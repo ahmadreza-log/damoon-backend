@@ -3,6 +3,7 @@
  * No view engine is configured because this project returns JSON, not HTML pages.
  */
 import express from "express";
+import { Catalog } from "./catalog";
 import routes from "./routes";
 
 const app = express();
@@ -14,11 +15,15 @@ const app = express();
 app.use(express.json());
 
 /**
- * Mount all versioned API routes under the /api prefix.
- * Current version: /api/v1
- * Example: a route defined as GET /health becomes GET /api/v1/health.
+ * Main route: list every registered endpoint as JSON.
  */
-app.use("/api", routes);
+app.get("/", Catalog(app));
+
+/**
+ * Mount versioned routes at the root so paths start with /v1, not /api/v1.
+ * Example: GET /health on the v1 router becomes GET /v1/health.
+ */
+app.use(routes);
 
 /**
  * Handle unknown routes with a JSON 404 response.

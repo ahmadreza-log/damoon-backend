@@ -133,13 +133,13 @@ damoon-backend/
 All endpoints use a version prefix. The current version is **v1**.
 
 ```
-/api/v1/...
+/v1/...
 ```
 
 Current endpoint:
 
 ```
-GET /api/v1/health
+GET /v1/health
 ```
 
 Response:

@@ -30,6 +30,7 @@ export async function ConnectDatabase(): Promise<void> {
   db = client.db(process.env.MONGODB_DB_NAME || undefined);
 
   await db.command({ ping: 1 });
+  await db.collection("users").createIndex({ email: 1 }, { unique: true });
   console.log("MongoDB connected");
 }
 

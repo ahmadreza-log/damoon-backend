@@ -7,7 +7,7 @@ import { GetDb } from "../../db";
 const router = Router();
 
 /**
- * GET /api/v1/health
+ * GET /v1/health
  * Pings MongoDB and returns JSON, not a rendered view.
  */
 router.get("/", async (_req, res) => {
