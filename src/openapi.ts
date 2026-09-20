@@ -97,6 +97,30 @@ const Identifier = {
 };
 
 /**
+ * 1-based page number for GET /api/v1/posts.
+ */
+const Page = {
+  name: "page",
+  in: "query",
+  required: false,
+  description: "1-based page number. Defaults to 1. Must be an integer greater than or equal to 1.",
+  schema: { type: "integer", minimum: 1, default: 1 },
+  example: 1,
+};
+
+/**
+ * Page size for GET /api/v1/posts.
+ */
+const Limit = {
+  name: "limit",
+  in: "query",
+  required: false,
+  description: "Number of posts per page. Defaults to 20. Integer from 1 to 100 inclusive.",
+  schema: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+  example: 20,
+};
+
+/**
  * Bearer JWT required for write operations.
  */
 const Protected = [{ Bearer: [] }];
@@ -165,14 +189,19 @@ export const Spec = {
         "Create an account, activate it with a 6-digit pin, then log in for a JWT. Register always assigns role `user`. The admin email from `.env` cannot register and is authenticated only on login.",
     },
     {
+      name: "Categories",
+      description:
+        "Named topics used on posts. Each category has title, unique slug, optional description, and optional thumbnail. Staff only: `author`, `editor`, or `admin`. Renaming a slug updates posts that used the old slug. Deleting a category removes that slug from posts.",
+    },
+    {
       name: "Posts",
       description:
-        "Articles with title, content, slug, author, categories, tags, thumbnail, JSON-LD schema, FAQ, and related ids. The posts route is staff-only: `author`, `editor`, and `admin`. `user` receives 403. `author` on the document is the email from the JWT (or the original writer on update). Authors may change only their own posts. Editors and admins may change any post. `slug` must be unique.",
+        "Articles with title, content, slug, author, categories, tags, thumbnail, JSON-LD schema, FAQ, and related ids. The posts route is staff-only: `author`, `editor`, and `admin`. `categories` is an array of existing category **slugs**. Unknown slugs return 400. `GET /api/v1/posts` is paginated with `page` and `limit`.",
     },
   ],
   "x-tagGroups": [
     { name: "App", tags: ["Catalog"] },
-    { name: "v1", tags: ["Health", "Auth", "Posts"] },
+    { name: "v1", tags: ["Health", "Auth", "Posts", "Categories"] },
   ],
   paths: {
     "/": {
@@ -482,25 +511,41 @@ A \`user\` token can read posts but cannot create or edit them.
       get: {
         tags: ["Posts"],
         operationId: "Index",
-        summary: "List all posts",
+        summary: "List posts",
         description: `
-Returns every post, newest first (MongoDB \`_id\` descending).
+Returns one page of posts, newest first (MongoDB \`_id\` descending).
 
 ### Who can call this
 Bearer token required. Role must be \`author\`, \`editor\`, or \`admin\`. Role \`user\` receives 403.
 
-### What you get
-\`posts\` is an array of post objects. Each item includes \`id\`, \`title\`, \`content\`, \`slug\`, \`author\`, \`categories\`, \`tags\`, \`thumbnail\`, \`schema\`, \`faq\`, and \`related\`.
+### Query
+| Param | Default | Rules |
+| --- | --- | --- |
+| \`page\` | \`1\` | Integer ≥ 1. Page 1 is the newest posts. |
+| \`limit\` | \`20\` | Integer from 1 to 100. |
 
-An empty array means there are no posts yet, not an error.
+Omitted params use the defaults. Invalid numbers, \`page < 1\`, \`limit < 1\`, or \`limit > 100\` return 400.
+
+A \`page\` past the last page returns an empty \`posts\` array. \`total\` and \`pages\` still describe the full collection.
+
+### What you get
+- \`posts\` — this page of post objects (\`id\`, \`title\`, \`content\`, \`slug\`, \`author\`, \`categories\`, \`tags\`, \`thumbnail\`, \`schema\`, \`faq\`, \`related\`)
+- \`page\` — the requested page
+- \`limit\` — the requested page size
+- \`total\` — how many posts exist in total
+- \`pages\` — how many pages that total fills at this \`limit\` (\`0\` when there are no posts)
+
+An empty \`posts\` array means this page has no rows, not necessarily that the collection is empty. Check \`total\`.
 `.trim(),
         security: Protected,
+        parameters: [Page, Limit],
         responses: {
           "200": Status(200, {
-            description: "Array of posts, newest first. May be empty.",
+            description: "One page of posts, newest first, plus pagination fields.",
             schema: { $ref: "#/components/schemas/PostList" },
-            example: { posts: [Sample] },
+            example: { posts: [Sample], page: 1, limit: 20, total: 1, pages: 1 },
           }),
+          "400": Fail(400, "page or limit is missing a valid integer, page is less than 1, or limit is outside 1–100."),
           "401": Fail(401, "missing, invalid, or expired Bearer token."),
           "403": Fail(403, "role is not author, editor, or admin."),
         },
@@ -526,7 +571,7 @@ Do **not** send \`author\`. The API sets it to the email inside the JWT. Clients
 | \`title\` | yes | string | Trimmed. Empty string is rejected. |
 | \`slug\` | no | string | Unique URL slug. If omitted, generated from \`title\`. Duplicate slug is 409. |
 | \`content\` | yes | string | Full article body. |
-| \`categories\` | no | string[] | Empty array if omitted. Blank strings are dropped. |
+| \`categories\` | no | string[] | Slugs of existing categories. Unknown slugs return 400. |
 | \`tags\` | no | string[] | Empty array if omitted. |
 | \`thumbnail\` | no | file or string | Upload an image (\`multipart/form-data\` field \`thumbnail\`) or send a URL in JSON. Uploaded files are stored under \`/storage/thumbnails/\`. |
 | \`schema\` | no | object or \`null\` | JSON-LD. Arrays are rejected and stored as \`null\`. |
@@ -559,7 +604,7 @@ Returns the stored post, including the generated \`id\` and the JWT email as \`a
             schema: { $ref: "#/components/schemas/PostWrap" },
             example: { post: Sample },
           }),
-          "400": Fail(400, "`title`, `content`, or `slug` is missing or empty."),
+          "400": Fail(400, "`title`, `content`, or `slug` is missing, or a category slug does not exist."),
           "401": Fail(401, "missing, invalid, or expired Bearer token."),
           "403": Fail(403, "role is not author, editor, or admin."),
           "409": Fail(409, "another post already uses this slug."),
@@ -760,6 +805,204 @@ Returns the same \`Allow\` header as the collection. No token.
         },
       },
     },
+    "/api/v1/categories": {
+      get: {
+        tags: ["Categories"],
+        operationId: "CategoryIndex",
+        summary: "List all categories",
+        description: `
+Returns every category, sorted by title.
+
+### Who can call this
+Bearer token required. Role must be \`author\`, \`editor\`, or \`admin\`.
+`.trim(),
+        security: Protected,
+        responses: {
+          "200": Status(200, {
+            description: "Array of categories, sorted by title.",
+            schema: { $ref: "#/components/schemas/CategoryList" },
+            example: { categories: [{ id: Sample.id, title: "News", slug: "news", description: "", thumbnail: "" }] },
+          }),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
+        },
+      },
+      post: {
+        tags: ["Categories"],
+        operationId: "CategoryCreate",
+        summary: "Create a category",
+        description: `
+Creates a category. \`title\` is required. If \`slug\` is omitted, it is generated from the title. Slugs must be unique.
+
+### Thumbnail
+Send a file in \`multipart/form-data\` as field \`thumbnail\`, or a URL in JSON.
+`.trim(),
+        security: Protected,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CategoryInput" },
+              example: { title: "News", slug: "news", description: "Top stories" },
+            },
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["title"],
+                properties: {
+                  title: { type: "string" },
+                  slug: { type: "string" },
+                  description: { type: "string" },
+                  thumbnail: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "201": Status(201, {
+            description: "Category created.",
+            schema: { $ref: "#/components/schemas/CategoryWrap" },
+          }),
+          "400": Fail(400, "`title` or `slug` is missing or empty."),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
+          "409": Fail(409, "another category already uses this slug."),
+        },
+      },
+      options: {
+        tags: ["Categories"],
+        operationId: "CategoryOptionsIndex",
+        summary: "List methods on /api/v1/categories",
+        responses: {
+          "200": Status(200, {
+            description: "Allowed methods are listed in the `Allow` header.",
+          }),
+        },
+      },
+    },
+    "/api/v1/categories/{id}": {
+      parameters: [Identifier],
+      get: {
+        tags: ["Categories"],
+        operationId: "CategoryShow",
+        summary: "Get one category by id",
+        security: Protected,
+        responses: {
+          "200": Status(200, {
+            description: "The category was found.",
+            schema: { $ref: "#/components/schemas/CategoryWrap" },
+          }),
+          "400": Fail(400, "`id` is not a valid MongoDB ObjectId."),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
+          "404": Fail(404, "no category exists for this id."),
+        },
+      },
+      put: {
+        tags: ["Categories"],
+        operationId: "CategoryReplace",
+        summary: "Replace a category",
+        description: "Replaces the whole payload. If the slug changes, posts that used the old slug are updated.",
+        security: Protected,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CategoryInput" },
+              example: { title: "News", slug: "news", description: "Top stories" },
+            },
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["title"],
+                properties: {
+                  title: { type: "string" },
+                  slug: { type: "string" },
+                  description: { type: "string" },
+                  thumbnail: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": Status(200, {
+            description: "Category replaced.",
+            schema: { $ref: "#/components/schemas/CategoryWrap" },
+          }),
+          "400": Fail(400, "invalid `id`, or `title` / `slug` is empty."),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
+          "404": Fail(404, "no category exists for this id."),
+          "409": Fail(409, "another category already uses this slug."),
+        },
+      },
+      patch: {
+        tags: ["Categories"],
+        operationId: "CategoryPatch",
+        summary: "Update sent category fields",
+        security: Protected,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CategoryPatch" },
+              example: { description: "Updated blurb" },
+            },
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  slug: { type: "string" },
+                  description: { type: "string" },
+                  thumbnail: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": Status(200, {
+            description: "Category updated.",
+            schema: { $ref: "#/components/schemas/CategoryWrap" },
+          }),
+          "400": Fail(400, "invalid `id`, or a sent `title` / `slug` is empty."),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
+          "404": Fail(404, "no category exists for this id."),
+          "409": Fail(409, "another category already uses this slug."),
+        },
+      },
+      delete: {
+        tags: ["Categories"],
+        operationId: "CategoryDestroy",
+        summary: "Delete a category",
+        description: "Removes the category and pulls its slug out of every post.",
+        security: Protected,
+        responses: {
+          "200": Status(200, {
+            description: "Category deleted.",
+            schema: { $ref: "#/components/schemas/Deleted" },
+          }),
+          "400": Fail(400, "`id` is not a valid MongoDB ObjectId."),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
+          "404": Fail(404, "no category exists for this id."),
+        },
+      },
+      options: {
+        tags: ["Categories"],
+        operationId: "CategoryOptionsShow",
+        summary: "List methods on /api/v1/categories/{id}",
+        responses: {
+          "200": Status(200, {
+            description: "Allowed methods are listed in the `Allow` header.",
+          }),
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -770,7 +1013,7 @@ Returns the same \`Allow\` header as the collection. No token.
         description: `
 Token from **POST /api/v1/auth/login**.
 
-Send it on posts routes:
+Send it on posts and categories routes:
 
 \`Authorization: Bearer eyJhbGciOi...\`
 
@@ -971,7 +1214,7 @@ In Scalar, paste the value into **Bearer Token** once. It is stored in the brows
           categories: {
             type: "array",
             items: { type: "string" },
-            description: "Category names. Blank strings are removed.",
+            description: "Slugs of existing categories. Unknown slugs return 400.",
           },
           tags: {
             type: "array",
@@ -1056,7 +1299,90 @@ In Scalar, paste the value into **Bearer Token** once. It is stored in the brows
               posts: {
                 type: "array",
                 items: { $ref: "#/components/schemas/Post" },
-                description: "All posts, newest first.",
+                description: "This page of posts, newest first.",
+              },
+              page: {
+                type: "integer",
+                minimum: 1,
+                description: "Current 1-based page.",
+              },
+              limit: {
+                type: "integer",
+                minimum: 1,
+                maximum: 100,
+                description: "Page size used for this response.",
+              },
+              total: {
+                type: "integer",
+                minimum: 0,
+                description: "Total number of posts in the collection.",
+              },
+              pages: {
+                type: "integer",
+                minimum: 0,
+                description: "Total page count at this limit. 0 when there are no posts.",
+              },
+            },
+          },
+        ],
+      },
+      CategoryInput: {
+        type: "object",
+        required: ["title"],
+        properties: {
+          title: { type: "string", description: "Display name. Required." },
+          slug: {
+            type: "string",
+            description: "Unique URL slug. If omitted, generated from title.",
+          },
+          description: { type: "string", description: "Optional short blurb." },
+          thumbnail: {
+            type: "string",
+            description: "Cover image URL or /storage/thumbnails/... after upload.",
+          },
+        },
+      },
+      CategoryPatch: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          slug: { type: "string" },
+          description: { type: "string" },
+          thumbnail: { type: "string" },
+        },
+      },
+      Category: {
+        allOf: [
+          { $ref: "#/components/schemas/CategoryInput" },
+          {
+            type: "object",
+            required: ["id"],
+            properties: {
+              id: { type: "string" },
+            },
+          },
+        ],
+      },
+      CategoryWrap: {
+        allOf: [
+          { $ref: "#/components/schemas/Status" },
+          {
+            type: "object",
+            properties: {
+              category: { $ref: "#/components/schemas/Category" },
+            },
+          },
+        ],
+      },
+      CategoryList: {
+        allOf: [
+          { $ref: "#/components/schemas/Status" },
+          {
+            type: "object",
+            properties: {
+              categories: {
+                type: "array",
+                items: { $ref: "#/components/schemas/Category" },
               },
             },
           },

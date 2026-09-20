@@ -26,3 +26,6 @@ Desktop.ini
 # Uploaded files (keep the empty folder)
 storage/thumbnails/*
 !storage/thumbnails/.gitkeep
+
+# Generated Faker dump (created by npm run seed)
+src/seed/data.json

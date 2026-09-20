@@ -7,10 +7,12 @@ import { ObjectId, type WithId } from "mongodb";
 import { GetDb } from "../../db";
 import { Guard, Staff, Thumbnail, type Authed } from "../../middleware";
 import { Drop, Keep } from "../../storage";
-import { Reply, Wrap } from "../../utils";
+import { Persist, Reply, Slug, Wrap, Normalize } from "../../utils";
 
 const router = Router();
 const Allow = "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT";
+const Size = 20;
+const Cap = 100;
 
 type Item = {
   title: string;
@@ -38,57 +40,6 @@ function Posts() {
 }
 
 /**
- * Trim unknown body values into a string.
- */
-function Normalize(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-/**
- * Turn a title or raw slug into a URL-safe slug.
- * Allows Latin letters, digits, and Persian letters. Spaces become hyphens.
- */
-function Slug(value: unknown, fallback = ""): string {
-  const source = Normalize(value) || fallback;
-
-  return source
-    .toLowerCase()
-    .trim()
-    .replace(/[\s_]+/g, "-")
-    .replace(/[^\p{L}\p{N}-]+/gu, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-/**
- * True when MongoDB rejected a write because the slug is already taken.
- */
-function Clash(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code: unknown }).code === 11000
-  );
-}
-
-/**
- * Run a Mongo write and turn a duplicate slug into 409.
- */
-async function Persist<T>(work: () => Promise<T>, res: Response): Promise<T | null> {
-  try {
-    return await work();
-  } catch (error) {
-    if (Clash(error)) {
-      Reply(res, 409);
-      return null;
-    }
-
-    throw error;
-  }
-}
-
-/**
  * Keep only non-empty strings from an array.
  */
 function Strings(value: unknown): string[] {
@@ -100,6 +51,25 @@ function Strings(value: unknown): string[] {
     .filter((item): item is string => typeof item === "string")
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
+}
+
+/**
+ * True when every category slug exists in the categories collection.
+ */
+async function Linked(list: string[], res: Response): Promise<boolean> {
+  if (list.length === 0) {
+    return true;
+  }
+
+  const unique = [...new Set(list)];
+  const count = await GetDb().collection("categories").countDocuments({ slug: { $in: unique } });
+
+  if (count !== unique.length) {
+    Reply(res, 400);
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -275,6 +245,38 @@ function Parse(id: string, res: Response): ObjectId | null {
 }
 
 /**
+ * Take the first query value, or a fallback when the key is missing.
+ */
+function First(value: unknown, fallback: string): string {
+  if (Array.isArray(value)) {
+    const head = value[0];
+    return typeof head === "string" && head !== "" ? head : fallback;
+  }
+
+  if (typeof value === "string" && value !== "") {
+    return value;
+  }
+
+  return fallback;
+}
+
+/**
+ * Read page and limit from the query string.
+ * Defaults: page=1, limit=20. Values must be integers; limit is 1–100.
+ */
+function Paging(req: Request, res: Response): { page: number; limit: number } | null {
+  const page = Number(First(req.query.page, "1"));
+  const limit = Number(First(req.query.limit, String(Size)));
+
+  if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || limit > Cap) {
+    Reply(res, 400);
+    return null;
+  }
+
+  return { page, limit };
+}
+
+/**
  * OPTIONS /api/v1/posts
  * Advertise every method this resource supports.
  */
@@ -293,13 +295,28 @@ function Reject(_req: Request, res: Response): void {
 
 /**
  * GET /api/v1/posts
- * List every post.
+ * List one page of posts, newest first.
  */
-async function Index(_req: Request, res: Response): Promise<void> {
-  const list = await Posts().find().sort({ _id: -1 }).toArray();
+async function Index(req: Request, res: Response): Promise<void> {
+  const paging = Paging(req, res);
+
+  if (!paging) {
+    return;
+  }
+
+  const { page, limit } = paging;
+  const skip = (page - 1) * limit;
+  const [total, list] = await Promise.all([
+    Posts().countDocuments(),
+    Posts().find().sort({ _id: -1 }).skip(skip).limit(limit).toArray(),
+  ]);
 
   Reply(res, 200, {
     posts: list.map(Shape),
+    page,
+    limit,
+    total,
+    pages: Math.ceil(total / limit),
   });
 }
 
@@ -336,6 +353,10 @@ async function Create(req: Request, res: Response): Promise<void> {
 
   if (!fields) {
     Reply(res, 400);
+    return;
+  }
+
+  if (!(await Linked(fields.categories, res))) {
     return;
   }
 
@@ -403,6 +424,10 @@ async function Replace(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  if (!(await Linked(fields.categories, res))) {
+    return;
+  }
+
   fields.author = post.author;
   const url = await Picture(req, post.thumbnail);
 
@@ -453,6 +478,10 @@ async function Patch(req: Request, res: Response): Promise<void> {
 
   if (!fields) {
     Reply(res, 400);
+    return;
+  }
+
+  if (!(await Linked(fields.categories, res))) {
     return;
   }
 

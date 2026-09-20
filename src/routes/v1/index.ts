@@ -6,6 +6,7 @@ import { Router } from "express";
 import health from "./health.routes";
 import auth from "./auth.routes";
 import posts from "./posts.routes";
+import categories from "./categories.routes";
 
 const router = Router();
 
@@ -24,5 +25,11 @@ router.use("/auth", auth);
  * Guard + Staff: author, editor, and admin only. OPTIONS stays public.
  */
 router.use("/posts", posts);
+
+/**
+ * Categories: GET, POST, PUT, PATCH, DELETE /api/v1/categories
+ * Guard + Staff: author, editor, and admin. OPTIONS stays public.
+ */
+router.use("/categories", categories);
 
 export default router;
