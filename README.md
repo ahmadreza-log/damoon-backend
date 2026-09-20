@@ -113,11 +113,16 @@ damoon-backend/
 │   ├── app.ts                # Express app, JSON parser, route mounting
 │   ├── db/
 │   │   └── index.ts          # connect / getDb / close MongoDB
+│   ├── middleware/           # JWT, roles, thumbnail upload
+│   ├── storage/              # Save / delete uploaded files
 │   └── routes/
 │       ├── index.ts          # API versions
 │       └── v1/
 │           ├── index.ts      # v1 router
-│           └── health.routes.ts
+│           ├── health.routes.ts
+│           ├── auth.routes.ts
+│           └── posts.routes.ts
+├── storage/thumbnails/       # Uploaded cover images
 ├── .env.example
 ├── .gitignore
 ├── LICENSE

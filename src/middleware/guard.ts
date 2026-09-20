@@ -3,7 +3,7 @@
  */
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { Reply } from "./status";
+import { Reply } from "../utils/status";
 
 export type Actor = {
   email: string;

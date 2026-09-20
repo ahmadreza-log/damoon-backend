@@ -22,3 +22,7 @@ Desktop.ini
 .idea/
 .vscode/
 *.swp
+
+# Uploaded files (keep the empty folder)
+storage/thumbnails/*
+!storage/thumbnails/.gitkeep

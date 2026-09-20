@@ -11,6 +11,7 @@ const Faq = {
 
 const Input = {
   title: "Hello Damoon",
+  slug: "hello-damoon",
   content: "Full article body.",
   categories: ["news"],
   tags: ["damoon"],
@@ -27,6 +28,31 @@ const Sample = {
   id: "68ce1a2b3c4d5e6f7a8b9c0d",
   author: "author@example.com",
   ...Input,
+};
+
+const Form = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    slug: {
+      type: "string",
+      description: "URL slug. If omitted, it is generated from title.",
+    },
+    content: { type: "string" },
+    categories: {
+      type: "string",
+      description: 'JSON array string, for example ["news"].',
+    },
+    tags: { type: "string", description: "JSON array string." },
+    thumbnail: {
+      type: "string",
+      format: "binary",
+      description: "Image file: jpeg, png, webp, or gif. Max 5 MB. Stored under /storage/thumbnails/.",
+    },
+    schema: { type: "string", description: "JSON object string." },
+    faq: { type: "string", description: "JSON array of { title, content }." },
+    related: { type: "string", description: "JSON array of post ids." },
+  },
 };
 
 /**
@@ -83,7 +109,7 @@ Damoon is a JSON REST API under \`/api\`. This page (\`/\`) is the Scalar docume
 1. JSON endpoints live under \`/api/v1/...\`.
 2. Use \`Content-Type: application/json\` whenever you send a body.
 3. Every JSON response includes \`code\` (HTTP status number) and \`message\` (standard HTTP phrase).
-4. Public routes need no token. Write routes on posts need \`Authorization: Bearer <token>\`.
+4. Public routes need no token. The posts route needs \`Authorization: Bearer <token>\` and role \`author\`, \`editor\`, or \`admin\`.
 
 ## First login
 
@@ -91,15 +117,15 @@ Damoon is a JSON REST API under \`/api\`. This page (\`/\`) is the Scalar docume
 2. **Verify** — send that \`pin\` to activate the account.
 3. **Login** — returns a JWT. Paste it into **Bearer Auth** in this page (it is remembered on reload).
 
-A newly registered account has role \`user\` and **cannot** create or edit posts.
+A newly registered account has role \`user\` and **cannot** use the posts route.
 
 ## Roles
 
 | Role | Where it lives | What it can do |
 | --- | --- | --- |
-| \`user\` | MongoDB, set on register | Read posts. Cannot write. |
-| \`author\` | MongoDB | Create posts. Edit or delete **own** posts. |
-| \`editor\` | MongoDB | Create, edit, or delete **any** post. |
+| \`user\` | MongoDB, set on register | No access to posts. |
+| \`author\` | MongoDB | Full posts route. Edit or delete **own** posts. |
+| \`editor\` | MongoDB | Full posts route. Edit or delete **any** post. |
 | \`admin\` | \`.env\` only (\`ADMIN_EMAIL\` + \`ADMIN_PASSWORD\`) | Same as editor. This account is never stored in MongoDB. |
 
 To try post writes from this page, log in as admin from \`.env\`, or change a user's role in MongoDB to \`author\` or \`editor\`.
@@ -141,7 +167,7 @@ export const Spec = {
     {
       name: "Posts",
       description:
-        "Articles with title, content, author, categories, tags, thumbnail, JSON-LD schema, FAQ, and related ids. Listing and reading are public. Create, replace, patch, and delete need a Bearer token. `author` on the document is always the email from the token (or the original writer on update). Role `user` is forbidden from writes. Authors may change only their own posts. Editors and admins may change any post.",
+        "Articles with title, content, slug, author, categories, tags, thumbnail, JSON-LD schema, FAQ, and related ids. The posts route is staff-only: `author`, `editor`, and `admin`. `user` receives 403. `author` on the document is the email from the JWT (or the original writer on update). Authors may change only their own posts. Editors and admins may change any post. `slug` must be unique.",
     },
   ],
   "x-tagGroups": [
@@ -461,19 +487,22 @@ A \`user\` token can read posts but cannot create or edit them.
 Returns every post, newest first (MongoDB \`_id\` descending).
 
 ### Who can call this
-Anyone. No token.
+Bearer token required. Role must be \`author\`, \`editor\`, or \`admin\`. Role \`user\` receives 403.
 
 ### What you get
-\`posts\` is an array of public post objects. Each item includes \`id\`, \`title\`, \`content\`, \`author\`, \`categories\`, \`tags\`, \`thumbnail\`, \`schema\`, \`faq\`, and \`related\`.
+\`posts\` is an array of post objects. Each item includes \`id\`, \`title\`, \`content\`, \`slug\`, \`author\`, \`categories\`, \`tags\`, \`thumbnail\`, \`schema\`, \`faq\`, and \`related\`.
 
 An empty array means there are no posts yet, not an error.
 `.trim(),
+        security: Protected,
         responses: {
           "200": Status(200, {
             description: "Array of posts, newest first. May be empty.",
             schema: { $ref: "#/components/schemas/PostList" },
             example: { posts: [Sample] },
           }),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
         },
       },
       post: {
@@ -495,10 +524,11 @@ Do **not** send \`author\`. The API sets it to the email inside the JWT. Clients
 | Field | Required | Type | Notes |
 | --- | --- | --- | --- |
 | \`title\` | yes | string | Trimmed. Empty string is rejected. |
+| \`slug\` | no | string | Unique URL slug. If omitted, generated from \`title\`. Duplicate slug is 409. |
 | \`content\` | yes | string | Full article body. |
 | \`categories\` | no | string[] | Empty array if omitted. Blank strings are dropped. |
 | \`tags\` | no | string[] | Empty array if omitted. |
-| \`thumbnail\` | no | string | Image URL. Empty string if omitted. |
+| \`thumbnail\` | no | file or string | Upload an image (\`multipart/form-data\` field \`thumbnail\`) or send a URL in JSON. Uploaded files are stored under \`/storage/thumbnails/\`. |
 | \`schema\` | no | object or \`null\` | JSON-LD. Arrays are rejected and stored as \`null\`. |
 | \`faq\` | no | \`{ title, content }[]\` | Rows need both title and content. Incomplete rows are dropped. |
 | \`related\` | no | string[] | Related post ids. |
@@ -509,11 +539,17 @@ Returns the stored post, including the generated \`id\` and the JWT email as \`a
         security: Protected,
         requestBody: {
           required: true,
-          description: "Post fields. `author` is ignored; it comes from the JWT.",
+          description: "JSON body, or multipart/form-data with a thumbnail file. `author` is ignored; it comes from the JWT.",
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/PostInput" },
               example: Input,
+            },
+            "multipart/form-data": {
+              schema: {
+                ...Form,
+                required: ["title", "content"],
+              },
             },
           },
         },
@@ -523,9 +559,10 @@ Returns the stored post, including the generated \`id\` and the JWT email as \`a
             schema: { $ref: "#/components/schemas/PostWrap" },
             example: { post: Sample },
           }),
-          "400": Fail(400, "`title` or `content` is missing or empty."),
+          "400": Fail(400, "`title`, `content`, or `slug` is missing or empty."),
           "401": Fail(401, "missing, invalid, or expired Bearer token."),
-          "403": Fail(403, "role is `user` (or otherwise not allowed to write)."),
+          "403": Fail(403, "role is not author, editor, or admin."),
+          "409": Fail(409, "another post already uses this slug."),
           "500": Fail(500, "the post was inserted but could not be read back."),
         },
       },
@@ -555,11 +592,12 @@ Returns \`Allow: DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT\` in the headers. 
 Returns a single post.
 
 ### Who can call this
-Anyone. No token.
+Bearer token required. Role must be \`author\`, \`editor\`, or \`admin\`.
 
 ### Path
 \`id\` must be a valid MongoDB ObjectId. A malformed id is 400, not 404.
 `.trim(),
+        security: Protected,
         responses: {
           "200": Status(200, {
             description: "The post was found.",
@@ -567,6 +605,8 @@ Anyone. No token.
             example: { post: Sample },
           }),
           "400": Fail(400, "`id` is not a valid MongoDB ObjectId."),
+          "401": Fail(401, "missing, invalid, or expired Bearer token."),
+          "403": Fail(403, "role is not author, editor, or admin."),
           "404": Fail(404, "no post exists for this id."),
         },
       },
@@ -593,11 +633,17 @@ If you only want to change some fields and keep the rest, use **Patch** instead.
         security: Protected,
         requestBody: {
           required: true,
-          description: "Full post payload. Omitted optional fields become empty defaults.",
+          description: "Full post payload. Omitted optional fields become empty defaults. You may upload a new thumbnail file.",
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/PostInput" },
               example: Input,
+            },
+            "multipart/form-data": {
+              schema: {
+                ...Form,
+                required: ["title", "content"],
+              },
             },
           },
         },
@@ -607,10 +653,11 @@ If you only want to change some fields and keep the rest, use **Patch** instead.
             schema: { $ref: "#/components/schemas/PostWrap" },
             example: { post: Sample },
           }),
-          "400": Fail(400, "invalid `id`, or `title` / `content` is empty."),
+          "400": Fail(400, "invalid `id`, or `title` / `content` / `slug` is empty."),
           "401": Fail(401, "missing, invalid, or expired Bearer token."),
           "403": Fail(403, "this role cannot edit this post."),
           "404": Fail(404, "no post exists for this id."),
+          "409": Fail(409, "another post already uses this slug."),
         },
       },
       patch: {
@@ -629,10 +676,11 @@ Send only the keys you want to change. If you send \`title\` or \`content\`, the
 | Field | If omitted | If sent |
 | --- | --- | --- |
 | \`title\` | kept | replaced (must not be empty) |
+| \`slug\` | kept | replaced (must stay unique) |
 | \`content\` | kept | replaced (must not be empty) |
 | \`categories\` | kept | replaced by the new array |
 | \`tags\` | kept | replaced |
-| \`thumbnail\` | kept | replaced |
+| \`thumbnail\` | kept | replaced by a new URL, or by an uploaded file |
 | \`schema\` | kept | replaced (object or \`null\`) |
 | \`faq\` | kept | replaced |
 | \`related\` | kept | replaced |
@@ -643,11 +691,14 @@ PUT vs PATCH: PUT rebuilds the document from the body. PATCH merges into the exi
         security: Protected,
         requestBody: {
           required: true,
-          description: "One or more post fields. Omitted keys are left unchanged.",
+          description: "One or more post fields. Omitted keys are left unchanged. You may upload a new thumbnail file.",
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/PostPatch" },
               example: { title: "Updated title" },
+            },
+            "multipart/form-data": {
+              schema: Form,
             },
           },
         },
@@ -657,10 +708,11 @@ PUT vs PATCH: PUT rebuilds the document from the body. PATCH merges into the exi
             schema: { $ref: "#/components/schemas/PostWrap" },
             example: { post: Sample },
           }),
-          "400": Fail(400, "invalid `id`, or a sent `title` / `content` is empty."),
+          "400": Fail(400, "invalid `id`, or a sent `title` / `content` / `slug` is empty."),
           "401": Fail(401, "missing, invalid, or expired Bearer token."),
           "403": Fail(403, "this role cannot edit this post."),
           "404": Fail(404, "no post exists for this id."),
+          "409": Fail(409, "another post already uses this slug."),
         },
       },
       delete: {
@@ -718,7 +770,7 @@ Returns the same \`Allow\` header as the collection. No token.
         description: `
 Token from **POST /api/v1/auth/login**.
 
-Send it on write routes:
+Send it on posts routes:
 
 \`Authorization: Bearer eyJhbGciOi...\`
 
@@ -910,6 +962,11 @@ In Scalar, paste the value into **Bearer Token** once. It is stored in the brows
         required: ["title", "content"],
         properties: {
           title: { type: "string", description: "Headline. Required. Trimmed." },
+          slug: {
+            type: "string",
+            description:
+              "Unique URL slug. Lowercased. If omitted on create, generated from title. Duplicate values return 409.",
+          },
           content: { type: "string", description: "Full article body. Required. Trimmed." },
           categories: {
             type: "array",
@@ -923,7 +980,8 @@ In Scalar, paste the value into **Bearer Token** once. It is stored in the brows
           },
           thumbnail: {
             type: "string",
-            description: "Cover image URL.",
+            description:
+              "Cover image URL, or a path like /storage/thumbnails/<id>.jpg after a file upload.",
           },
           schema: {
             description: "JSON-LD object, or null. Arrays are stored as null.",
@@ -946,6 +1004,7 @@ In Scalar, paste the value into **Bearer Token** once. It is stored in the brows
         description: "Partial post update. Send only the keys you want to change.",
         properties: {
           title: { type: "string" },
+          slug: { type: "string" },
           content: { type: "string" },
           categories: { type: "array", items: { type: "string" } },
           tags: { type: "array", items: { type: "string" } },

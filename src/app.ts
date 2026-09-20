@@ -5,6 +5,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { Catalog } from "./catalog";
 import { Openapi, Page } from "./docs";
+import { Root } from "./storage";
 import { Reply } from "./utils";
 import routes from "./routes";
 
@@ -15,6 +16,11 @@ const app = express();
  * REST clients send data as JSON, so this middleware makes req.body available as an object.
  */
 app.use(express.json());
+
+/**
+ * Serve files saved under the storage folder at /storage/...
+ */
+app.use("/storage", express.static(Root));
 
 /**
  * Main route: Scalar live documentation.

@@ -1,10 +1,13 @@
 /**
  * Posts resource. Supports GET, HEAD, POST, PUT, PATCH, DELETE, and OPTIONS.
+ * JSON methods require Guard then Staff (author, editor, admin).
  */
 import { Router, type Request, type Response } from "express";
 import { ObjectId, type WithId } from "mongodb";
 import { GetDb } from "../../db";
-import { Guard, Reply, Wrap, type Authed } from "../../utils";
+import { Guard, Staff, Thumbnail, type Authed } from "../../middleware";
+import { Drop, Keep } from "../../storage";
+import { Reply, Wrap } from "../../utils";
 
 const router = Router();
 const Allow = "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT";
@@ -17,6 +20,7 @@ type Item = {
 type Post = {
   title: string;
   content: string;
+  slug: string;
   author: string;
   categories: string[];
   tags: string[];
@@ -38,6 +42,50 @@ function Posts() {
  */
 function Normalize(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+/**
+ * Turn a title or raw slug into a URL-safe slug.
+ * Allows Latin letters, digits, and Persian letters. Spaces become hyphens.
+ */
+function Slug(value: unknown, fallback = ""): string {
+  const source = Normalize(value) || fallback;
+
+  return source
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^\p{L}\p{N}-]+/gu, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * True when MongoDB rejected a write because the slug is already taken.
+ */
+function Clash(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: unknown }).code === 11000
+  );
+}
+
+/**
+ * Run a Mongo write and turn a duplicate slug into 409.
+ */
+async function Persist<T>(work: () => Promise<T>, res: Response): Promise<T | null> {
+  try {
+    return await work();
+  } catch (error) {
+    if (Clash(error)) {
+      Reply(res, 409);
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 /**
@@ -96,20 +144,82 @@ function Schema(value: unknown): Record<string, unknown> | null {
 }
 
 /**
+ * Parse JSON text sent as a multipart string. Leave other values as-is.
+ */
+function Decode(value: unknown): unknown {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const text = value.trim();
+
+  if (!text.startsWith("{") && !text.startsWith("[")) {
+    return value;
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Turn a JSON or multipart body into a plain object with decoded JSON fields.
+ */
+function Payload(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return {};
+  }
+
+  const data = body as Record<string, unknown>;
+  const next: Record<string, unknown> = {};
+
+  for (const key of Object.keys(data)) {
+    next[key] = Decode(data[key]);
+  }
+
+  return next;
+}
+
+/**
+ * Save an uploaded thumbnail and remove the previous stored file when present.
+ * Returns undefined when the request did not include a file.
+ */
+async function Picture(req: Request, previous = ""): Promise<string | undefined> {
+  const file = req.file;
+
+  if (!file?.buffer) {
+    return undefined;
+  }
+
+  const url = await Keep({
+    buffer: file.buffer,
+    mimetype: file.mimetype,
+    originalname: file.originalname,
+  });
+  await Drop(previous);
+  return url;
+}
+
+/**
  * Build post fields from a request body. Missing optional fields become empty defaults.
  */
 function Fields(body: Record<string, unknown> | undefined, base?: Post): Post | null {
   const data = body ?? {};
   const title = data.title === undefined && base ? base.title : Normalize(data.title);
   const content = data.content === undefined && base ? base.content : Normalize(data.content);
+  const slug =
+    data.slug === undefined && base ? base.slug : Slug(data.slug, data.slug === undefined ? title : "");
 
-  if (!title || !content) {
+  if (!title || !content || !slug) {
     return null;
   }
 
   return {
     title,
     content,
+    slug,
     author: base?.author ?? "",
     categories: data.categories === undefined && base ? base.categories : Strings(data.categories),
     tags: data.tags === undefined && base ? base.tags : Strings(data.tags),
@@ -128,6 +238,7 @@ function Shape(post: WithId<Post>) {
     id: String(post._id),
     title: post.title,
     content: post.content,
+    slug: post.slug ?? "",
     author: post.author,
     categories: post.categories,
     tags: post.tags,
@@ -139,14 +250,9 @@ function Shape(post: WithId<Post>) {
 }
 
 /**
- * True when the role may create posts.
- */
-function CanWrite(role: string): boolean {
-  return role === "admin" || role === "author" || role === "editor";
-}
-
-/**
  * True when the actor may change or delete this post.
+ * Staff middleware already limited the route to author, editor, and admin.
+ * Authors may only mutate their own posts. Editors and admins may mutate any post.
  */
 function CanEdit(actor: Authed["actor"], post: Post): boolean {
   if (actor.role === "admin" || actor.role === "editor") {
@@ -226,13 +332,7 @@ async function Show(req: Request, res: Response): Promise<void> {
  */
 async function Create(req: Request, res: Response): Promise<void> {
   const actor = (req as Authed).actor;
-
-  if (!CanWrite(actor.role)) {
-    Reply(res, 403);
-    return;
-  }
-
-  const fields = Fields(req.body as Record<string, unknown> | undefined);
+  const fields = Fields(Payload(req.body));
 
   if (!fields) {
     Reply(res, 400);
@@ -240,8 +340,18 @@ async function Create(req: Request, res: Response): Promise<void> {
   }
 
   fields.author = actor.email;
+  const url = await Picture(req);
 
-  const result = await Posts().insertOne(fields);
+  if (url !== undefined) {
+    fields.thumbnail = url;
+  }
+
+  const result = await Persist(() => Posts().insertOne(fields), res);
+
+  if (!result) {
+    return;
+  }
+
   const post = await Posts().findOne({ _id: result.insertedId });
 
   if (!post) {
@@ -286,7 +396,7 @@ async function Replace(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const fields = Fields(req.body as Record<string, unknown> | undefined);
+  const fields = Fields(Payload(req.body));
 
   if (!fields) {
     Reply(res, 400);
@@ -294,8 +404,20 @@ async function Replace(req: Request, res: Response): Promise<void> {
   }
 
   fields.author = post.author;
+  const url = await Picture(req, post.thumbnail);
 
-  await Posts().updateOne({ _id: id }, { $set: fields });
+  if (url !== undefined) {
+    fields.thumbnail = url;
+  } else if (fields.thumbnail !== post.thumbnail) {
+    await Drop(post.thumbnail);
+  }
+
+  const wrote = await Persist(() => Posts().updateOne({ _id: id }, { $set: fields }), res);
+
+  if (!wrote) {
+    return;
+  }
+
   const next = await Posts().findOne({ _id: id });
 
   Reply(res, 200, {
@@ -327,7 +449,7 @@ async function Patch(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const fields = Fields(req.body as Record<string, unknown> | undefined, post);
+  const fields = Fields(Payload(req.body), post);
 
   if (!fields) {
     Reply(res, 400);
@@ -335,8 +457,20 @@ async function Patch(req: Request, res: Response): Promise<void> {
   }
 
   fields.author = post.author;
+  const url = await Picture(req, post.thumbnail);
 
-  await Posts().updateOne({ _id: id }, { $set: fields });
+  if (url !== undefined) {
+    fields.thumbnail = url;
+  } else if (fields.thumbnail !== post.thumbnail) {
+    await Drop(post.thumbnail);
+  }
+
+  const wrote = await Persist(() => Posts().updateOne({ _id: id }, { $set: fields }), res);
+
+  if (!wrote) {
+    return;
+  }
+
   const next = await Posts().findOne({ _id: id });
 
   Reply(res, 200, {
@@ -368,6 +502,7 @@ async function Destroy(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  await Drop(post.thumbnail);
   await Posts().deleteOne({ _id: id });
   Reply(res, 200, {
     id: String(id),
@@ -376,12 +511,13 @@ async function Destroy(req: Request, res: Response): Promise<void> {
 
 router.options("/", Options);
 router.options("/:id", Options);
+router.use(Guard, Staff);
 router.get("/", Wrap(Index));
 router.get("/:id", Wrap(Show));
-router.post("/", Guard, Wrap(Create));
-router.put("/:id", Guard, Wrap(Replace));
-router.patch("/:id", Guard, Wrap(Patch));
-router.delete("/:id", Guard, Wrap(Destroy));
+router.post("/", Thumbnail, Wrap(Create));
+router.put("/:id", Thumbnail, Wrap(Replace));
+router.patch("/:id", Thumbnail, Wrap(Patch));
+router.delete("/:id", Wrap(Destroy));
 router.all("/", Reject);
 router.all("/:id", Reject);
 

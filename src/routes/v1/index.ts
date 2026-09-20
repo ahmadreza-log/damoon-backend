@@ -21,6 +21,7 @@ router.use("/auth", auth);
 
 /**
  * Posts routes: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD /api/v1/posts
+ * Guard + Staff: author, editor, and admin only. OPTIONS stays public.
  */
 router.use("/posts", posts);
 

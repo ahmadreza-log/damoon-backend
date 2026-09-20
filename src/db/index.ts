@@ -32,6 +32,7 @@ export async function ConnectDatabase(): Promise<void> {
   await db.command({ ping: 1 });
   await db.collection("users").createIndex({ email: 1 }, { unique: true });
   await db.collection("roles").createIndex({ name: 1 }, { unique: true });
+  await db.collection("posts").createIndex({ slug: 1 }, { unique: true, sparse: true });
   await SeedRoles();
   console.log("MongoDB connected");
 }
