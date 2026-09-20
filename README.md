@@ -21,6 +21,7 @@ Damoon Backend is a REST API skeleton. It does not render HTML and has no view e
 - Express + TypeScript
 - متغیرهای محیطی با `.env` / environment variables via `.env`
 - سیستم Routing نسخه‌بندی‌شده / versioned routing
+- اتصال MongoDB با Connection Pool / MongoDB connection pool
 - نسخه فعال API: **v1** / active API version: **v1**
 
 ---
@@ -34,6 +35,7 @@ Damoon Backend is a REST API skeleton. It does not render HTML and has no view e
 | Language | TypeScript |
 | Dev runner | `tsx` |
 | Config | `dotenv` |
+| Database | MongoDB (`mongodb` driver) |
 
 ---
 
@@ -41,6 +43,7 @@ Damoon Backend is a REST API skeleton. It does not render HTML and has no view e
 
 - Node.js 18 یا بالاتر / Node.js 18 or newer
 - npm
+- MongoDB
 
 ---
 
@@ -70,6 +73,9 @@ cp .env.example .env
 
 ```env
 PORT=3000
+MONGODB_URI=mongodb://127.0.0.1:27017/damoon
+MONGODB_DB_NAME=damoon
+MONGODB_POOL_MAX=10
 ```
 
 ### توسعه / Development
@@ -113,8 +119,10 @@ npm start
 ```
 damoon-backend/
 ├── src/
-│   ├── index.ts              # نقطه ورود و روشن کردن سرور / entry point
+│   ├── index.ts              # نقطه ورود، اتصال DB و روشن کردن سرور / entry + DB + server
 │   ├── app.ts                # Express app، JSON، اتصال routeها / app + routes
+│   ├── db/
+│   │   └── index.ts          # connect / getDb / close MongoDB
 │   └── routes/
 │       ├── index.ts          # نسخه‌های API / API versions
 │       └── v1/
@@ -150,9 +158,14 @@ GET /api/v1/health
 
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "database": "up"
 }
 ```
+
+اگر دیتابیس در دسترس نباشد، سرور اصلاً استارت نمی‌شود. اگر بعداً قطع شود، همین endpoint وضعیت `503` با `"database": "down"` برمی‌گرداند.
+
+If MongoDB is unreachable at boot, the server does not start. If it drops later, this endpoint returns `503` with `"database": "down"`.
 
 مسیر ناشناخته JSON با وضعیت `404` برمی‌گرداند، نه صفحه HTML.
 
@@ -164,11 +177,31 @@ For a later version, add `src/routes/v2` and mount it in `src/routes/index.ts` s
 
 ---
 
+## دیتابیس / Database
+
+اتصال با درایور رسمی `mongodb` و Connection Pool داخلی MongoClient است.
+
+The connection uses the official `mongodb` driver and MongoClient's built-in connection pool.
+
+مثال استفاده از یک collection / Collection example:
+
+```ts
+import { getDb } from "./db";
+
+const users = getDb().collection("users");
+const user = await users.findOne({ email });
+```
+
+---
+
 ## متغیرهای محیطی / Environment variables
 
 | متغیر / Variable | پیش‌فرض / Default | توضیح / Description |
 |---|---|---|
 | `PORT` | `3000` | پورت HTTP سرور / HTTP server port |
+| `MONGODB_URI` | — | رشته اتصال MongoDB / MongoDB connection string |
+| `MONGODB_DB_NAME` | نام داخل URI / URI db name | نام دیتابیس / database name |
+| `MONGODB_POOL_MAX` | `10` | حداکثر اتصال همزمان در Pool / max pooled connections |
 
 فایل `.env` هرگز به Git فرستاده نمی‌شود. فقط `.env.example` در ریپو است.
 

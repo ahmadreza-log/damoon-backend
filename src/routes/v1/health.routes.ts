@@ -1,18 +1,29 @@
 /**
- * Health-check routes used to verify that the API is running.
+ * Health-check routes used to verify that the API and MongoDB are running.
  */
 import { Router } from "express";
+import { getDb } from "../../db";
 
 const router = Router();
 
 /**
  * GET /api/v1/health
- * Returns a simple JSON payload. This is an HTTP API response, not a rendered view.
+ * Pings MongoDB and returns JSON, not a rendered view.
  */
-router.get("/", (_req, res) => {
-  res.json({
-    status: "ok",
-  });
+router.get("/", async (_req, res) => {
+  try {
+    await getDb().command({ ping: 1 });
+
+    res.json({
+      status: "ok",
+      database: "up",
+    });
+  } catch {
+    res.status(503).json({
+      status: "error",
+      database: "down",
+    });
+  }
 });
 
 export default router;
