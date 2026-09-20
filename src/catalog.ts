@@ -2,6 +2,7 @@
  * Walk the Express router stack and return every registered HTTP route.
  */
 import type { Application, Request, Response } from "express";
+import { Reply } from "./utils";
 
 type Entry = {
   method: string;
@@ -108,7 +109,7 @@ export function List(app: Application): Entry[] {
  */
 export function Catalog(app: Application) {
   return (_req: Request, res: Response): void => {
-    res.json({
+    Reply(res, 200, {
       routes: List(app),
     });
   };

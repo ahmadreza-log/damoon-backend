@@ -3,6 +3,7 @@
  */
 import { Router } from "express";
 import { GetDb } from "../../db";
+import { Reply } from "../../utils";
 
 const router = Router();
 
@@ -14,12 +15,12 @@ router.get("/", async (_req, res) => {
   try {
     await GetDb().command({ ping: 1 });
 
-    res.json({
+    Reply(res, 200, {
       status: "ok",
       database: "up",
     });
   } catch {
-    res.status(503).json({
+    Reply(res, 503, {
       status: "error",
       database: "down",
     });

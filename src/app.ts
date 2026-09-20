@@ -2,8 +2,9 @@
  * Create the Express application and attach REST API middleware.
  * No view engine is configured because this project returns JSON, not HTML pages.
  */
-import express from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import { Catalog } from "./catalog";
+import { Reply } from "./utils";
 import routes from "./routes";
 
 const app = express();
@@ -30,9 +31,24 @@ app.use(routes);
  * This keeps the API consistent even when the path does not exist.
  */
 app.use((_req, res) => {
-  res.status(404).json({
-    message: "Route not found",
-  });
+  Reply(res, 404);
+});
+
+/**
+ * Turn thrown errors, including invalid JSON bodies, into JSON replies.
+ */
+app.use((error: unknown, _req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
+
+  if (error instanceof SyntaxError) {
+    Reply(res, 400);
+    return;
+  }
+
+  Reply(res, 500);
 });
 
 export default app;

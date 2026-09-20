@@ -3,20 +3,28 @@
  * Register leaves the account in "activation" until Verify succeeds.
  */
 import bcrypt from "bcryptjs";
+import { timingSafeEqual } from "node:crypto";
 import { Router, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
 import { GetDb } from "../../db";
+import { Reply } from "../../utils";
 
 const router = Router();
 
 /**
  * A user document stored in the users collection.
+ * Regular users have role "user". The admin account is not stored here.
  */
 type User = {
   email: string;
   password: string;
   status: "activation" | "active";
   code: string | null;
+  role: string;
+};
+
+type Role = {
+  name: string;
 };
 
 /**
@@ -27,10 +35,52 @@ function Users() {
 }
 
 /**
+ * Return the roles collection.
+ */
+function Roles() {
+  return GetDb().collection<Role>("roles");
+}
+
+/**
  * Trim unknown body values into a string.
  */
 function Normalize(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+/**
+ * Compare two strings in constant time to avoid leaking length via timing.
+ */
+function Match(left: string, right: string): boolean {
+  const one = Buffer.from(left);
+  const two = Buffer.from(right);
+
+  if (one.length !== two.length) {
+    return false;
+  }
+
+  return timingSafeEqual(one, two);
+}
+
+/**
+ * Admin email from .env, never from MongoDB.
+ */
+function AdminEmail(): string {
+  return Normalize(process.env.ADMIN_EMAIL).toLowerCase();
+}
+
+/**
+ * True when credentials match the env-only admin account.
+ */
+function MatchAdmin(email: string, password: string): boolean {
+  const admin = AdminEmail();
+  const secret = process.env.ADMIN_PASSWORD ?? "";
+
+  if (!admin || !secret) {
+    return false;
+  }
+
+  return Match(email, admin) && Match(password, secret);
 }
 
 /**
@@ -41,16 +91,16 @@ function CreateCode(): string {
 }
 
 /**
- * Sign a JWT for an authenticated user.
+ * Sign a JWT that includes email and role.
  */
-function CreateToken(email: string): string {
+function CreateToken(email: string, role: string): string {
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
     throw new Error("JWT_SECRET is not set in the environment.");
   }
 
-  return jwt.sign({ email }, secret, { expiresIn: "7d" });
+  return jwt.sign({ email, role }, secret, { expiresIn: "7d" });
 }
 
 /**
@@ -60,9 +110,7 @@ function Wrap(handler: (req: Request, res: Response) => Promise<void>) {
   return (req: Request, res: Response): void => {
     void handler(req, res).catch(() => {
       if (!res.headersSent) {
-        res.status(500).json({
-          message: "Internal server error.",
-        });
+        Reply(res, 500);
       }
     });
   };
@@ -77,18 +125,27 @@ async function Register(req: Request, res: Response): Promise<void> {
   const password = Normalize(req.body?.password);
 
   if (!email.includes("@") || password.length < 8) {
-    res.status(400).json({
-      message: "A valid email and a password of at least 8 characters are required.",
-    });
+    Reply(res, 400);
+    return;
+  }
+
+  if (AdminEmail() && Match(email, AdminEmail())) {
+    Reply(res, 403);
+    return;
+  }
+
+  const role = "user";
+  const named = await Roles().findOne({ name: role });
+
+  if (!named) {
+    Reply(res, 500);
     return;
   }
 
   const found = await Users().findOne({ email });
 
   if (found?.status === "active") {
-    res.status(409).json({
-      message: "Email is already registered.",
-    });
+    Reply(res, 409);
     return;
   }
 
@@ -98,7 +155,7 @@ async function Register(req: Request, res: Response): Promise<void> {
   if (found) {
     await Users().updateOne(
       { email },
-      { $set: { password: hash, status: "activation", code } }
+      { $set: { password: hash, status: "activation", code, role } }
     );
   } else {
     await Users().insertOne({
@@ -106,6 +163,7 @@ async function Register(req: Request, res: Response): Promise<void> {
       password: hash,
       status: "activation",
       code,
+      role,
     });
   }
 
@@ -113,11 +171,11 @@ async function Register(req: Request, res: Response): Promise<void> {
    * The code is returned until an email or SMS sender is added.
    * The account stays in activation and cannot log in yet.
    */
-  res.status(201).json({
-    message: "Registration successful. Verify the account with the 6-digit code.",
+  Reply(res, 201, {
     email,
     status: "activation",
-    code,
+    role,
+    pin: code,
   });
 }
 
@@ -130,8 +188,21 @@ async function Login(req: Request, res: Response): Promise<void> {
   const password = Normalize(req.body?.password);
 
   if (!email || !password) {
-    res.status(400).json({
-      message: "Email and password are required.",
+    Reply(res, 400);
+    return;
+  }
+
+  /**
+   * Admin is authenticated from .env only, never from the users collection.
+   */
+  if (MatchAdmin(email, password)) {
+    const token = CreateToken(email, "admin");
+
+    Reply(res, 200, {
+      token,
+      email,
+      status: "active",
+      role: "admin",
     });
     return;
   }
@@ -139,35 +210,29 @@ async function Login(req: Request, res: Response): Promise<void> {
   const user = await Users().findOne({ email });
 
   if (!user) {
-    res.status(401).json({
-      message: "Invalid credentials.",
-    });
+    Reply(res, 401);
     return;
   }
 
   const match = await bcrypt.compare(password, user.password);
 
   if (!match) {
-    res.status(401).json({
-      message: "Invalid credentials.",
-    });
+    Reply(res, 401);
     return;
   }
 
   if (user.status !== "active") {
-    res.status(403).json({
-      message: "Account is pending activation. Send the 6-digit code to /v1/auth/verify.",
-    });
+    Reply(res, 403);
     return;
   }
 
-  const token = CreateToken(user.email);
+  const token = CreateToken(user.email, user.role || "user");
 
-  res.json({
-    message: "Login successful.",
+  Reply(res, 200, {
     token,
     email: user.email,
     status: user.status,
+    role: user.role || "user",
   });
 }
 
@@ -177,47 +242,39 @@ async function Login(req: Request, res: Response): Promise<void> {
  */
 async function Verify(req: Request, res: Response): Promise<void> {
   const email = Normalize(req.body?.email).toLowerCase();
-  const code = Normalize(req.body?.code);
+  const pin = Normalize(req.body?.pin) || Normalize(req.body?.code);
 
-  if (!email || !/^\d{6}$/.test(code)) {
-    res.status(400).json({
-      message: "Email and a 6-digit code are required.",
-    });
+  if (!email || !/^\d{6}$/.test(pin)) {
+    Reply(res, 400);
     return;
   }
 
   const user = await Users().findOne({ email });
 
   if (!user) {
-    res.status(404).json({
-      message: "Account not found.",
-    });
+    Reply(res, 404);
     return;
   }
 
   if (user.status === "active") {
-    res.status(409).json({
-      message: "Account is already active.",
-    });
+    Reply(res, 409);
     return;
   }
 
-  if (user.code !== code) {
-    res.status(400).json({
-      message: "Invalid verification code.",
-    });
+  if (user.code !== pin) {
+    Reply(res, 400);
     return;
   }
 
   await Users().updateOne(
     { email },
-    { $set: { status: "active", code: null } }
+    { $set: { status: "active", code: null, role: user.role || "user" } }
   );
 
-  res.json({
-    message: "Account activated.",
+  Reply(res, 200, {
     email,
     status: "active",
+    role: user.role || "user",
   });
 }
 
