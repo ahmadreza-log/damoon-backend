@@ -32,12 +32,32 @@ export async function ConnectDatabase(): Promise<void> {
   await db.command({ ping: 1 });
   await db.collection("users").createIndex({ email: 1 }, { unique: true });
   await db.collection("roles").createIndex({ name: 1 }, { unique: true });
-  await db.collection("roles").updateOne(
-    { name: "user" },
-    { $setOnInsert: { name: "user" } },
-    { upsert: true }
-  );
+  await SeedRoles();
   console.log("MongoDB connected");
+}
+
+/**
+ * Insert default roles if they are missing.
+ * Admin is not seeded here; that account lives in .env only.
+ */
+async function SeedRoles(): Promise<void> {
+  if (!db) {
+    return;
+  }
+
+  const list = [
+    { name: "user", title: "کاربر" },
+    { name: "author", title: "نویسنده" },
+    { name: "editor", title: "ویرایشگر" },
+  ];
+
+  for (const role of list) {
+    await db.collection("roles").updateOne(
+      { name: role.name },
+      { $set: { name: role.name, title: role.title } },
+      { upsert: true }
+    );
+  }
 }
 
 /**

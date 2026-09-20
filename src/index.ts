@@ -30,6 +30,7 @@ async function Start(): Promise<void> {
      * It only prints a message to the terminal; it does not handle API requests.
      */
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Docs http://localhost:${PORT}`);
   });
 
   /**

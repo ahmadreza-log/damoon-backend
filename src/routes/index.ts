@@ -9,7 +9,7 @@ import v1 from "./v1";
 const router = Router();
 
 /**
- * Version 1 routes: /v1/...
+ * Version 1 routes: /api/v1/...
  */
 router.use("/v1", v1);
 

@@ -9,7 +9,7 @@ Proprietary REST API for Damoon, built with **Node.js**, **Express**, and **Type
 
 ## 📌 About
 
-Damoon Backend is a REST API skeleton. It does not render HTML and has no view engine — it returns **JSON only**.
+Damoon Backend is a REST API. The home page (`/`) is Scalar documentation. JSON endpoints live under **`/api`**.
 
 **Current status:**
 
@@ -130,16 +130,18 @@ damoon-backend/
 
 ## 🧭 API versioning
 
-All endpoints use a version prefix. The current version is **v1**.
+All JSON endpoints live under **`/api`** with a version prefix. The current version is **v1**.
 
 ```
-/v1/...
+/api/v1/...
 ```
+
+Open [http://localhost:3000](http://localhost:3000) for live Scalar docs. `GET /api` returns a grouped JSON catalog of routes.
 
 Current endpoint:
 
 ```
-GET /v1/health
+GET /api/v1/health
 ```
 
 Response:
@@ -153,7 +155,7 @@ Response:
 
 If MongoDB is unreachable at boot, the server does not start. If it drops later, this endpoint returns `503` with `"database": "down"`.
 
-Unknown paths return JSON `404`, not an HTML page.
+The home page (`/`) is Scalar HTML documentation. Unknown API paths return JSON `404`.
 
 For a later version, add `src/routes/v2` and mount it in `src/routes/index.ts` so v1 and v2 can run together.
 

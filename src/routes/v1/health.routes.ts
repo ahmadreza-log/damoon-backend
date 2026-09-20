@@ -8,7 +8,7 @@ import { Reply } from "../../utils";
 const router = Router();
 
 /**
- * GET /v1/health
+ * GET /api/v1/health
  * Pings MongoDB and returns JSON, not a rendered view.
  */
 router.get("/", async (_req, res) => {

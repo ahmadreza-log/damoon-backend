@@ -7,7 +7,7 @@ import { timingSafeEqual } from "node:crypto";
 import { Router, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
 import { GetDb } from "../../db";
-import { Reply } from "../../utils";
+import { Reply, Wrap } from "../../utils";
 
 const router = Router();
 
@@ -25,6 +25,7 @@ type User = {
 
 type Role = {
   name: string;
+  title: string;
 };
 
 /**
@@ -104,20 +105,7 @@ function CreateToken(email: string, role: string): string {
 }
 
 /**
- * Catch async errors so a thrown exception becomes JSON 500, not a crash.
- */
-function Wrap(handler: (req: Request, res: Response) => Promise<void>) {
-  return (req: Request, res: Response): void => {
-    void handler(req, res).catch(() => {
-      if (!res.headersSent) {
-        Reply(res, 500);
-      }
-    });
-  };
-}
-
-/**
- * POST /v1/auth/register
+ * POST /api/v1/auth/register
  * Creates a user in activation status and stores a 6-digit code.
  */
 async function Register(req: Request, res: Response): Promise<void> {
@@ -180,7 +168,7 @@ async function Register(req: Request, res: Response): Promise<void> {
 }
 
 /**
- * POST /v1/auth/login
+ * POST /api/v1/auth/login
  * Issues a token only when the account is already active.
  */
 async function Login(req: Request, res: Response): Promise<void> {
@@ -237,7 +225,7 @@ async function Login(req: Request, res: Response): Promise<void> {
 }
 
 /**
- * POST /v1/auth/verify
+ * POST /api/v1/auth/verify
  * Activates a registered account when the 6-digit code matches.
  */
 async function Verify(req: Request, res: Response): Promise<void> {

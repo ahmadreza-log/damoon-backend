@@ -1,9 +1,10 @@
 /**
  * Create the Express application and attach REST API middleware.
- * No view engine is configured because this project returns JSON, not HTML pages.
+ * `/` serves Scalar HTML. JSON API routes live under `/api`.
  */
 import express, { type NextFunction, type Request, type Response } from "express";
 import { Catalog } from "./catalog";
+import { Openapi, Page } from "./docs";
 import { Reply } from "./utils";
 import routes from "./routes";
 
@@ -16,15 +17,31 @@ const app = express();
 app.use(express.json());
 
 /**
- * Main route: list every registered endpoint as JSON.
+ * Main route: Scalar live documentation.
  */
-app.get("/", Catalog(app));
+app.get("/", Page);
 
 /**
- * Mount versioned routes at the root so paths start with /v1, not /api/v1.
- * Example: GET /health on the v1 router becomes GET /v1/health.
+ * OpenAPI document used by Scalar and other API clients.
  */
-app.use(routes);
+app.get("/openapi.json", Openapi);
+
+/**
+ * Keep the old /docs URL working by sending visitors to `/`.
+ */
+app.get("/docs", (_req, res) => {
+  res.redirect(301, "/");
+});
+
+/**
+ * JSON catalog of every registered route, grouped for readability.
+ */
+app.get("/api", Catalog(app));
+
+/**
+ * Versioned JSON API. Example: GET /health on the v1 router becomes GET /api/v1/health.
+ */
+app.use("/api", routes);
 
 /**
  * Handle unknown routes with a JSON 404 response.
