@@ -1,13 +1,49 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
+    /* Emit modern JS that Node 20+ can run natively, with less downleveling. */
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+
+    /* Keep source layout and emit compiled files into dist/. */
     "rootDir": "./src",
     "outDir": "./dist",
-    "strict": true,
+
+    /* Smaller, cleaner JS: drop comments and unused locals from the emit. */
+    "removeComments": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    /* Correct modern emit for classes, JSON, and default imports like express. */
+    "useDefineForClassFields": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+
+    /* Catch bad code before it reaches dist/. */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "noEmitOnError": true,
+    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+
+    /* Map stack traces back to TypeScript without bloating the .js files. */
+    "sourceMap": true,
+    "inlineSources": false,
+
+    /* Faster rebuilds; the cache file stays inside dist/. */
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+
+    "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

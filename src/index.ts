@@ -44,15 +44,28 @@ async function start(): Promise<void> {
     });
   };
 
+  /**
+   * SIGINT is sent when you stop the process in the terminal with Ctrl+C.
+   * void tells TypeScript we intentionally do not await this async call.
+   */
   process.on("SIGINT", () => {
     void shutdown("SIGINT");
   });
 
+  /**
+   * SIGTERM is sent by the OS or a process manager (Docker, PM2, systemd)
+   * when they want the server to stop gracefully.
+   */
   process.on("SIGTERM", () => {
     void shutdown("SIGTERM");
   });
 }
 
+/**
+ * start() is async, so a thrown error becomes a rejected Promise.
+ * This catch logs the failure (for example MongoDB is down) and exits
+ * with code 1 so the process manager knows startup did not succeed.
+ */
 start().catch((error: unknown) => {
   console.error("Failed to start server:", error);
   process.exit(1);
