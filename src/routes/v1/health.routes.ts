@@ -2,7 +2,7 @@
  * Health-check routes used to verify that the API and MongoDB are running.
  */
 import { Router } from "express";
-import { getDb } from "../../db";
+import { GetDb } from "../../db";
 
 const router = Router();
 
@@ -12,7 +12,7 @@ const router = Router();
  */
 router.get("/", async (_req, res) => {
   try {
-    await getDb().command({ ping: 1 });
+    await GetDb().command({ ping: 1 });
 
     res.json({
       status: "ok",

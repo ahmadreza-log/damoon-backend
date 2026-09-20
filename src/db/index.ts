@@ -1,6 +1,6 @@
 /**
  * MongoDB client and database accessors.
- * The MongoClient is created only inside connectDatabase() so dotenv can load first.
+ * The MongoClient is created only inside ConnectDatabase() so dotenv can load first.
  */
 import { MongoClient, type Db } from "mongodb";
 
@@ -11,7 +11,7 @@ let db: Db | null = null;
  * Connect to MongoDB and verify the server with a ping.
  * Throws if MONGODB_URI is missing or the database is unreachable.
  */
-export async function connectDatabase(): Promise<void> {
+export async function ConnectDatabase(): Promise<void> {
   const uri = process.env.MONGODB_URI;
 
   if (!uri) {
@@ -35,9 +35,9 @@ export async function connectDatabase(): Promise<void> {
 
 /**
  * Return the connected database instance.
- * Call this after connectDatabase() has succeeded.
+ * Call this after ConnectDatabase() has succeeded.
  */
-export function getDb(): Db {
+export function GetDb(): Db {
   if (!db) {
     throw new Error("MongoDB is not connected.");
   }
@@ -49,7 +49,7 @@ export function getDb(): Db {
  * Close the MongoDB client and drop local references.
  * Call this during graceful shutdown.
  */
-export async function closeDatabase(): Promise<void> {
+export async function CloseDatabase(): Promise<void> {
   if (client) {
     await client.close();
     client = null;

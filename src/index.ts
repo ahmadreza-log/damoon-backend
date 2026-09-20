@@ -8,7 +8,7 @@ import "dotenv/config";
  * Import the configured Express app (middleware + routes).
  */
 import app from "./app";
-import { closeDatabase, connectDatabase } from "./db";
+import { CloseDatabase, ConnectDatabase } from "./db";
 
 /**
  * Read the port from environment variables.
@@ -21,8 +21,8 @@ const PORT = Number(process.env.PORT) || 3000;
  * Connect to MongoDB first, then start the HTTP server.
  * If the database is unreachable, the process exits instead of serving a broken API.
  */
-async function start(): Promise<void> {
-  await connectDatabase();
+async function Start(): Promise<void> {
+  await ConnectDatabase();
 
   const server = app.listen(PORT, () => {
     /**
@@ -35,21 +35,21 @@ async function start(): Promise<void> {
   /**
    * Close the HTTP server and the MongoDB client on shutdown signals.
    */
-  const shutdown = async (signal: string): Promise<void> => {
+  async function Shutdown(signal: string): Promise<void> {
     console.log(`${signal} received, shutting down`);
 
     server.close(async () => {
-      await closeDatabase();
+      await CloseDatabase();
       process.exit(0);
     });
-  };
+  }
 
   /**
    * SIGINT is sent when you stop the process in the terminal with Ctrl+C.
    * void tells TypeScript we intentionally do not await this async call.
    */
   process.on("SIGINT", () => {
-    void shutdown("SIGINT");
+    void Shutdown("SIGINT");
   });
 
   /**
@@ -57,16 +57,16 @@ async function start(): Promise<void> {
    * when they want the server to stop gracefully.
    */
   process.on("SIGTERM", () => {
-    void shutdown("SIGTERM");
+    void Shutdown("SIGTERM");
   });
 }
 
 /**
- * start() is async, so a thrown error becomes a rejected Promise.
+ * Start() is async, so a thrown error becomes a rejected Promise.
  * This catch logs the failure (for example MongoDB is down) and exits
  * with code 1 so the process manager knows startup did not succeed.
  */
-start().catch((error: unknown) => {
+Start().catch((error: unknown) => {
   console.error("Failed to start server:", error);
   process.exit(1);
 });

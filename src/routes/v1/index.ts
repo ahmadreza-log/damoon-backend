@@ -1,15 +1,15 @@
 /**
  * Version 1 API router.
- * Mount every v1 feature router here, for example: router.use("/users", userRoutes).
+ * Mount every v1 feature router here, for example: router.use("/users", users).
  */
 import { Router } from "express";
-import healthRoutes from "./health.routes";
+import health from "./health.routes";
 
 const router = Router();
 
 /**
  * Health routes: GET /api/v1/health
  */
-router.use("/health", healthRoutes);
+router.use("/health", health);
 
 export default router;
