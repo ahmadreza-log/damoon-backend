@@ -6,6 +6,7 @@ use App\Models\Degree;
 use App\Models\Gender;
 use App\Models\User;
 use App\Rules\National;
+use App\Support\Sizes;
 use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -102,6 +103,7 @@ class Fields
             ->columnSpanFull()
             ->deleteUploadedFileUsing(function (string $file): void {
                 Storage::disk('public')->delete($file);
+                Sizes::drop($file);
             });
     }
 

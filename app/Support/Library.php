@@ -53,7 +53,7 @@ class Library
                 'path' => $path,
                 'name' => basename($path),
                 'title' => is_string($title) ? $title : '',
-                'preview' => self::image($path, $mime) ? $path : null,
+                'preview' => self::image($path, $mime) ? Sizes::pick($path, 'small') : null,
                 'place' => self::place($path),
                 'usage' => $uses[$path] ?? 'بدون استفاده',
                 'size' => $disk->size($path),
@@ -68,9 +68,9 @@ class Library
     }
 
     /**
-     * One public file, plus its pixel size and public address.
+     * One public file, plus its pixel size, public address, and built sizes.
      *
-     * @return array{__key: string, path: string, name: string, title: string, preview: ?string, place: string, usage: string, size: int, mime: string, modified: string, width: ?int, height: ?int, url: string}|null
+     * @return array{__key: string, path: string, name: string, title: string, preview: ?string, place: string, usage: string, size: int, mime: string, modified: string, width: ?int, height: ?int, url: string, sizes: array<string, array{path: string, label: string, width: ?int, height: ?int, bytes: int, url: string}>}|null
      */
     public static function find(string $key): ?array
     {
@@ -83,6 +83,7 @@ class Library
             $row['width'] = $width;
             $row['height'] = $height;
             $row['url'] = self::url($row['path']);
+            $row['sizes'] = Sizes::list($row['path']);
 
             return $row;
         }
@@ -105,7 +106,7 @@ class Library
     }
 
     /**
-     * Deletes a public file and clears it from users, articles, and the detail text.
+     * Deletes a public file with its sizes and clears it from users, articles, and the detail text.
      */
     public static function drop(string $path): void
     {
@@ -114,6 +115,7 @@ class Library
         }
 
         Storage::disk('public')->delete($path);
+        Sizes::drop($path);
         Asset::query()->where('path', $path)->delete();
 
         User::query()->where('avatar', $path)->update(['avatar' => null]);
@@ -182,7 +184,9 @@ class Library
      */
     private static function hidden(string $path): bool
     {
-        return str_starts_with(basename($path), '.') || str_starts_with($path, 'livewire-tmp/');
+        return str_starts_with(basename($path), '.')
+            || str_starts_with($path, 'livewire-tmp/')
+            || str_starts_with($path, Sizes::ROOT.'/');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Auth\RoleName;
 use App\Auth\Section;
+use App\Support\Sizes;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
@@ -90,6 +91,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
             }
         });
 
+        static::saved(function (User $user): void {
+            if ($user->isDirty('avatar') && is_string($user->avatar) && $user->avatar !== '') {
+                Sizes::make($user->avatar);
+            }
+        });
+
         static::updating(function (User $user): void {
             static::forget($user);
         });
@@ -101,6 +108,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
         static::deleted(function (User $user): void {
             if (is_string($user->avatar) && $user->avatar !== '') {
                 Storage::disk('public')->delete($user->avatar);
+                Sizes::drop($user->avatar);
             }
         });
 
@@ -216,6 +224,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
      * The personal avatar shown in the panel.
      *
      * The HasAvatar contract owns this method name. An empty path uses the shared default image.
+     * The square thumb size is used when it was built.
      */
     public function getFilamentAvatarUrl(): ?string
     {
@@ -223,7 +232,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
             $disk = Storage::disk('public');
 
             if ($disk instanceof FilesystemAdapter && $disk->exists($this->avatar)) {
-                return $disk->url($this->avatar);
+                return $disk->url(Sizes::pick($this->avatar, 'thumb'));
             }
         }
 
@@ -231,7 +240,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
     }
 
     /**
-     * Deletes the previous avatar file when a new one replaces it.
+     * Deletes the previous avatar file and its sizes when a new one replaces it.
      */
     private static function forget(User $user): void
     {
@@ -246,6 +255,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
         }
 
         Storage::disk('public')->delete($previous);
+        Sizes::drop($previous);
     }
 
     /**

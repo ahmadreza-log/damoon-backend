@@ -2,14 +2,12 @@
 
 namespace App\Filament\Pages;
 
-use App\Auth\Section;
 use App\Models\Asset as AssetRecord;
-use App\Models\User;
 use App\Support\Library;
 use App\Support\Shamsi;
+use App\Support\Sizes;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Facades\Filament;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -20,8 +18,9 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Html;
-use Filament\Schemas\Components\Section as FormSection;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
 use Morilog\Jalali\Jalalian;
@@ -31,9 +30,10 @@ use Morilog\Jalali\Jalalian;
  *
  * Title, alt text, image title, and description are saved on the asset row.
  * The information box reads the file itself: name, type, size, pixels, and date.
+ * The sizes box lists the WebP copies from Sizes. The header button rebuilds them.
  *
  * Extending:
- * - Filament owns form, content, mount, and canAccess.
+ * - Filament owns form, content, getHeaderActions, mount, and canAccess.
  * - A new text field belongs on the asset model and in form() together.
  *
  * @property-read Schema $form
@@ -65,9 +65,7 @@ class Asset extends Page
      */
     public static function canAccess(): bool
     {
-        $user = Filament::auth()->user();
-
-        return $user instanceof User && $user->can(Section::MEDIA);
+        return Media::canAccess();
     }
 
     /**
@@ -159,7 +157,7 @@ class Asset extends Page
                         ]),
                     ])
                     ->columnSpan(['lg' => 2]),
-                FormSection::make('اطلاعات تصویر')
+                Section::make('اطلاعات تصویر')
                     ->schema([
                         TextEntry::make('name')->label('نام فایل')->state(fn (): string => (string) ($this->facts['name'] ?? '')),
                         TextEntry::make('kind')->label('نوع')->state(fn (): string => $this->kind((string) ($this->facts['mime'] ?? ''))),
@@ -176,7 +174,71 @@ class Asset extends Page
                     ])
                     ->columnSpan(['lg' => 1]),
             ]),
+            Section::make('اندازه‌ها')
+                ->description('نسخه‌های WebP این تصویر برای جاهای مختلف سایت.')
+                ->visible(fn (): bool => Sizes::fits((string) ($this->facts['path'] ?? '')))
+                ->columns(['default' => 1, 'sm' => 2, 'lg' => 4])
+                ->schema(fn (): array => $this->sizes()),
         ]);
+    }
+
+    /**
+     * Rebuilds the sizes, for images uploaded before sizes existed or after the list changed.
+     *
+     * Filament owns this method name.
+     *
+     * @return array<int, Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('resize')
+                ->label('ساخت اندازه‌ها')
+                ->icon(Heroicon::OutlinedArrowPath)
+                ->color('gray')
+                ->visible(fn (): bool => Sizes::fits((string) ($this->facts['path'] ?? '')))
+                ->action(function (): void {
+                    $made = Sizes::make((string) $this->facts['path']);
+                    $this->facts = Library::find($this->asset) ?? $this->facts;
+
+                    $made === []
+                        ? Notification::make()->title('ساخت اندازه‌ها انجام نشد')->danger()->send()
+                        : Notification::make()->title('اندازه‌ها ساخته شد')->success()->send();
+                }),
+        ];
+    }
+
+    /**
+     * One entry per built size, or a note when none exist yet.
+     *
+     * @return array<int, TextEntry>
+     */
+    private function sizes(): array
+    {
+        $sizes = (array) ($this->facts['sizes'] ?? []);
+
+        if ($sizes === []) {
+            return [
+                TextEntry::make('nosizes')
+                    ->hiddenLabel()
+                    ->state('هنوز اندازه‌ای ساخته نشده است.')
+                    ->columnSpanFull(),
+            ];
+        }
+
+        $entries = [];
+
+        foreach ($sizes as $name => $size) {
+            $pixels = is_int($size['width']) && is_int($size['height']) ? $size['width'].' × '.$size['height'] : '—';
+
+            $entries[] = TextEntry::make('size_'.$name)
+                ->label($size['label'])
+                ->state($pixels.' — '.Library::weight((int) $size['bytes']))
+                ->url($size['url'])
+                ->openUrlInNewTab();
+        }
+
+        return $entries;
     }
 
     /**

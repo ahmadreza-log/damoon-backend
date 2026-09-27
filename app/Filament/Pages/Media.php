@@ -7,6 +7,7 @@ use App\Auth\Section;
 use App\Models\User;
 use App\Support\Library;
 use App\Support\Shamsi;
+use App\Support\Sizes;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -31,8 +32,9 @@ use Illuminate\Support\Collection;
  * The media library in the content group.
  *
  * It shows every public file as a grid of cards, including avatars,
- * article images, and files uploaded on this page. Deleting a file also
- * removes it from the user or article that still points at it.
+ * article images, and files uploaded on this page. Uploaded images get their
+ * smaller copies from Sizes. Deleting a file also removes it from the user or
+ * article that still points at it.
  *
  * Extending:
  * - Filament owns table, content, and canAccess.
@@ -97,7 +99,13 @@ class Media extends Page implements HasTable
                         ])
                         ->maxSize(10240),
                 ])
-                ->action(function (): void {})
+                ->action(function (array $data): void {
+                    foreach ((array) ($data['files'] ?? []) as $path) {
+                        if (is_string($path)) {
+                            Sizes::make($path);
+                        }
+                    }
+                })
                 ->successNotificationTitle('بارگذاری شد'),
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Sizes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * The slug is filled from the title when the form leaves it blank.
  * Cover and gallery files live on the public disk and are removed with the article.
+ * New cover and gallery images get their smaller copies from Sizes when the article is saved.
  *
  * Extending:
  * - Add a column in the articles migration, Fillable, and ArticleResource together.
@@ -34,7 +36,7 @@ use Illuminate\Support\Facades\Storage;
 class Article extends Model
 {
     /**
-     * Fills the slug and drops stored images when the article is removed.
+     * Fills the slug, builds image sizes, and drops stored images when the article is removed.
      *
      * Eloquent owns this method name.
      */
@@ -42,6 +44,10 @@ class Article extends Model
     {
         static::saving(function (Article $article): void {
             $article->place();
+        });
+
+        static::saved(function (Article $article): void {
+            $article->resize();
         });
 
         static::deleted(function (Article $article): void {
@@ -151,24 +157,56 @@ class Article extends Model
     }
 
     /**
-     * Removes the cover and gallery files from the public disk.
+     * Builds sizes for cover and gallery images that were not on the article before this save.
+     *
+     * Runs in saved, while getOriginal still holds the previous values.
+     */
+    private function resize(): void
+    {
+        $before = self::pictures($this->getOriginal('cover'), $this->getOriginal('gallery'));
+
+        foreach (array_diff(self::pictures($this->cover, $this->gallery), $before) as $path) {
+            Sizes::make($path);
+        }
+    }
+
+    /**
+     * Removes the cover and gallery files and their sizes from the public disk.
      */
     private function clear(): void
     {
-        $paths = [];
+        $paths = self::pictures($this->cover, $this->gallery);
 
-        if (is_string($this->cover) && $this->cover !== '') {
-            $paths[] = $this->cover;
+        if ($paths === []) {
+            return;
         }
 
-        foreach ((array) $this->gallery as $path) {
+        Storage::disk('public')->delete($paths);
+
+        foreach ($paths as $path) {
+            Sizes::drop($path);
+        }
+    }
+
+    /**
+     * Cover and gallery paths as one flat list.
+     *
+     * @return array<int, string>
+     */
+    private static function pictures(mixed $cover, mixed $gallery): array
+    {
+        $paths = [];
+
+        if (is_string($cover) && $cover !== '') {
+            $paths[] = $cover;
+        }
+
+        foreach ((array) $gallery as $path) {
             if (is_string($path) && $path !== '') {
                 $paths[] = $path;
             }
         }
 
-        if ($paths !== []) {
-            Storage::disk('public')->delete($paths);
-        }
+        return $paths;
     }
 }
