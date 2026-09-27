@@ -9,20 +9,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * One-time application install.
+ *
+ * The /install form collects the site title and the owner account.
+ * After install, both routes redirect to the panel login page.
+ *
+ * Extending:
+ * - Add a new form field in validate, resources/views/install.blade.php, and the related model.
+ * - The owner account is created through User::grant. Do not assign the role by hand here.
+ */
 class InstallController extends Controller
 {
+    /**
+     * Shows the install form. Redirects to the panel login when install is already finished.
+     *
+     * create is this controller's name for showing the form.
+     */
     public function create(): View|RedirectResponse
     {
-        if (Setting::isInstalled()) {
+        if (Setting::installed()) {
             return redirect()->route('filament.admin.auth.login');
         }
 
         return view('install');
     }
 
+    /**
+     * Stores the install: one owner user and one settings record with installed_at.
+     *
+     * The installed check runs again inside the transaction so two simultaneous submits
+     * cannot create two owners. The users table lock is in User::save.
+     */
     public function store(Request $request): RedirectResponse
     {
-        if (Setting::isInstalled()) {
+        if (Setting::installed()) {
             return redirect()->route('filament.admin.auth.login');
         }
 
@@ -53,7 +74,7 @@ class InstallController extends Controller
         ]);
 
         DB::transaction(function () use ($data): void {
-            if (Setting::isInstalled()) {
+            if (Setting::installed()) {
                 return;
             }
 

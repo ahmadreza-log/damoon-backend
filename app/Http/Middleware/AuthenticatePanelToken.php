@@ -9,17 +9,34 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Builds the panel session from the Sanctum token cookie.
+ *
+ * This middleware stands in for an empty session login:
+ * a valid cookie with the panel ability logs the user into the web guard.
+ * A customer cookie, a broken cookie, or an expired token logs the session out and clears the cookie.
+ *
+ * Extending:
+ * - Keep this class on the panel middleware stack, after StartSession and before AuthenticateSession.
+ * - The cookie name is sanctum.panel_cookie.
+ */
 class AuthenticatePanelToken
 {
     public function __construct(private readonly AccessTokens $tokens) {}
 
+    /**
+     * Reads the panel cookie and logs the user in when it is valid.
+     *
+     * Once more than half of the token lifetime has passed, refresh renews that same cookie.
+     * The Laravel middleware contract owns this method name.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $guard = Auth::guard('web');
         $cookie = (string) config('sanctum.panel_cookie');
-        $plainText = $request->cookie($cookie);
+        $plain = $request->cookie($cookie);
 
-        if (! is_string($plainText) || $plainText === '') {
+        if (! is_string($plain) || $plain === '') {
             if ($guard->check()) {
                 $guard->logout();
             }
@@ -27,7 +44,7 @@ class AuthenticatePanelToken
             return $next($request);
         }
 
-        $user = $this->tokens->resolve($plainText, AccessTokens::ABILITY_PANEL, User::class);
+        $user = $this->tokens->resolve($plain, AccessTokens::ABILITY_PANEL, User::class);
 
         if (! $user instanceof User) {
             if ($guard->check()) {
@@ -43,7 +60,7 @@ class AuthenticatePanelToken
             $guard->login($user);
         }
 
-        $this->tokens->refreshPanelCookie($plainText);
+        $this->tokens->refresh($plain);
 
         return $next($request);
     }

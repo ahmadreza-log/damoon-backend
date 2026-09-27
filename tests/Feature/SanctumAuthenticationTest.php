@@ -35,24 +35,24 @@ class SanctumAuthenticationTest extends TestCase
 
         $this->actingAs($user)->get('/admin')->assertRedirect(route('filament.admin.auth.login'));
 
-        $customerToken = $tokens->issue($customer, AccessTokens::ABILITY_API, AccessTokens::ABILITY_API, 60);
-        $this->withCookie('panel_token', $customerToken)
+        $api = $tokens->issue($customer, AccessTokens::ABILITY_API, AccessTokens::ABILITY_API, 60);
+        $this->withCookie('panel_token', $api)
             ->get('/admin')
             ->assertRedirect(route('filament.admin.auth.login'));
 
-        $userToken = $tokens->issue($user, AccessTokens::ABILITY_PANEL, AccessTokens::ABILITY_PANEL, 60);
-        $this->withCookie('panel_token', $userToken)
+        $panel = $tokens->issue($user, AccessTokens::ABILITY_PANEL, AccessTokens::ABILITY_PANEL, 60);
+        $this->withCookie('panel_token', $panel)
             ->get('/admin')
             ->assertOk()
             ->assertSee('کاربران')
             ->assertSee('مشتریان');
 
-        $this->withCookie('panel_token', $userToken)
+        $this->withCookie('panel_token', $panel)
             ->get('/admin/users')
             ->assertOk()
             ->assertSee($user->username);
 
-        $this->withCookie('panel_token', $userToken)
+        $this->withCookie('panel_token', $panel)
             ->get('/admin/customers')
             ->assertOk()
             ->assertSee($customer->username);
@@ -125,9 +125,9 @@ class SanctumAuthenticationTest extends TestCase
 
         Auth::forgetGuards();
 
-        $panelToken = $tokens->issue($user, AccessTokens::ABILITY_PANEL, AccessTokens::ABILITY_PANEL, 60);
+        $panel = $tokens->issue($user, AccessTokens::ABILITY_PANEL, AccessTokens::ABILITY_PANEL, 60);
 
-        $this->withToken($panelToken)
+        $this->withToken($panel)
             ->getJson('/v1/auth/me')
             ->assertUnauthorized();
 

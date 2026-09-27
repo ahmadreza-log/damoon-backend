@@ -39,8 +39,8 @@ class InstallTest extends TestCase
 
         $user = User::query()->where('username', 'owner')->first();
         $this->assertNotNull($user);
-        $this->assertTrue($user->isOwner());
-        $this->assertTrue(Setting::isInstalled());
+        $this->assertTrue($user->owner());
+        $this->assertTrue(Setting::installed());
         $this->assertSame('دامون', Setting::current()?->title);
         $this->assertTrue(Auth::attempt([
             'username' => 'owner',

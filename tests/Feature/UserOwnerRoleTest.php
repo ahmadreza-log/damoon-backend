@@ -20,9 +20,9 @@ class UserOwnerRoleTest extends TestCase
         ]);
 
         $this->assertSame(['editor', 'owner'], $first->fresh()->roles);
-        $this->assertTrue($first->fresh()->isOwner());
+        $this->assertTrue($first->fresh()->owner());
         $this->assertSame(['editor'], $second->fresh()->roles);
-        $this->assertFalse($second->fresh()->isOwner());
+        $this->assertFalse($second->fresh()->owner());
     }
 
     public function test_owner_role_cannot_be_moved_to_another_user(): void
@@ -36,9 +36,9 @@ class UserOwnerRoleTest extends TestCase
         $owner->roles = ['editor'];
         $owner->save();
 
-        $this->assertTrue($owner->fresh()->isOwner());
+        $this->assertTrue($owner->fresh()->owner());
         $this->assertSame(['editor', 'owner'], $owner->fresh()->roles);
-        $this->assertFalse($member->fresh()->isOwner());
+        $this->assertFalse($member->fresh()->owner());
         $this->assertSame([], $member->fresh()->roles);
     }
 }

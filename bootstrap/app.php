@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // auth.customer locks customer Bearer routes. It does not accept a panel token.
         $middleware->alias([
             'auth.customer' => AuthenticateCustomerToken::class,
         ]);

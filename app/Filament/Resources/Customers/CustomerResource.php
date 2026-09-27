@@ -17,6 +17,16 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
+/**
+ * The panel customers section, in the access group.
+ *
+ * These accounts sign in through the API. Their token ability is api, and this screen only shows the profile.
+ * The form is shared with users through AccountFields.
+ *
+ * Extending:
+ * - Add a new column in table, and in AccountFields when it should be editable.
+ * - Filament owns the form, table, and getPages method names.
+ */
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
@@ -35,11 +45,17 @@ class CustomerResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'username';
 
+    /**
+     * Create and edit form for a customer.
+     */
     public static function form(Schema $schema): Schema
     {
         return $schema->components(AccountFields::make());
     }
 
+    /**
+     * Customer list.
+     */
     public static function table(Table $table): Table
     {
         return $table
@@ -62,6 +78,11 @@ class CustomerResource extends Resource
             ]);
     }
 
+    /**
+     * Index, create, and edit pages.
+     *
+     * @return array<string, mixed>
+     */
     public static function getPages(): array
     {
         return [
