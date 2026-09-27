@@ -28,7 +28,9 @@
 
 A customer token cannot open the panel. A panel token cannot call the customer API.
 
-The owner role is given only to the first account created during install. It cannot be moved to someone else, and that account cannot be deleted from the panel. Other staff accounts start with no panel sections. On each user's edit page, the owner chooses which sections that person may open: home, users, and customers.
+The owner role is given only to the first account created during install. It cannot be moved to someone else, and that account cannot be deleted from the panel. Other staff accounts start with no panel sections. On each user's edit page, the owner chooses which sections that person may open: home, users, customers, and roles.
+
+Two roles always exist and always keep every section: **توسعه‌دهنده** (`developer`) and **مالک** (`owner`). They cannot be renamed, narrowed, or deleted. Other roles are defined in the panel.
 
 ## Panel
 
@@ -36,7 +38,9 @@ The admin panel is Persian and right to left, set in Iran Yekan, with `#00377B` 
 
 Until install is finished, `/admin` redirects to `/install`. That form asks for the site title, a short description, and the owner account. Afterward, the title becomes the panel name and the owner signs in with a username or email, plus the password they just chose.
 
-Inside the panel, **پیشخوان** is the home page. The **دسترسی** group holds **کاربران** and **مشتریان**. A staff account only sees the sections chosen for them.
+Inside the panel, **پیشخوان** is the home page. The **دسترسی** group holds **کاربران**, **مشتریان**, and **نقش‌ها**. A staff account only sees the sections chosen for them.
+
+**نقش‌ها** stores a Persian name, an English key, and the sections that role may open. Moving between panel pages keeps the styles and fonts loaded. Dates are shown in Shamsi. A user with no avatar photo is shown the shared default image.
 
 ## API
 
@@ -47,7 +51,7 @@ Routes are versioned at `/v1`, with no `/api` prefix.
 | `POST` | `/v1/auth/login` | Customer login. Returns a bearer token. |
 | `GET` | `/v1/auth/me` | The signed-in customer. Requires `Authorization: Bearer`. |
 
-Login accepts `username` and `password`. A successful response looks like this:
+Login accepts `username` and `password`. In the local environment, OpenAPI docs are at `/docs/api`. A successful response looks like this:
 
 ```json
 {
@@ -109,5 +113,11 @@ Tests use SQLite in memory, so they do not touch the PostgreSQL database.
 | Laravel 13 | Application framework |
 | Filament 5 | Staff panel |
 | Laravel Sanctum | Panel cookie and customer API tokens |
+| Spatie Permission | Roles and the section checklist |
+| Filament Jalali | Shamsi dates in the panel |
+| Scramble | OpenAPI docs for `/v1` |
 | PostgreSQL | Application database |
 | Iran Yekan | Panel and install typeface |
+| Media Library, Intervention Image, Activity Log, Query Builder, Sluggable | Included for the features that will use them |
+| Horizon | Queue dashboard. It needs Redis, and its worker does not run on Windows |
+| Sentry | Error reporting, once `SENTRY_LARAVEL_DSN` is set |
