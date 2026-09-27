@@ -16,7 +16,7 @@ use Laravel\Sanctum\HasApiTokens;
  * The customer guard in config/auth.php points at this model.
  *
  * Extending:
- * - Add a new field in Fillable, casts, the migration, AccountFields, and the me response together.
+ * - Add a new field in Fillable, casts, the migration, Fields::account, and the me response together.
  * - If customer authentication changes, update AccessTokens and the sanctum-customer guard too.
  */
 #[Fillable(['username', 'email', 'phone', 'firstname', 'lastname', 'password'])]

@@ -12,7 +12,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -31,9 +30,11 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * It is Persian and right to left, set in Iran Yekan, with #00377B as the primary color.
  * Until install finishes, EnsureInstalled sends every request to /install.
  * AuthenticatePanelToken builds the session from the Sanctum cookie.
+ * spa keeps CSS, JavaScript, and fonts loaded while moving between panel pages.
  *
  * Extending:
  * - Put a new resource in app/Filament/Resources. discoverResources picks it up.
+ * - The home page is app/Filament/Pages/Dashboard. discoverPages picks it up.
  * - Keep panel middleware after StartSession and before AuthenticateSession.
  * - Filament owns the panel method name.
  */
@@ -51,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
+            ->spa(hasPrefetching: true)
             ->font('iranyekan', asset('fonts/iranyekan/iranyekan.css'), LocalFontProvider::class)
             ->brandName(fn (): string => Setting::current()?->title ?: config('app.name'))
             ->colors([
@@ -60,9 +62,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
