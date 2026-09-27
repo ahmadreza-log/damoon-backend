@@ -1,58 +1,116 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.shields.io/badge/Damoon-CMS-00377B?style=for-the-badge" alt="Damoon CMS">
 </p>
 
-## About Laravel
+<p align="center">
+  A Persian, right-to-left content system for Damoon.<br>
+  The first person to install it becomes the owner. Everyone else is either staff or a customer.
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/Filament-5-00377B?style=flat-square" alt="Filament 5">
+  <img src="https://img.shields.io/badge/PHP-8.3+-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/PostgreSQL-18-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Auth-Sanctum-0F172A?style=flat-square" alt="Laravel Sanctum">
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Two doors
 
-## Learning Laravel
+| | Staff | Customers |
+| --- | --- | --- |
+| Where they go | Filament panel at `/admin` | Future customer panel, through the API |
+| How they sign in | Username and password | `POST /v1/auth/login` |
+| Token | Sanctum token in a secure cookie | Sanctum bearer token |
+| Who they are | `users`, including the single owner | `customers` |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+A customer token cannot open the panel. A panel token cannot call the customer API.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+The owner role is given only to the first account created during install. It cannot be moved to someone else, and that account cannot be deleted from the panel.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Panel
 
-## Agentic Development
+The admin panel is Persian and right to left, set in Iran Yekan, with `#00377B` as the primary color.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Until install is finished, `/admin` redirects to `/install`. That form asks for the site title, a short description, and the owner account. Afterward, the title becomes the panel name and the owner signs in with the username and password they just chose.
 
-```bash
-composer require laravel/boost --dev
+Inside the panel, the **دسترسی** group holds two sections: **کاربران** and **مشتریان**.
 
-php artisan boost:install
+## API
+
+Routes are versioned at `/v1`, with no `/api` prefix.
+
+| Method | Path | What it does |
+| --- | --- | --- |
+| `POST` | `/v1/auth/login` | Customer login. Returns a bearer token. |
+| `GET` | `/v1/auth/me` | The signed-in customer. Requires `Authorization: Bearer`. |
+| `POST` | `/v1/auth/register` | Reserved. |
+| `POST` | `/v1/auth/verify` | Reserved. |
+| `POST` | `/v1/auth/forgot` | Reserved. |
+
+Login accepts `username` and `password`. A successful response looks like this:
+
+```json
+{
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "access_token": "1|..."
+}
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Requirements
 
-## Contributing
+- PHP 8.3 or newer, with `intl`, `pdo_pgsql`, and `mbstring`
+- Composer
+- PostgreSQL
+- Node.js, only if you are building frontend assets
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Setup
 
-## Code of Conduct
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Point `.env` at PostgreSQL:
 
-## Security Vulnerabilities
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=cms
+DB_USERNAME=cms
+DB_PASSWORD=
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Then migrate and serve:
 
-## License
+```bash
+php artisan migrate
+php artisan serve
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Open [http://127.0.0.1:8000/install](http://127.0.0.1:8000/install), create the owner, and sign in at [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin).
+
+`.env` stays on your machine. Only `.env.example` belongs in git.
+
+## Tests
+
+```bash
+php artisan test
+```
+
+Tests use SQLite in memory, so they do not touch the PostgreSQL database.
+
+## Stack
+
+| Piece | Role |
+| --- | --- |
+| Laravel 13 | Application framework |
+| Filament 5 | Staff panel |
+| Laravel Sanctum | Panel cookie and customer API tokens |
+| PostgreSQL | Application database |
+| Iran Yekan | Panel and install typeface |
