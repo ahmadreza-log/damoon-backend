@@ -60,12 +60,12 @@ class CustomerResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('username')->label('کاربری')->searchable(),
+                TextColumn::make('username')->label('نام کاربری')->searchable(),
                 TextColumn::make('firstname')->label('نام')->searchable(),
-                TextColumn::make('lastname')->label('خانوادگی')->searchable(),
+                TextColumn::make('lastname')->label('نام خانوادگی')->searchable(),
                 TextColumn::make('email')->label('ایمیل')->searchable(),
-                TextColumn::make('phone')->label('تلفن'),
-                TextColumn::make('last_login')->label('ورود')->dateTime()->placeholder('—'),
+                TextColumn::make('phone')->label('شماره تلفن'),
+                TextColumn::make('last_login')->label('آخرین ورود')->dateTime()->placeholder('—'),
             ])
             ->recordActions([
                 EditAction::make(),

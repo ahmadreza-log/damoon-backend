@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Auth\AccessTokens;
 use App\Filament\Auth\LogoutResponse;
 use App\Models\Customer;
+use App\Models\User;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Illuminate\Auth\RequestGuard;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -19,6 +21,7 @@ use Illuminate\Support\ServiceProvider;
  * Extending:
  * - Add a new guard here with Auth::extend and register its name in config/auth.php.
  * - OpenAPI docs are configured for the v1 prefix in config/scramble.php.
+ * - The owner bypass belongs in boot. Section checks stay in the policies.
  */
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +42,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Spatie ships with role events off. The owner lock listens for them.
+        config(['permission.events_enabled' => true]);
+
+        Gate::before(function (mixed $user, string $ability, array $arguments): ?bool {
+            if ($user instanceof User && $user->owner()) {
+                return true;
+            }
+
+            return null;
+        });
+
         Auth::extend('sanctum-customer', function ($app, string $name, array $config): RequestGuard {
             return new RequestGuard(function ($request) use ($app) {
                 $token = $request->bearerToken();

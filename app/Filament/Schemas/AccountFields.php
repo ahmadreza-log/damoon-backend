@@ -30,11 +30,11 @@ class AccountFields
                 ->required()
                 ->maxLength(255),
             TextInput::make('lastname')
-                ->label('خانوادگی')
+                ->label('نام خانوادگی')
                 ->required()
                 ->maxLength(255),
             TextInput::make('username')
-                ->label('کاربری')
+                ->label('نام کاربری')
                 ->required()
                 ->maxLength(255)
                 ->rule('alpha_dash:ascii')
@@ -46,12 +46,12 @@ class AccountFields
                 ->maxLength(255)
                 ->unique(ignoreRecord: true),
             TextInput::make('phone')
-                ->label('تلفن')
+                ->label('شماره تلفن')
                 ->tel()
                 ->maxLength(20)
                 ->unique(ignoreRecord: true),
             TextInput::make('password')
-                ->label('رمز')
+                ->label('رمز عبور')
                 ->password()
                 ->revealable()
                 ->rule('min:8')

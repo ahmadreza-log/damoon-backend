@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 use SensitiveParameter;
 
 /**
- * Panel login by username, not email.
+ * Panel login by username or email.
  *
  * After a successful login, a Sanctum token with the panel ability is queued in a secure cookie.
  * When "remember me" is on, the cookie lifetime is remember_expiration. Otherwise it is panel_expiration.
@@ -24,27 +24,31 @@ use SensitiveParameter;
 class Login extends BaseLogin
 {
     /**
-     * Replaces the default email field with username.
+     * Replaces the default email field with one identifier that accepts a username or an email.
+     *
+     * Usernames cannot contain @, so a value that validates as an email is looked up in the email column.
      */
     protected function getEmailFormComponent(): Component
     {
-        return TextInput::make('username')
-            ->label('کاربری')
+        return TextInput::make('login')
+            ->label('نام کاربری / ایمیل')
             ->required()
             ->autocomplete('username')
             ->autofocus();
     }
 
     /**
-     * Builds login credentials from username so the web guard looks up that column.
+     * Builds credentials for the web guard from the shared login field.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     protected function getCredentialsFromFormData(#[SensitiveParameter] array $data): array
     {
+        $login = $data['login'];
+
         return [
-            'username' => $data['username'],
+            (filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username') => $login,
             'password' => $data['password'],
         ];
     }
@@ -75,12 +79,12 @@ class Login extends BaseLogin
     }
 
     /**
-     * Shows a failed login on the username field, not email.
+     * Shows a failed login on the shared username or email field.
      */
     protected function throwFailureValidationException(): never
     {
         throw ValidationException::withMessages([
-            'data.username' => __('filament-panels::auth/pages/login.messages.failed'),
+            'data.login' => __('filament-panels::auth/pages/login.messages.failed'),
         ]);
     }
 
@@ -89,7 +93,7 @@ class Login extends BaseLogin
      */
     protected function getPasswordFormComponent(): Component
     {
-        return parent::getPasswordFormComponent()->label('رمز');
+        return parent::getPasswordFormComponent()->label('رمز عبور');
     }
 
     /**

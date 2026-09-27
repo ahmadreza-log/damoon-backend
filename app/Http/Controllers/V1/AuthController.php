@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,10 +16,11 @@ use Illuminate\Support\Facades\Hash;
  * Routes live under /v1/auth and have no /api prefix.
  * Scramble documents this controller at /docs/api.
  *
+ * Customers are created by staff in the panel. There is no public register, verify, or forgot route.
+ *
  * Extending:
  * - Add a new action as a single-word method here and register it in the v1 group in routes/api.php.
  * - Validate the body with validate so the OpenAPI schema is built from those rules.
- * - register, verify, and forgot are reserved and currently return 204.
  */
 class AuthController extends Controller
 {
@@ -83,29 +83,5 @@ class AuthController extends Controller
             'firstname' => $customer->firstname,
             'lastname' => $customer->lastname,
         ]);
-    }
-
-    /**
-     * Customer registration. Not implemented yet. Returns 204.
-     */
-    public function register(): Response
-    {
-        return response()->noContent();
-    }
-
-    /**
-     * Customer account verification. Not implemented yet. Returns 204.
-     */
-    public function verify(): Response
-    {
-        return response()->noContent();
-    }
-
-    /**
-     * Customer password reset. Not implemented yet. Returns 204.
-     */
-    public function forgot(): Response
-    {
-        return response()->noContent();
     }
 }

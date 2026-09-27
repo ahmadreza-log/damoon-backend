@@ -34,7 +34,6 @@ class UserFactory extends Factory
             'last_login_ip' => null,
             'code' => null,
             'token' => null,
-            'roles' => [],
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

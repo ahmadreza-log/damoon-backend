@@ -28,15 +28,15 @@
 
 A customer token cannot open the panel. A panel token cannot call the customer API.
 
-The owner role is given only to the first account created during install. It cannot be moved to someone else, and that account cannot be deleted from the panel.
+The owner role is given only to the first account created during install. It cannot be moved to someone else, and that account cannot be deleted from the panel. Other staff accounts start with no panel sections. On each user's edit page, the owner chooses which sections that person may open: home, users, and customers.
 
 ## Panel
 
 The admin panel is Persian and right to left, set in Iran Yekan, with `#00377B` as the primary color.
 
-Until install is finished, `/admin` redirects to `/install`. That form asks for the site title, a short description, and the owner account. Afterward, the title becomes the panel name and the owner signs in with the username and password they just chose.
+Until install is finished, `/admin` redirects to `/install`. That form asks for the site title, a short description, and the owner account. Afterward, the title becomes the panel name and the owner signs in with a username or email, plus the password they just chose.
 
-Inside the panel, the **دسترسی** group holds two sections: **کاربران** and **مشتریان**.
+Inside the panel, **پیشخوان** is the home page. The **دسترسی** group holds **کاربران** and **مشتریان**. A staff account only sees the sections chosen for them.
 
 ## API
 
@@ -46,9 +46,6 @@ Routes are versioned at `/v1`, with no `/api` prefix.
 | --- | --- | --- |
 | `POST` | `/v1/auth/login` | Customer login. Returns a bearer token. |
 | `GET` | `/v1/auth/me` | The signed-in customer. Requires `Authorization: Bearer`. |
-| `POST` | `/v1/auth/register` | Reserved. |
-| `POST` | `/v1/auth/verify` | Reserved. |
-| `POST` | `/v1/auth/forgot` | Reserved. |
 
 Login accepts `username` and `password`. A successful response looks like this:
 

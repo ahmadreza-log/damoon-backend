@@ -19,9 +19,9 @@ class OpenApiTest extends TestCase
 
         $this->assertContains('/auth/login', $paths);
         $this->assertContains('/auth/me', $paths);
-        $this->assertContains('/auth/register', $paths);
-        $this->assertContains('/auth/verify', $paths);
-        $this->assertContains('/auth/forgot', $paths);
+        $this->assertNotContains('/auth/register', $paths);
+        $this->assertNotContains('/auth/verify', $paths);
+        $this->assertNotContains('/auth/forgot', $paths);
         $this->assertSame('1.0.0', $spec['info']['version']);
     }
 }

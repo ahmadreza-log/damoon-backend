@@ -17,7 +17,7 @@ use Illuminate\View\View;
  *
  * Extending:
  * - Add a new form field in validate, resources/views/install.blade.php, and the related model.
- * - The owner account is created through User::grant. Do not assign the role by hand here.
+ * - The first saved user becomes the owner inside User. Do not assign the role by hand here.
  */
 class InstallController extends Controller
 {
