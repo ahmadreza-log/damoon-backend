@@ -28,7 +28,7 @@
 
 A customer token cannot open the panel. A panel token cannot call the customer API.
 
-The owner role is given only to the first account created during install. It cannot be moved to someone else, and that account cannot be deleted from the panel. Other staff accounts start with no panel sections. On each user's edit page, the owner chooses which sections that person may open: home, users, customers, and roles.
+The owner role is given only to the first account created during install. It cannot be moved to someone else, and that account cannot be deleted from the panel. Other staff accounts start with no panel sections. On each user's edit page, the owner chooses which sections that person may open: home, users, customers, roles, articles, and media.
 
 Two roles always exist and always keep every section: **توسعه‌دهنده** (`developer`) and **مالک** (`owner`). They cannot be renamed, narrowed, or deleted. Other roles are defined in the panel.
 
@@ -38,9 +38,44 @@ The admin panel is Persian and right to left, set in Iran Yekan, with `#00377B` 
 
 Until install is finished, `/admin` redirects to `/install`. That form asks for the site title, a short description, and the owner account. Afterward, the title becomes the panel name and the owner signs in with a username or email, plus the password they just chose.
 
-Inside the panel, **پیشخوان** is the home page. The **دسترسی** group holds **کاربران**, **مشتریان**, and **نقش‌ها**. A staff account only sees the sections chosen for them.
+Inside the panel, **پیشخوان** is the home page. The **دسترسی** group holds **کاربران**, **مشتریان**, and **نقش‌ها**. The **محتوا** group holds **نوشته‌ها** and **رسانه‌ها**. A staff account only sees the sections chosen for them.
 
 **نقش‌ها** stores a Persian name, an English key, and the sections that role may open. Moving between panel pages keeps the styles and fonts loaded. Dates are shown in Shamsi. A user with no avatar photo is shown the shared default image.
+
+## Content
+
+**نوشته‌ها** is where articles are created, edited, and deleted. Each article has:
+
+- a title and a slug (نامک), filled from the title when left blank and kept unique with `-2`, `-3`
+- rich-text content, a featured image, and an image gallery
+- a category, tags, an author chosen from staff, and a publish date
+- an SEO box (title and description) and a list of frequently asked questions
+- related articles and related products
+
+Categories, tags, and products can be added from the article form. Deleting an article also deletes its images.
+
+**رسانه‌ها** is a grid of every file on the public disk: avatars, article images, and files uploaded on that page. Each card shows where the file is used. Deleting a file also removes it from the user or article that points to it.
+
+Each file has a detail page with a title, alt text, image title, and description, plus an information box with the file name, type, size, dimensions, date, location, usage, and address.
+
+### Image sizes
+
+Every uploaded JPG, PNG, or WebP image also gets four WebP copies, so each part of the site can load the size it needs:
+
+| Size | Dimensions |
+| --- | --- |
+| `thumb` | 150 × 150, square crop |
+| `small` | 480 wide |
+| `medium` | 960 wide |
+| `large` | 1600 wide |
+
+The width-based sizes keep the aspect ratio and never grow past the original. The copies are stored at `sizes/{size}/{original path}.webp` and are deleted with the original. GIF files are left alone so animations are not flattened.
+
+The media grid uses `small`, and panel avatars use `thumb`. The detail page lists each copy and has a button to rebuild them. To build sizes for images uploaded before this feature, or after the size list changes, run:
+
+```bash
+php artisan media:sizes
+```
 
 ## API
 
@@ -63,7 +98,7 @@ Login accepts `username` and `password`. In the local environment, OpenAPI docs 
 
 ## Requirements
 
-- PHP 8.3 or newer, with `intl`, `pdo_pgsql`, and `mbstring`
+- PHP 8.3 or newer, with `intl`, `pdo_pgsql`, `mbstring`, and `gd` (GD needs WebP support for image sizes)
 - Composer
 - PostgreSQL
 - Node.js, only if you are building frontend assets
@@ -91,8 +126,11 @@ Then migrate and serve:
 
 ```bash
 php artisan migrate
+php artisan storage:link
 php artisan serve
 ```
+
+`storage:link` makes uploaded avatars, article images, and media reachable at `/storage`.
 
 Open [http://127.0.0.1:8000/install](http://127.0.0.1:8000/install), create the owner, and sign in at [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin).
 
@@ -118,6 +156,7 @@ Tests use SQLite in memory, so they do not touch the PostgreSQL database.
 | Scramble | OpenAPI docs for `/v1` |
 | PostgreSQL | Application database |
 | Iran Yekan | Panel and install typeface |
-| Media Library, Intervention Image, Activity Log, Query Builder, Sluggable | Included for the features that will use them |
+| Intervention Image | WebP image sizes, using GD |
+| Media Library, Activity Log, Query Builder, Sluggable | Included for the features that will use them |
 | Horizon | Queue dashboard. It needs Redis, and its worker does not run on Windows |
 | Sentry | Error reporting, once `SENTRY_LARAVEL_DSN` is set |
