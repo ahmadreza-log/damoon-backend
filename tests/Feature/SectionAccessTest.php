@@ -46,7 +46,9 @@ class SectionAccessTest extends TestCase
             ->assertSee('دسترسی بخش‌ها')
             ->assertSee('پیشخوان')
             ->assertSee('کاربران')
-            ->assertSee('مشتریان');
+            ->assertSee('مشتریان')
+            ->assertSee('نوشته‌ها')
+            ->assertSee('رسانه‌ها');
 
         Livewire::withCookie((string) config('sanctum.panel_cookie'), $token)
             ->test(EditUser::class, ['record' => $member->getKey()])
@@ -87,7 +89,9 @@ class SectionAccessTest extends TestCase
             ->assertOk()
             ->assertSee('کاربران')
             ->assertDontSee('/admin/customers')
-            ->assertDontSee('/admin/roles');
+            ->assertDontSee('/admin/roles')
+            ->assertDontSee('/admin/articles')
+            ->assertDontSee('/admin/media');
 
         $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
             ->get('/admin/customers')
@@ -95,6 +99,18 @@ class SectionAccessTest extends TestCase
 
         $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
             ->get('/admin')
+            ->assertForbidden();
+
+        $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
+            ->get('/admin/articles')
+            ->assertForbidden();
+
+        $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
+            ->get('/admin/media')
+            ->assertForbidden();
+
+        $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
+            ->get('/admin/media/missing')
             ->assertForbidden();
     }
 
@@ -113,6 +129,9 @@ class SectionAccessTest extends TestCase
             ->assertSee('پیشخوان')
             ->assertSee('کاربران')
             ->assertSee('مشتریان')
-            ->assertSee('نقش‌ها');
+            ->assertSee('نقش‌ها')
+            ->assertSee('محتوا')
+            ->assertSee('نوشته‌ها')
+            ->assertSee('رسانه‌ها');
     }
 }

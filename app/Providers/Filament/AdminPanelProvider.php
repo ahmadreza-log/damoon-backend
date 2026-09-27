@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\SetPersianLocale;
 use App\Models\Setting;
 use Filament\FontProviders\LocalFontProvider;
+use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,6 +32,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * Until install finishes, EnsureInstalled sends every request to /install.
  * AuthenticatePanelToken builds the session from the Sanctum cookie.
  * spa keeps CSS, JavaScript, and fonts loaded while moving between panel pages.
+ * The sidebar groups are دسترسی, then محتوا.
  *
  * Extending:
  * - Put a new resource in app/Filament/Resources. discoverResources picks it up.
@@ -59,6 +61,10 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => array_replace(Color::hex('#00377B'), [
                     600 => '#00377B',
                 ]),
+            ])
+            ->navigationGroups([
+                NavigationGroup::make('دسترسی'),
+                NavigationGroup::make('محتوا'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

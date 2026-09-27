@@ -30,6 +30,12 @@ class Section
     /** The roles resource. */
     public const ROLES = 'roles';
 
+    /** The articles page. */
+    public const ARTICLES = 'articles';
+
+    /** The media library page. */
+    public const MEDIA = 'media';
+
     /** Guard used by the staff panel. */
     public const GUARD = 'web';
 
@@ -45,6 +51,8 @@ class Section
             self::USERS => 'کاربران',
             self::CUSTOMERS => 'مشتریان',
             self::ROLES => 'نقش‌ها',
+            self::ARTICLES => 'نوشته‌ها',
+            self::MEDIA => 'رسانه‌ها',
         ];
     }
 
