@@ -69,7 +69,7 @@ class UserAvatarTest extends TestCase
 
     public function test_create_stores_the_avatar_and_a_replacement_drops_the_old_file(): void
     {
-        Storage::fake('public');
+        $disk = Storage::fake('public');
 
         $owner = User::factory()->create([
             'username' => 'owner_user',
@@ -102,20 +102,29 @@ class UserAvatarTest extends TestCase
         $this->assertNotNull($staff);
         $this->assertIsString($staff->avatar);
         $this->assertStringStartsWith('avatars/', $staff->avatar);
-        Storage::disk('public')->assertExists($staff->avatar);
+        $disk->assertExists($staff->avatar);
         $this->assertStringContainsString($staff->avatar, (string) $staff->getFilamentAvatarUrl());
 
+        $blank = User::factory()->create([
+            'username' => 'no_avatar',
+            'email' => 'no.avatar@example.com',
+            'phone' => '09120000004',
+        ]);
+
+        $this->assertNull($blank->avatar);
+        $this->assertStringContainsString('images/default-avatar.png', (string) $blank->getFilamentAvatarUrl());
+
         $previous = $staff->avatar;
-        Storage::disk('public')->put('avatars/next.png', 'next');
+        $disk->put('avatars/next.png', 'next');
 
         $staff->update(['avatar' => 'avatars/next.png']);
 
-        Storage::disk('public')->assertMissing($previous);
-        Storage::disk('public')->assertExists('avatars/next.png');
+        $disk->assertMissing($previous);
+        $disk->assertExists('avatars/next.png');
 
         $staff->delete();
 
-        Storage::disk('public')->assertMissing('avatars/next.png');
+        $disk->assertMissing('avatars/next.png');
     }
 
     /**

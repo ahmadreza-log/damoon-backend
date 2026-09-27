@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Auth\AccessTokens;
 use App\Filament\Auth\LogoutResponse;
 use App\Models\Customer;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\Shamsi;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
@@ -23,6 +24,7 @@ use Illuminate\Support\ServiceProvider;
  * - Add a new guard here with Auth::extend and register its name in config/auth.php.
  * - OpenAPI docs are configured for the v1 prefix in config/scramble.php.
  * - The owner bypass belongs in boot. Section checks stay in the policies.
+ * - permission.models.role points at App\Models\Role so a role can keep a Persian name.
  * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
  */
 class AppServiceProvider extends ServiceProvider
@@ -34,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        config(['permission.models.role' => Role::class]);
+
         $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
     }
 

@@ -86,7 +86,8 @@ class SectionAccessTest extends TestCase
             ->get('/admin/users')
             ->assertOk()
             ->assertSee('کاربران')
-            ->assertDontSee('/admin/customers');
+            ->assertDontSee('/admin/customers')
+            ->assertDontSee('/admin/roles');
 
         $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
             ->get('/admin/customers')
@@ -111,6 +112,7 @@ class SectionAccessTest extends TestCase
             ->assertOk()
             ->assertSee('پیشخوان')
             ->assertSee('کاربران')
-            ->assertSee('مشتریان');
+            ->assertSee('مشتریان')
+            ->assertSee('نقش‌ها');
     }
 }

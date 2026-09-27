@@ -2,14 +2,14 @@
 
 namespace App\Auth;
 
+use App\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 /**
  * Panel sections a staff account may open.
  *
  * Each section is one Spatie permission. The edit user page stores the chosen
- * list on the user. The owner role always receives every section.
+ * list on the user. The owner and developer roles always receive every section.
  *
  * Extending:
  * - Add a constant and a Persian label in options.
@@ -27,6 +27,9 @@ class Section
     /** The customers resource. */
     public const CUSTOMERS = 'customers';
 
+    /** The roles resource. */
+    public const ROLES = 'roles';
+
     /** Guard used by the staff panel. */
     public const GUARD = 'web';
 
@@ -41,6 +44,7 @@ class Section
             self::HOME => 'پیشخوان',
             self::USERS => 'کاربران',
             self::CUSTOMERS => 'مشتریان',
+            self::ROLES => 'نقش‌ها',
         ];
     }
 
@@ -55,10 +59,10 @@ class Section
     }
 
     /**
-     * Creates any missing section permission and the owner role.
+     * Creates any missing section permission and the fixed roles.
      *
-     * Safe to call more than once. The owner role is given every section so a
-     * role check and a direct permission check agree.
+     * Safe to call more than once. The owner and developer roles are given every
+     * section so a role check and a direct permission check agree.
      */
     public static function ensure(): void
     {
@@ -66,7 +70,6 @@ class Section
             Permission::findOrCreate($key, self::GUARD);
         }
 
-        $role = Role::findOrCreate(RoleName::OWNER, self::GUARD);
-        $role->syncPermissions(self::keys());
+        Role::settle();
     }
 }

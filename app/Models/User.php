@@ -24,7 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Contracts\Role;
 use Spatie\Permission\Events\RoleAttachedEvent;
 use Spatie\Permission\Events\RoleDetachedEvent;
-use Spatie\Permission\Models\Role as RoleModel;
+use App\Models\Role as RoleModel;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -215,21 +215,19 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
     /**
      * The personal avatar shown in the panel.
      *
-     * The HasAvatar contract owns this method name. An empty path uses Filament's default.
+     * The HasAvatar contract owns this method name. An empty path uses the shared default image.
      */
     public function getFilamentAvatarUrl(): ?string
     {
-        if (! is_string($this->avatar) || $this->avatar === '') {
-            return null;
+        if (is_string($this->avatar) && $this->avatar !== '') {
+            $disk = Storage::disk('public');
+
+            if ($disk instanceof FilesystemAdapter && $disk->exists($this->avatar)) {
+                return $disk->url($this->avatar);
+            }
         }
 
-        $disk = Storage::disk('public');
-
-        if (! $disk instanceof FilesystemAdapter) {
-            return null;
-        }
-
-        return $disk->url($this->avatar);
+        return '/images/default-avatar.png';
     }
 
     /**

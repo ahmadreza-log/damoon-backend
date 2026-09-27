@@ -30,6 +30,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * It is Persian and right to left, set in Iran Yekan, with #00377B as the primary color.
  * Until install finishes, EnsureInstalled sends every request to /install.
  * AuthenticatePanelToken builds the session from the Sanctum cookie.
+ * spa keeps CSS, JavaScript, and fonts loaded while moving between panel pages.
  *
  * Extending:
  * - Put a new resource in app/Filament/Resources. discoverResources picks it up.
@@ -51,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
+            ->spa(hasPrefetching: true)
             ->font('iranyekan', asset('fonts/iranyekan/iranyekan.css'), LocalFontProvider::class)
             ->brandName(fn (): string => Setting::current()?->title ?: config('app.name'))
             ->colors([
