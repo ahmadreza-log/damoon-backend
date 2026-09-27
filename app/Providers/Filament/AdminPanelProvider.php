@@ -7,6 +7,7 @@ use App\Http\Middleware\AuthenticatePanelToken;
 use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\SetPersianLocale;
 use App\Models\Setting;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -14,7 +15,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\FontProviders\LocalFontProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -25,8 +25,25 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+/**
+ * The staff panel at /admin.
+ *
+ * It is Persian and right to left, set in Iran Yekan, with #00377B as the primary color.
+ * Until install finishes, EnsureInstalled sends every request to /install.
+ * AuthenticatePanelToken builds the session from the Sanctum cookie.
+ *
+ * Extending:
+ * - Put a new resource in app/Filament/Resources. discoverResources picks it up.
+ * - Keep panel middleware after StartSession and before AuthenticateSession.
+ * - Filament owns the panel method name.
+ */
 class AdminPanelProvider extends PanelProvider
 {
+    /**
+     * Builds the panel appearance, path, login, and middleware.
+     *
+     * The brand title comes from Setting::current, or the application name when install has not run.
+     */
     public function panel(Panel $panel): Panel
     {
         return $panel

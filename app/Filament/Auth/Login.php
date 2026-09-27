@@ -13,8 +13,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use SensitiveParameter;
 
+/**
+ * Panel login by username, not email.
+ *
+ * After a successful login, a Sanctum token with the panel ability is queued in a secure cookie.
+ * When "remember me" is on, the cookie lifetime is remember_expiration. Otherwise it is panel_expiration.
+ *
+ * Filament's Login page owns these method names. Renaming them breaks the override.
+ */
 class Login extends BaseLogin
 {
+    /**
+     * Replaces the default email field with username.
+     */
     protected function getEmailFormComponent(): Component
     {
         return TextInput::make('username')
@@ -25,6 +36,8 @@ class Login extends BaseLogin
     }
 
     /**
+     * Builds login credentials from username so the web guard looks up that column.
+     *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
@@ -36,6 +49,11 @@ class Login extends BaseLogin
         ];
     }
 
+    /**
+     * After Filament signs the user in, records the last login and sends the panel token cookie.
+     *
+     * If the parent authenticate call fails, no cookie is created.
+     */
     public function authenticate(): ?LoginResponse
     {
         $response = parent::authenticate();
@@ -50,12 +68,15 @@ class Login extends BaseLogin
                 'last_login_ip' => request()->ip(),
             ])->save();
 
-            cookie()->queue(app(AccessTokens::class)->panelCookie($user, $minutes));
+            cookie()->queue(app(AccessTokens::class)->cookie($user, $minutes));
         }
 
         return $response;
     }
 
+    /**
+     * Shows a failed login on the username field, not email.
+     */
     protected function throwFailureValidationException(): never
     {
         throw ValidationException::withMessages([
@@ -63,11 +84,17 @@ class Login extends BaseLogin
         ]);
     }
 
+    /**
+     * Sets the password field label to Persian.
+     */
     protected function getPasswordFormComponent(): Component
     {
         return parent::getPasswordFormComponent()->label('رمز');
     }
 
+    /**
+     * Shows the flash message left by install under the login page heading.
+     */
     public function getSubheading(): string|Htmlable|null
     {
         $status = session('status');

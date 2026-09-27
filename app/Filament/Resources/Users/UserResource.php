@@ -19,6 +19,16 @@ use Filament\Tables\Table;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * The panel users section, in the access group.
+ *
+ * Deleting the owner is blocked here. The model also refuses the delete in deleting.
+ * The form comes from AccountFields so it stays the same as the customer form.
+ *
+ * Extending:
+ * - Add a new column in table, and in AccountFields when the user should edit it.
+ * - Filament owns the form, table, and getPages method names.
+ */
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
@@ -37,11 +47,17 @@ class UserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'username';
 
+    /**
+     * Create and edit form for a user.
+     */
     public static function form(Schema $schema): Schema
     {
         return $schema->components(AccountFields::make());
     }
 
+    /**
+     * User list. Roles are shown as badges.
+     */
     public static function table(Table $table): Table
     {
         return $table
@@ -65,15 +81,23 @@ class UserResource extends Resource
             ]);
     }
 
+    /**
+     * Makes the owner undeletable, even if another policy would allow it.
+     */
     public static function getDeleteAuthorizationResponse(Model $record): Response
     {
-        if ($record instanceof User && $record->isOwner()) {
+        if ($record instanceof User && $record->owner()) {
             return Response::deny();
         }
 
         return parent::getDeleteAuthorizationResponse($record);
     }
 
+    /**
+     * Index, create, and edit pages.
+     *
+     * @return array<string, mixed>
+     */
     public static function getPages(): array
     {
         return [

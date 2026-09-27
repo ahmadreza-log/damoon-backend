@@ -16,14 +16,14 @@ return new class extends Migration
             ->exists();
 
         if (! $owner) {
-            $firstUser = DB::table('users')->orderBy('id')->first();
+            $first = DB::table('users')->orderBy('id')->first();
 
-            if ($firstUser !== null) {
-                $roles = json_decode($firstUser->roles ?? '[]', true);
+            if ($first !== null) {
+                $roles = json_decode($first->roles ?? '[]', true);
                 $roles = is_array($roles) ? $roles : [];
                 $roles[] = 'owner';
 
-                DB::table('users')->where('id', $firstUser->id)->update([
+                DB::table('users')->where('id', $first->id)->update([
                     'roles' => json_encode(array_values(array_unique($roles))),
                 ]);
             }
