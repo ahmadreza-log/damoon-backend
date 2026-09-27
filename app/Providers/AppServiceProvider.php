@@ -6,6 +6,7 @@ use App\Auth\AccessTokens;
 use App\Filament\Auth\LogoutResponse;
 use App\Models\Customer;
 use App\Models\User;
+use App\Support\Shamsi;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Illuminate\Auth\RequestGuard;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,7 @@ use Illuminate\Support\ServiceProvider;
  * - Add a new guard here with Auth::extend and register its name in config/auth.php.
  * - OpenAPI docs are configured for the v1 prefix in config/scramble.php.
  * - The owner bypass belongs in boot. Section checks stay in the policies.
+ * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
  */
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,6 +46,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Spatie ships with role events off. The owner lock listens for them.
         config(['permission.events_enabled' => true]);
+
+        $this->app->booted(function (): void {
+            Shamsi::boot();
+        });
 
         Gate::before(function (mixed $user, string $ability, array $arguments): ?bool {
             if ($user instanceof User && $user->owner()) {

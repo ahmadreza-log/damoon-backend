@@ -7,9 +7,13 @@ use App\Filament\Auth\Login;
 use App\Models\Customer;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Shamsi;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Livewire;
+use Morilog\Jalali\CalendarUtils;
+use Morilog\Jalali\Jalalian;
 use Tests\TestCase;
 
 class SanctumAuthenticationTest extends TestCase
@@ -29,8 +33,16 @@ class SanctumAuthenticationTest extends TestCase
 
     public function test_panel_requires_a_user_sanctum_cookie(): void
     {
-        $user = User::factory()->create();
-        $customer = Customer::factory()->create();
+        $logged = Carbon::parse('2026-09-27 08:03:19', 'UTC');
+        $user = User::factory()->create([
+            'last_login' => $logged,
+        ]);
+        $customer = Customer::factory()->create([
+            'last_login' => $logged,
+        ]);
+        $shamsi = CalendarUtils::convertNumbers(
+            Jalalian::fromCarbon($logged->copy()->timezone(Shamsi::ZONE))->format(Shamsi::TIME),
+        );
         $tokens = app(AccessTokens::class);
 
         $this->actingAs($user)->get('/admin')->assertRedirect(route('filament.admin.auth.login'));
@@ -54,6 +66,8 @@ class SanctumAuthenticationTest extends TestCase
             ->assertSee('نام خانوادگی')
             ->assertSee('شماره تلفن')
             ->assertSee('آخرین ورود')
+            ->assertSee($shamsi)
+            ->assertDontSee('سپتامبر')
             ->assertDontSee('نام کاربری')
             ->assertDontSee('بخش‌ها');
 
@@ -62,7 +76,8 @@ class SanctumAuthenticationTest extends TestCase
             ->assertOk()
             ->assertSee($customer->username)
             ->assertSee('نام کاربری')
-            ->assertSee('نام خانوادگی');
+            ->assertSee('نام خانوادگی')
+            ->assertSee($shamsi);
     }
 
     public function test_panel_login_issues_a_sanctum_cookie_and_logout_revokes_it(): void

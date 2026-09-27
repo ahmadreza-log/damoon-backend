@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * This middleware stands in for an empty session login:
  * a valid cookie with the panel ability logs the user into the web guard.
- * A customer cookie, a broken cookie, or an expired token logs the session out and clears the cookie.
+ * A customer cookie, a broken cookie, an inactive account, or an expired token logs the session out and clears the cookie.
  *
  * Extending:
  * - Keep this class on the panel middleware stack, after StartSession and before AuthenticateSession.
@@ -46,7 +46,9 @@ class AuthenticatePanelToken
 
         $user = $this->tokens->resolve($plain, AccessTokens::ABILITY_PANEL, User::class);
 
-        if (! $user instanceof User) {
+        if (! $user instanceof User || ! $user->active) {
+            $this->tokens->revoke($plain);
+
             if ($guard->check()) {
                 $guard->logout();
             }

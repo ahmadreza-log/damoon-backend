@@ -10,7 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Sets the request language to Persian.
  *
- * Both the Laravel locale and Carbon change, so panel dates and text stay Persian.
+ * The Laravel locale and Carbon change, so panel text is Persian.
+ * The calendar itself is Shamsi. That conversion lives in App\Support\Shamsi.
  * This middleware runs on the install form and on the panel.
  */
 class SetPersianLocale

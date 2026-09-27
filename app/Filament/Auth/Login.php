@@ -8,6 +8,7 @@ use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -76,6 +77,23 @@ class Login extends BaseLogin
         }
 
         return $response;
+    }
+
+    /**
+     * Blocks an inactive account after the password has matched.
+     *
+     * Filament owns this method name. The message stays Persian so the person
+     * knows the account was switched off, not that the password was wrong.
+     */
+    protected function isUserAllowedToAccessPanel(Authenticatable $user): bool
+    {
+        if ($user instanceof User && ! $user->active) {
+            throw ValidationException::withMessages([
+                'data.login' => 'این حساب غیرفعال است.',
+            ]);
+        }
+
+        return parent::isUserAllowedToAccessPanel($user);
     }
 
     /**

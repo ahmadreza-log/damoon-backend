@@ -5,7 +5,8 @@ namespace App\Filament\Resources\Customers;
 use App\Filament\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
-use App\Filament\Schemas\AccountFields;
+use App\Filament\Schemas\Fields;
+use App\Support\Shamsi;
 use App\Models\Customer;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -21,10 +22,10 @@ use Filament\Tables\Table;
  * The panel customers section, in the access group.
  *
  * These accounts sign in through the API. Their token ability is api, and this screen only shows the profile.
- * The form is shared with users through AccountFields.
+ * The form is shared with users through Fields::account.
  *
  * Extending:
- * - Add a new column in table, and in AccountFields when it should be editable.
+ * - Add a new column in table, and in Fields::account when it should be editable.
  * - Filament owns the form, table, and getPages method names.
  */
 class CustomerResource extends Resource
@@ -50,7 +51,7 @@ class CustomerResource extends Resource
      */
     public static function form(Schema $schema): Schema
     {
-        return $schema->components(AccountFields::make());
+        return $schema->components(Fields::account());
     }
 
     /**
@@ -65,7 +66,7 @@ class CustomerResource extends Resource
                 TextColumn::make('lastname')->label('نام خانوادگی')->searchable(),
                 TextColumn::make('email')->label('ایمیل')->searchable(),
                 TextColumn::make('phone')->label('شماره تلفن'),
-                TextColumn::make('last_login')->label('آخرین ورود')->dateTime()->placeholder('—'),
+                TextColumn::make('last_login')->label('آخرین ورود')->jalaliDateTime(timezone: Shamsi::ZONE)->placeholder('—'),
             ])
             ->recordActions([
                 EditAction::make(),

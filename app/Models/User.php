@@ -6,6 +6,7 @@ use App\Auth\RoleName;
 use App\Auth\Section;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,8 +16,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Contracts\Role;
 use Spatie\Permission\Events\RoleAttachedEvent;
@@ -32,19 +35,31 @@ use Spatie\Permission\Traits\HasRoles;
  * Panel sign-in uses a Sanctum token with the panel ability, not a plain session.
  *
  * Extending:
- * - Add a new field in Fillable, casts, the migration, and AccountFields together.
+ * - Add a shared account field in Fillable, the migration, and Fields::account together.
+ * - A staff-only field belongs in Fields::staff, Fillable, and a users migration.
+ * - The avatar is Fields::avatar. getFilamentAvatarUrl owns the panel image.
+ * - active is Fields::status. A false value blocks the panel. The owner is forced back to true.
  * - Add a panel section in App\Auth\Section, then check it from the page or policy.
  * - Do not write the owner role from a form. created and the role events keep it.
  */
-#[Fillable(['username', 'email', 'phone', 'firstname', 'lastname', 'password'])]
+#[Fillable(['username', 'email', 'phone', 'firstname', 'lastname', 'password', 'personnel', 'national', 'job', 'degree', 'major', 'gender', 'avatar', 'active'])]
 #[Hidden(['password', 'remember_token', 'token'])]
-class User extends Authenticatable implements FilamentUser, HasName
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {
     /** The only role the application assigns itself. Forms cannot change it. */
     public const ROLE_OWNER = RoleName::OWNER;
 
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
+
+    /**
+     * New accounts may open the panel until someone switches them off.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'active' => true,
+    ];
 
     /**
      * Stops the owner-role listeners from reacting to their own corrections.
@@ -69,6 +84,26 @@ class User extends Authenticatable implements FilamentUser, HasName
             $user->grant(Section::keys());
         });
 
+        static::saving(function (User $user): void {
+            if ($user->owner()) {
+                $user->active = true;
+            }
+        });
+
+        static::updating(function (User $user): void {
+            static::forget($user);
+        });
+
+        static::updated(function (User $user): void {
+            static::halt($user);
+        });
+
+        static::deleted(function (User $user): void {
+            if (is_string($user->avatar) && $user->avatar !== '') {
+                Storage::disk('public')->delete($user->avatar);
+            }
+        });
+
         static::deleting(function (User $user): bool {
             return ! $user->owner();
         });
@@ -83,13 +118,14 @@ class User extends Authenticatable implements FilamentUser, HasName
     }
 
     /**
-     * Every staff account may open the panel. Section policies decide the pages.
+     * An inactive account cannot open the panel. Section policies still decide the pages.
      *
+     * The owner is kept active in saving, so this stays true for that account.
      * The FilamentUser contract owns this method name.
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return (bool) $this->active;
     }
 
     /**
@@ -174,6 +210,58 @@ class User extends Authenticatable implements FilamentUser, HasName
     public function getFilamentName(): string
     {
         return trim($this->firstname.' '.$this->lastname);
+    }
+
+    /**
+     * The personal avatar shown in the panel.
+     *
+     * The HasAvatar contract owns this method name. An empty path uses Filament's default.
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        if (! is_string($this->avatar) || $this->avatar === '') {
+            return null;
+        }
+
+        $disk = Storage::disk('public');
+
+        if (! $disk instanceof FilesystemAdapter) {
+            return null;
+        }
+
+        return $disk->url($this->avatar);
+    }
+
+    /**
+     * Deletes the previous avatar file when a new one replaces it.
+     */
+    private static function forget(User $user): void
+    {
+        if (! $user->isDirty('avatar')) {
+            return;
+        }
+
+        $previous = $user->getOriginal('avatar');
+
+        if (! is_string($previous) || $previous === '' || $previous === $user->avatar) {
+            return;
+        }
+
+        Storage::disk('public')->delete($previous);
+    }
+
+    /**
+     * Drops every panel token when the account is switched off.
+     *
+     * A cookie that is already in the browser then fails on the next request.
+     */
+    private static function halt(User $user): void
+    {
+        if (! $user->wasChanged('active') || $user->active) {
+            return;
+        }
+
+        $user->tokens()->delete();
     }
 
     /**
@@ -270,6 +358,7 @@ class User extends Authenticatable implements FilamentUser, HasName
             'email_verified_at' => 'datetime',
             'last_login' => 'datetime',
             'password' => 'hashed',
+            'active' => 'boolean',
         ];
     }
 }

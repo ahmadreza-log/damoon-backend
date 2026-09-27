@@ -3,10 +3,11 @@
 namespace App\Filament\Resources\Users;
 
 use App\Auth\Section;
+use App\Support\Shamsi;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
-use App\Filament\Schemas\AccountFields;
+use App\Filament\Schemas\Fields;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -26,10 +27,12 @@ use Illuminate\Database\Eloquent\Model;
  * The panel users section, in the access group.
  *
  * Deleting the owner is blocked here. The model also refuses the delete in deleting.
- * The account fields stay shared with customers. The edit page adds the section checklist.
+ * The account fields stay shared with customers. Staff profile and the password box are only on this form.
+ * The edit page adds the section checklist after the password box.
  *
  * Extending:
- * - Add a new column in table, and in AccountFields when the user should edit it.
+ * - Add a shared column in the table and in Fields::account.
+ * - Add a staff-only field in Fields::staff, not on the customer form.
  * - A new panel section is a permission in App\Auth\Section, not a new column here.
  * - Filament owns the form, table, and getPages method names.
  */
@@ -60,7 +63,11 @@ class UserResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            ...AccountFields::make(),
+            Fields::avatar(),
+            ...Fields::account(password: false),
+            Fields::staff(),
+            Fields::password(),
+            Fields::status(),
             FormSection::make('دسترسی بخش‌ها')
                 ->description('بخش‌هایی از پنل که این کاربر می‌تواند باز کند.')
                 ->visible(fn(?User $record): bool => $record instanceof User)
@@ -89,7 +96,7 @@ class UserResource extends Resource
                 TextColumn::make('firstname')->label('نام')->searchable(),
                 TextColumn::make('lastname')->label('نام خانوادگی')->searchable(),
                 TextColumn::make('phone')->label('شماره تلفن'),
-                TextColumn::make('last_login')->label('آخرین ورود')->dateTime()->placeholder('—'),
+                TextColumn::make('last_login')->label('آخرین ورود')->jalaliDateTime(timezone: Shamsi::ZONE)->placeholder('—'),
             ])
             ->recordActions([
                 EditAction::make(),
