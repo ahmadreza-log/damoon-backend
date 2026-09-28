@@ -41,9 +41,13 @@ class InstallTest extends TestCase
      * The response redirects to the panel login. The new user is the owner and can log
      * in with the username, the settings row is marked installed with the given title,
      * and /install now redirects to the login page instead of showing the form.
+     * The brand name is cached before install, so it must switch to the new title once the settings row is saved.
      */
     public function test_install_creates_the_owner_and_allows_login_with_username(): void
     {
+        $this->assertFalse(Setting::installed());
+        $this->assertSame(config('app.name'), Setting::brand());
+
         $response = $this->post('/install', [
             'title' => 'دامون',
             'description' => 'سامانه مدیریت محتوا',
@@ -62,6 +66,7 @@ class InstallTest extends TestCase
         $this->assertTrue($user->owner());
         $this->assertTrue(Setting::installed());
         $this->assertSame('دامون', Setting::current()?->title);
+        $this->assertSame('دامون', Setting::brand());
         $this->assertTrue(Auth::attempt([
             'username' => 'owner',
             'password' => 'password123',

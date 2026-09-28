@@ -7,6 +7,7 @@ use App\Filament\Auth\LogoutResponse;
 use App\Models\Customer;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Seo;
 use App\Support\Shamsi;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Illuminate\Auth\RequestGuard;
@@ -26,6 +27,7 @@ use Illuminate\Support\ServiceProvider;
  * - The owner bypass belongs in boot. Section checks stay in the policies.
  * - permission.models.role points at App\Models\Role so a role can keep a Persian name.
  * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
+ * - The SEO box fields are adjusted in Seo::boot.
  */
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +39,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         config(['permission.models.role' => Role::class]);
+
+        // The SEO box writes a seo_meta row only when something is filled, in the panel's locale.
+        config(['seo.features.auto_create_meta' => false]);
 
         $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
     }
@@ -50,6 +55,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Spatie ships with role events off. The owner lock listens for them.
         config(['permission.events_enabled' => true]);
+
+        Seo::boot();
 
         $this->app->booted(function (): void {
             Shamsi::boot();

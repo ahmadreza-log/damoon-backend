@@ -14,7 +14,7 @@ use Tests\TestCase;
 /**
  * Covers per-user section access (دسترسی بخش‌ها).
  *
- * Each panel section, such as home, users, customers, roles, articles, and media, is a
+ * Each panel section, such as home, users, customers, roles, articles, pages, and media, is a
  * Spatie permission. A user may open only the sections granted to them or to their
  * roles; the owner always has every section. The tests check saving sections from the
  * user form, the menu and 403 responses for a limited user, and the owner's full menu.
@@ -65,6 +65,7 @@ class SectionAccessTest extends TestCase
             ->assertSee('کاربران')
             ->assertSee('مشتریان')
             ->assertSee('نوشته‌ها')
+            ->assertSee('برگه‌ها')
             ->assertSee('رسانه‌ها');
 
         Livewire::withCookie((string) config('sanctum.panel_cookie'), $token)
@@ -115,6 +116,7 @@ class SectionAccessTest extends TestCase
             ->assertDontSee('/admin/customers')
             ->assertDontSee('/admin/roles')
             ->assertDontSee('/admin/articles')
+            ->assertDontSee('/admin/pages')
             ->assertDontSee('/admin/media');
 
         $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
@@ -127,6 +129,10 @@ class SectionAccessTest extends TestCase
 
         $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
             ->get('/admin/articles')
+            ->assertForbidden();
+
+        $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
+            ->get('/admin/pages')
             ->assertForbidden();
 
         $this->withCookie((string) config('sanctum.panel_cookie'), $memberToken)
@@ -159,6 +165,7 @@ class SectionAccessTest extends TestCase
             ->assertSee('نقش‌ها')
             ->assertSee('محتوا')
             ->assertSee('نوشته‌ها')
+            ->assertSee('برگه‌ها')
             ->assertSee('رسانه‌ها');
     }
 }

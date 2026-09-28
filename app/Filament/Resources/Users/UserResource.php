@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\Users;
 
 use App\Auth\Section;
-use App\Support\Shamsi;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Schemas\Fields;
 use App\Models\User;
+use App\Support\Shamsi;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -78,7 +78,7 @@ class UserResource extends Resource
             Fields::status(),
             FormSection::make('دسترسی بخش‌ها')
                 ->description('بخش‌هایی از پنل که این کاربر می‌تواند باز کند.')
-                ->visible(fn(?User $record): bool => $record instanceof User)
+                ->visible(fn (?User $record): bool => $record instanceof User)
                 ->columnSpan(2)
                 ->schema([
                     CheckboxList::make('sections')
@@ -86,8 +86,8 @@ class UserResource extends Resource
                         ->options(Section::options())
                         ->columns(1)
                         ->bulkToggleable()
-                        ->disabled(fn(?User $record): bool => (bool) $record?->owner())
-                        ->helperText(fn(?User $record): ?string => $record?->owner()
+                        ->disabled(fn (?User $record): bool => (bool) $record?->owner())
+                        ->helperText(fn (?User $record): ?string => $record?->owner()
                             ? 'مالک سامانه به همه بخش‌ها دسترسی دارد.'
                             : null),
                 ]),

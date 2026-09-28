@@ -99,7 +99,7 @@ class TagResource extends Resource
                 ->relationship(
                     name: 'parent',
                     titleAttribute: 'name',
-                    modifyQueryUsing: fn(Builder $query, ?Tag $record): Builder => $record?->exists
+                    modifyQueryUsing: fn (Builder $query, ?Tag $record): Builder => $record?->exists
                         ? $query->whereNotIn('id', $record->family())
                         : $query,
                 )
@@ -137,7 +137,7 @@ class TagResource extends Resource
                         ->columns(2)
                         ->reorderable()
                         ->collapsible()
-                        ->itemLabel(fn(array $state): string => filled($state['title'] ?? null) ? (string) $state['title'] : 'بنر')
+                        ->itemLabel(fn (array $state): string => filled($state['title'] ?? null) ? (string) $state['title'] : 'بنر')
                         ->defaultItems(0)
                         ->addActionLabel('افزودن بنر'),
                 ]),

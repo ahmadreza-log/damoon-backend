@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Pages\Asset as AssetPage;
 use App\Auth\Section;
+use App\Filament\Pages\Asset as AssetPage;
 use App\Models\User;
 use App\Support\Library;
 use App\Support\Shamsi;
@@ -23,8 +23,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 
@@ -56,8 +56,8 @@ class Media extends Page implements HasTable
     /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
-    /** The position inside the content group; the library comes after articles. */
-    protected static ?int $navigationSort = 2;
+    /** The position inside the content group; the library comes after articles and pages. */
+    protected static ?int $navigationSort = 3;
 
     /** The URL after /admin; each file's detail page (Asset) lives under it at media/{asset}. */
     protected static ?string $slug = 'media';

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Auth\RoleName;
 use App\Auth\Section;
+use App\Models\Role as RoleModel;
 use App\Support\Sizes;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -13,11 +14,11 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +26,6 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Contracts\Role;
 use Spatie\Permission\Events\RoleAttachedEvent;
 use Spatie\Permission\Events\RoleDetachedEvent;
-use App\Models\Role as RoleModel;
 use Spatie\Permission\Traits\HasRoles;
 
 /**

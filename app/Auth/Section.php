@@ -33,6 +33,9 @@ class Section
     /** The articles page. */
     public const ARTICLES = 'articles';
 
+    /** The pages resource. */
+    public const PAGES = 'pages';
+
     /** The media library page. */
     public const MEDIA = 'media';
 
@@ -52,6 +55,7 @@ class Section
             self::CUSTOMERS => 'مشتریان',
             self::ROLES => 'نقش‌ها',
             self::ARTICLES => 'نوشته‌ها',
+            self::PAGES => 'برگه‌ها',
             self::MEDIA => 'رسانه‌ها',
         ];
     }

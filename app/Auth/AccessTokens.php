@@ -58,6 +58,8 @@ class AccessTokens
      * Returns the token owner when both the ability and the model class match.
      *
      * An expired token is deleted. A bad token returns null and does not change the session.
+     * last_used_at is written at most once a minute, so a busy panel does not update the row on every request.
+     * The token is attached to the owner, so currentAccessToken returns it without another lookup.
      *
      * @param  class-string<User|Customer>  $class
      */
@@ -81,7 +83,9 @@ class AccessTokens
             return null;
         }
 
-        $token->forceFill(['last_used_at' => now()])->save();
+        if (! $token->last_used_at || $token->last_used_at->lt(now()->subMinute())) {
+            $token->forceFill(['last_used_at' => now()])->save();
+        }
 
         return $owner->withAccessToken($token);
     }
@@ -91,12 +95,13 @@ class AccessTokens
      *
      * The token value does not change. Only expires_at and the cookie Max-Age are renewed.
      * If the created or expiry timestamp is missing, nothing happens.
+     *
+     * @param  PersonalAccessToken  $token  The record resolve already loaded for this cookie.
+     * @param  string  $plain  The cookie value, written back with the new Max-Age.
      */
-    public function refresh(string $plain): void
+    public function refresh(PersonalAccessToken $token, string $plain): void
     {
-        $token = PersonalAccessToken::findToken($plain);
-
-        if (! $token?->expires_at || ! $token->created_at) {
+        if (! $token->expires_at || ! $token->created_at) {
             return;
         }
 

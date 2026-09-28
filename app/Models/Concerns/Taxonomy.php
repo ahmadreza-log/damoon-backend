@@ -4,8 +4,7 @@ namespace App\Models\Concerns;
 
 use App\Models\Article;
 use App\Support\Sizes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Shared behaviour for article groups such as categories and tags.
@@ -14,13 +13,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * for banner images. The slug is filled from the name when left blank, and banner
  * images get their sizes from Sizes. Banners are media library files, so they
  * stay in the library when the record is deleted.
+ * Parent, children, family, and trail come from Tree.
  *
  * Extending:
  * - Cast banners to array on the model.
  * - Eloquent calls bootTaxonomy by name.
+ *
+ * @mixin Model
+ *
+ * @property string $name
+ * @property string|null $slug
+ * @property array<int, array<string, mixed>>|null $banners
  */
 trait Taxonomy
 {
+    use Tree;
+
     /**
      * Fills the slug and builds sizes for new banner images.
      */
@@ -36,69 +44,11 @@ trait Taxonomy
     }
 
     /**
-     * The record this one sits under.
-     *
-     * @return BelongsTo<static, $this>
+     * The name, shown for this level of the trail.
      */
-    public function parent(): BelongsTo
+    public function caption(): string
     {
-        return $this->belongsTo(static::class, 'parent_id');
-    }
-
-    /**
-     * Records directly under this one.
-     *
-     * @return HasMany<static, $this>
-     */
-    public function children(): HasMany
-    {
-        return $this->hasMany(static::class, 'parent_id');
-    }
-
-    /**
-     * This record's id and the ids of every record under it, at any depth.
-     *
-     * The parent field hides these so a record cannot sit under itself.
-     *
-     * @return array<int, int>
-     */
-    public function family(): array
-    {
-        $ids = [(int) $this->getKey()];
-        $level = $ids;
-
-        while ($level !== []) {
-            $level = static::query()
-                ->whereIn('parent_id', $level)
-                ->whereNotIn('id', $ids)
-                ->pluck('id')
-                ->map(fn (mixed $id): int => (int) $id)
-                ->all();
-
-            $ids = [...$ids, ...$level];
-        }
-
-        return $ids;
-    }
-
-    /**
-     * The name with every parent before it, for example فناوری › هوش مصنوعی.
-     *
-     * The article form shows this in its category and tag lists.
-     */
-    public function trail(): string
-    {
-        $names = [(string) $this->name];
-        $seen = [(int) $this->getKey()];
-        $parent = $this->parent;
-
-        while ($parent !== null && ! in_array((int) $parent->getKey(), $seen, true)) {
-            array_unshift($names, (string) $parent->name);
-            $seen[] = (int) $parent->getKey();
-            $parent = $parent->parent;
-        }
-
-        return implode(' › ', $names);
+        return (string) $this->name;
     }
 
     /**

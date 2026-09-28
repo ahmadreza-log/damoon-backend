@@ -8,6 +8,7 @@ use App\Filament\Resources\Articles\Pages\EditArticle;
 use App\Filament\Resources\Articles\Pages\ListArticles;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Tags\TagResource;
+use App\Filament\Schemas\Editor;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Tag;
@@ -15,14 +16,12 @@ use App\Models\User;
 use App\Support\Shamsi;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Facades\Filament;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\RichEditor\ToolbarButtonGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,13 +35,15 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
 
 /**
  * The panel articles section, in the content group.
  *
  * Each article has a title, slug, body, cover, categories, tags, author,
  * publish date, an SEO box, questions, a gallery, and related articles and products.
- * The body editor saves Tiptap JSON, shows every Filament tool except merge tags,
+ * The SEO box is seoSection() from rankbeam/laravel-seo-filament, fitted to the panel in Seo::boot.
+ * The body editor is Editor::body, shared with pages. It saves Tiptap JSON,
  * offers the blocks in Article::BLOCKS, and stores pictures in Article::FOLDER.
  * The category and tag fields reuse the CategoryResource and TagResource forms
  * to create options, and link to those pages.
@@ -53,6 +54,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class ArticleResource extends Resource
 {
+    use HasSEOFields;
+
     /** The Eloquent model this page lists, creates, and edits. */
     protected static ?string $model = Article::class;
 
@@ -103,33 +106,7 @@ class ArticleResource extends Resource
                 ->maxLength(255)
                 ->unique(ignoreRecord: true)
                 ->helperText('اگر خالی بماند، از عنوان ساخته می‌شود.'),
-            RichEditor::make('content')
-                ->label('محتوا')
-                ->json()
-                ->customBlocks(Article::BLOCKS)
-                ->toolbarButtons([
-                    ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'code', 'link'],
-                    ['textColor', 'highlight', 'small', 'lead', 'clearFormatting'],
-                    [
-                        ToolbarButtonGroup::make('تیتر', ['paragraph', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
-                            ->icon(Heroicon::OutlinedH1)
-                            ->textualButtons(),
-                    ],
-                    ['alignStart', 'alignCenter', 'alignEnd', 'alignJustify'],
-                    ['blockquote', 'codeBlock', 'bulletList', 'orderedList', 'horizontalRule', 'details'],
-                    ['table', 'grid', 'gridDelete', 'attachFiles', 'customBlocks'],
-                    ['undo', 'redo'],
-                ])
-                ->customTextColors()
-                ->resizableImages()
-                ->fileAttachmentsDisk('public')
-                ->fileAttachmentsDirectory(Article::FOLDER)
-                ->fileAttachmentsVisibility('public')
-                ->fileAttachmentsAcceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
-                ->fileAttachmentsMaxSize(10240)
-                ->required()
-                ->helperText('برای گذاشتن کد HTML، CSS یا JavaScript از دکمهٔ بلوک‌ها، «کد دلخواه» را به متن بکشید.')
-                ->columnSpanFull(),
+            Editor::body(Article::FOLDER, Article::BLOCKS),
             FormSection::make('تصاویر')
                 ->columnSpan(2)
                 ->schema([
@@ -187,12 +164,7 @@ class ArticleResource extends Resource
                 ->label('تاریخ انتشار')
                 ->required()
                 ->default(now()),
-            FormSection::make('سئو')
-                ->columnSpan(2)
-                ->schema([
-                    TextInput::make('seo_title')->label('عنوان سئو')->maxLength(255),
-                    Textarea::make('seo_description')->label('توضیحات سئو')->rows(3)->maxLength(500),
-                ]),
+            static::seoSection(),
             FormSection::make('سوالات متداول')
                 ->columnSpan(2)
                 ->schema([
@@ -290,7 +262,7 @@ class ArticleResource extends Resource
      * A link above a field to the list page of a resource, opened in a new tab
      * so the article being written is not lost.
      *
-     * @param  class-string<Resource>  $resource
+     * @param  class-string<resource>  $resource
      */
     private static function manage(string $name, string $label, string $resource): Action
     {

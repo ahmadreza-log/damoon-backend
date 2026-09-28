@@ -3,7 +3,6 @@
 use App\Http\Middleware\AuthenticateCustomerToken;
 use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
 use Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy;
-use Dedoc\Scramble\Support\Generator\SecurityScheme;
 
 /**
  * OpenAPI docs for the customer API.
@@ -61,7 +60,7 @@ return [
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => 'API مشتری دامون. ورود با POST /v1/auth/login توکن Bearer می‌دهد. این توکن پنل کارکنان را باز نمی‌کند.',
+        'description' => 'API دامون. نوشته‌ها، برگه‌ها، دسته‌بندی‌ها، برچسب‌ها و رسانه‌ها عمومی و فقط‌خواندنی هستند و فقط محتوای منتشرشده را می‌دهند. ورود مشتری با POST /v1/auth/login توکن Bearer می‌دهد. این توکن پنل کارکنان را باز نمی‌کند.',
     ],
 
     'ui' => [
@@ -191,11 +190,11 @@ return [
     'security_strategy' => [
         MiddlewareAuthSecurityStrategy::class,
         [
+            // No scheme option: the strategy defaults to HTTP bearer, and an object here breaks config:cache.
             'middleware' => [
                 'auth.customer',
                 AuthenticateCustomerToken::class,
             ],
-            'scheme' => SecurityScheme::http('bearer'),
         ],
     ],
 ];

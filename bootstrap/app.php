@@ -4,6 +4,7 @@ use App\Http\Middleware\AuthenticateCustomerToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -34,5 +35,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // A browser opening an API link has no Accept: application/json header but still expects JSON errors.
+        $exceptions->shouldRenderJsonWhen(fn (Request $request): bool => $request->is('v1', 'v1/*') || $request->expectsJson());
     })->create();

@@ -126,8 +126,9 @@ class ArticleTest extends TestCase
             ->assertFormFieldExists('tags')
             ->assertFormFieldExists('author_id')
             ->assertFormFieldExists('published_at')
-            ->assertFormFieldExists('seo_title')
-            ->assertFormFieldExists('seo_description')
+            ->assertFormFieldExists('seo_meta.title')
+            ->assertFormFieldExists('seo_meta.description')
+            ->assertFormFieldExists('seo_meta.og_image')
             ->assertFormFieldExists('questions')
             ->assertFormFieldExists('related')
             ->assertFormFieldExists('products')
@@ -147,8 +148,11 @@ class ArticleTest extends TestCase
                 'tags' => [$tag->getKey()],
                 'author_id' => $owner->getKey(),
                 'published_at' => now()->toDateTimeString(),
-                'seo_title' => 'عنوان سئو',
-                'seo_description' => 'توضیح سئو',
+                'seo_meta' => [
+                    'title' => 'عنوان سئو',
+                    'description' => 'توضیح سئو',
+                    'og_image' => 'articles/covers/cover.png',
+                ],
                 'questions' => [
                     ['question' => 'این چیست؟', 'answer' => 'یک نوشته است.'],
                 ],
@@ -172,7 +176,9 @@ class ArticleTest extends TestCase
         $this->assertStringContainsString('<div class="box">سلام</div>', $article->html());
         $this->assertEqualsCanonicalizing([$category->getKey(), $second->getKey()], $article->categories->modelKeys());
         $this->assertSame($owner->getKey(), $article->author_id);
-        $this->assertSame('عنوان سئو', $article->seo_title);
+        $this->assertSame('عنوان سئو', $article->seoMeta->title);
+        $this->assertSame('توضیح سئو', $article->seoMeta->description);
+        $this->assertSame('/storage/articles/covers/cover.png', $article->seoMeta->og_image);
         $this->assertSame([['question' => 'این چیست؟', 'answer' => 'یک نوشته است.']], $article->questions);
         $this->assertTrue($article->tags->contains($tag));
         $this->assertEqualsCanonicalizing([$other->getKey(), $another->getKey()], $article->related->modelKeys());

@@ -19,7 +19,7 @@ use Tests\TestCase;
 class OpenApiTest extends TestCase
 {
     /**
-     * The document lists login and me, leaves out routes that do not exist, and has version 1.0.0.
+     * The document lists login, me, and the public content routes, leaves out routes that do not exist, and has version 1.0.0.
      *
      * setThrowExceptions(true) makes the test fail when Scramble cannot read a route,
      * instead of silently dropping that route from the document.
@@ -35,6 +35,15 @@ class OpenApiTest extends TestCase
 
         $this->assertContains('/auth/login', $paths);
         $this->assertContains('/auth/me', $paths);
+
+        foreach (['articles', 'pages', 'categories', 'tags'] as $group) {
+            $this->assertContains('/'.$group, $paths);
+            $this->assertContains('/'.$group.'/{slug}', $paths);
+        }
+
+        $this->assertContains('/media', $paths);
+        $this->assertContains('/media/{key}', $paths);
+        $this->assertSame([], $spec['paths']['/articles']['get']['security'] ?? []);
         $this->assertNotContains('/auth/register', $paths);
         $this->assertNotContains('/auth/verify', $paths);
         $this->assertNotContains('/auth/forgot', $paths);

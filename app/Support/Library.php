@@ -2,18 +2,22 @@
 
 namespace App\Support;
 
+use App\Filament\Builder\Block;
 use App\Models\Article;
 use App\Models\Asset;
 use App\Models\Category;
+use App\Models\Page;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Rankbeam\Seo\Models\SEOMeta;
+use Redberry\PageBuilderPlugin\Models\PageBuilderBlock;
 
 /**
  * Every file stored on the public disk, and where the panel still uses it.
  *
- * Avatars, article covers, galleries, and files uploaded on the media page
+ * Avatars, article and page covers, galleries, body pictures, SEO social images, and files uploaded on the media page
  * all live on that disk. The media page reads rows() and removes a file with drop().
  * find() is one file, used by the detail page.
  *
@@ -137,10 +141,11 @@ class Library
     }
 
     /**
-     * Deletes a public file with its sizes and clears it from users, articles, and the detail text.
+     * Deletes a public file with its sizes and clears it from users, articles, pages, and the detail text.
      *
-     * A picture from an article body is also taken out of that body, and a
-     * category or tag banner is taken off that record.
+     * A picture from an article or page body is also taken out of that body, a
+     * category or tag banner is taken off that record, a page builder block loses it,
+     * and an SEO social image is cleared.
      */
     public static function drop(string $path): void
     {
@@ -154,6 +159,7 @@ class Library
 
         User::query()->where('avatar', $path)->update(['avatar' => null]);
         Article::query()->where('cover', $path)->update(['cover' => null]);
+        Page::query()->where('cover', $path)->update(['cover' => null]);
 
         Article::query()
             ->whereJsonContains('gallery', $path)
@@ -193,6 +199,27 @@ class Library
                     $article->saveQuietly();
                 });
         }
+
+        if (str_starts_with($path, Page::FOLDER.'/')) {
+            Page::query()
+                ->get()
+                ->filter(fn (Page $page): bool => in_array($path, Page::images($page->content), true))
+                ->each(function (Page $page) use ($path): void {
+                    $page->content = Page::strip($page->content, $path);
+                    $page->saveQuietly();
+                });
+        }
+
+        PageBuilderBlock::query()
+            ->whereIn('block_type', Page::BUILDER)
+            ->get()
+            ->filter(fn (PageBuilderBlock $block): bool => in_array($path, $block->block_type::pictures((array) $block->data), true))
+            ->each(function (PageBuilderBlock $block) use ($path): void {
+                $block->data = $block->block_type::forget((array) $block->data, $path);
+                $block->saveQuietly();
+            });
+
+        SEOMeta::query()->where('og_image', Seo::value($path))->update(['og_image' => null]);
     }
 
     /**
@@ -271,6 +298,10 @@ class Library
             str_starts_with($path, 'articles/covers/') => 'تصویر شاخص',
             str_starts_with($path, 'articles/gallery/') => 'گالری',
             str_starts_with($path, Article::FOLDER.'/') => 'تصویر محتوا',
+            str_starts_with($path, Page::COVERS.'/') => 'تصویر شاخص برگه',
+            str_starts_with($path, Page::FOLDER.'/') => 'تصویر محتوای برگه',
+            str_starts_with($path, Block::FOLDER.'/') => 'تصویر صفحه‌ساز',
+            str_starts_with($path, Seo::FOLDER.'/') => 'تصویر سئو',
             str_starts_with($path, Category::FOLDER.'/') => self::BANNERS[Category::class],
             str_starts_with($path, Tag::FOLDER.'/') => self::BANNERS[Tag::class],
             str_starts_with($path, 'media/') => 'رسانه',
@@ -317,6 +348,29 @@ class Library
                 }
             });
 
+        Page::query()
+            ->with('pageBuilderBlocks')
+            ->get(['id', 'title', 'cover', 'content'])
+            ->each(function (Page $page) use (&$map): void {
+                if (is_string($page->cover) && $page->cover !== '') {
+                    $map[$page->cover][] = 'تصویر شاخص برگه '.$page->title;
+                }
+
+                foreach (array_unique(Page::images($page->content)) as $path) {
+                    $map[$path][] = 'محتوای برگه '.$page->title;
+                }
+
+                foreach ($page->pageBuilderBlocks as $block) {
+                    if (! in_array($block->block_type, Page::BUILDER, true)) {
+                        continue;
+                    }
+
+                    foreach ($block->block_type::pictures((array) $block->data) as $path) {
+                        $map[$path][] = 'بلوک '.$block->block_type::label().' برگه '.$page->title;
+                    }
+                }
+            });
+
         foreach (self::BANNERS as $model => $label) {
             $model::query()
                 ->whereNotNull('banners')
@@ -327,6 +381,21 @@ class Library
                     }
                 });
         }
+
+        SEOMeta::query()
+            ->whereIn('seoable_type', array_keys(Seo::MODELS))
+            ->whereNotNull('og_image')
+            ->with('seoable')
+            ->get()
+            ->each(function (SEOMeta $meta) use (&$map): void {
+                $path = Seo::path($meta->og_image);
+
+                if ($path === null) {
+                    return;
+                }
+
+                $map[$path][] = 'تصویر اشتراک‌گذاری '.Seo::MODELS[$meta->seoable_type].' '.($meta->seoable->title ?? '');
+            });
 
         $labels = [];
 

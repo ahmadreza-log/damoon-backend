@@ -77,8 +77,8 @@ class Fields
                 ->password()
                 ->revealable()
                 ->rule('min:8')
-                ->required(fn(string $operation): bool => $operation === 'create')
-                ->dehydrated(fn(?string $state): bool => filled($state))
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn (?string $state): bool => filled($state))
                 ->maxLength(255);
         }
 
@@ -111,20 +111,20 @@ class Fields
                     ->nullable()
                     ->maxLength(32)
                     ->unique(ignoreRecord: true)
-                    ->dehydrateStateUsing(fn(mixed $state): ?string => self::clear($state)),
+                    ->dehydrateStateUsing(fn (mixed $state): ?string => self::clear($state)),
                 TextInput::make('national')
                     ->label('کد ملی')
                     ->nullable()
                     ->maxLength(10)
                     ->rule(new National)
                     ->unique(ignoreRecord: true)
-                    ->dehydrateStateUsing(fn(mixed $state): ?string => self::clear($state)),
+                    ->dehydrateStateUsing(fn (mixed $state): ?string => self::clear($state)),
                 TextInput::make('job')
                     ->label('موقعیت شغلی')
                     ->nullable()
                     ->maxLength(255)
                     ->columnSpanFull()
-                    ->dehydrateStateUsing(fn(mixed $state): ?string => self::clear($state)),
+                    ->dehydrateStateUsing(fn (mixed $state): ?string => self::clear($state)),
                 Select::make('degree')
                     ->label('مدرک تحصیلی')
                     ->options(Degree::options())
@@ -136,7 +136,7 @@ class Fields
                     ->label('رشته تحصیلی')
                     ->nullable()
                     ->maxLength(255)
-                    ->dehydrateStateUsing(fn(mixed $state): ?string => self::clear($state)),
+                    ->dehydrateStateUsing(fn (mixed $state): ?string => self::clear($state)),
                 ToggleButtons::make('gender')
                     ->label('جنسیت')
                     ->options(Gender::options())
@@ -167,8 +167,8 @@ class Fields
                     ->autocomplete('current-password')
                     ->visibleOn('edit')
                     ->dehydrated(false)
-                    ->required(fn(Get $get, string $operation): bool => $operation === 'edit' && (filled($get('password')) || filled($get('confirmation'))))
-                    ->rule(fn(?User $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                    ->required(fn (Get $get, string $operation): bool => $operation === 'edit' && (filled($get('password')) || filled($get('confirmation'))))
+                    ->rule(fn (?User $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
                         self::known($record, $value, $fail);
                     }),
                 TextInput::make('password')
@@ -178,9 +178,9 @@ class Fields
                     ->revealable()
                     ->autocomplete('new-password')
                     ->maxLength(255)
-                    ->required(fn(Get $get, string $operation): bool => $operation === 'create' || filled($get('current')) || filled($get('confirmation')))
-                    ->dehydrated(fn(?string $state): bool => filled($state))
-                    ->rule(fn(): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                    ->required(fn (Get $get, string $operation): bool => $operation === 'create' || filled($get('current')) || filled($get('confirmation')))
+                    ->dehydrated(fn (?string $state): bool => filled($state))
+                    ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
                         self::length($value, $fail);
                     }),
                 TextInput::make('confirmation')
@@ -190,8 +190,8 @@ class Fields
                     ->revealable()
                     ->autocomplete('new-password')
                     ->dehydrated(false)
-                    ->required(fn(Get $get, string $operation): bool => $operation === 'create' || filled($get('password')) || filled($get('current')))
-                    ->rule(fn(Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                    ->required(fn (Get $get, string $operation): bool => $operation === 'create' || filled($get('password')) || filled($get('current')))
+                    ->rule(fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
                         self::agree($get('password'), $value, $fail);
                     }),
             ]);
@@ -212,8 +212,8 @@ class Fields
             ->required()
             ->default(true)
             ->columnSpanFull()
-            ->disabled(fn(?User $record): bool => (bool) $record?->owner())
-            ->helperText(fn(?User $record): string => $record?->owner()
+            ->disabled(fn (?User $record): bool => (bool) $record?->owner())
+            ->helperText(fn (?User $record): string => $record?->owner()
                 ? 'مالک سامانه همیشه فعال است.'
                 : 'با غیرفعال کردن، ورود این کاربر به پنل قطع می‌شود.');
     }

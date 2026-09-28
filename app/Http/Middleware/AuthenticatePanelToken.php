@@ -7,6 +7,7 @@ use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -67,7 +68,11 @@ class AuthenticatePanelToken
             $guard->login($user);
         }
 
-        $this->tokens->refresh($plain);
+        $token = $user->currentAccessToken();
+
+        if ($token instanceof PersonalAccessToken) {
+            $this->tokens->refresh($token, $plain);
+        }
 
         return $next($request);
     }
