@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Filament\Builder\Block;
 use App\Models\Article;
 use App\Models\Asset;
 use App\Models\Category;
@@ -12,7 +11,6 @@ use App\Models\User;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Rankbeam\Seo\Models\SEOMeta;
-use Redberry\PageBuilderPlugin\Models\PageBuilderBlock;
 
 /**
  * Every file stored on the public disk, and where the panel still uses it.
@@ -123,7 +121,9 @@ class Library
 
         $disk = Storage::disk('public');
 
-        return $disk->exists($path) && self::image($path, (string) $disk->mimeType($path));
+        return $disk instanceof FilesystemAdapter
+            && $disk->exists($path)
+            && self::image($path, (string) $disk->mimeType($path));
     }
 
     /**
@@ -144,7 +144,7 @@ class Library
      * Deletes a public file with its sizes and clears it from users, articles, pages, and the detail text.
      *
      * A picture from an article or page body is also taken out of that body, a
-     * category or tag banner is taken off that record, a page builder block loses it,
+     * category or tag banner is taken off that record, a page builder layout loses its picture,
      * and an SEO social image is cleared.
      */
     public static function drop(string $path): void
@@ -210,13 +210,13 @@ class Library
                 });
         }
 
-        PageBuilderBlock::query()
-            ->whereIn('block_type', Page::BUILDER)
+        Page::query()
+            ->where(fn ($query) => $query->whereNotNull('design')->orWhereNotNull('markup'))
             ->get()
-            ->filter(fn (PageBuilderBlock $block): bool => in_array($path, $block->block_type::pictures((array) $block->data), true))
-            ->each(function (PageBuilderBlock $block) use ($path): void {
-                $block->data = $block->block_type::forget((array) $block->data, $path);
-                $block->saveQuietly();
+            ->filter(fn (Page $page): bool => in_array($path, Page::sources($page->design, $page->markup), true))
+            ->each(function (Page $page) use ($path): void {
+                [$page->design, $page->markup] = Page::erase($page->design, $page->markup, $path);
+                $page->saveQuietly();
             });
 
         SEOMeta::query()->where('og_image', Seo::value($path))->update(['og_image' => null]);
@@ -300,7 +300,7 @@ class Library
             str_starts_with($path, Article::FOLDER.'/') => 'تصویر محتوا',
             str_starts_with($path, Page::COVERS.'/') => 'تصویر شاخص برگه',
             str_starts_with($path, Page::FOLDER.'/') => 'تصویر محتوای برگه',
-            str_starts_with($path, Block::FOLDER.'/') => 'تصویر صفحه‌ساز',
+            str_starts_with($path, Page::DESIGNS.'/'), str_starts_with($path, 'pages/blocks/') => 'تصویر صفحه‌ساز',
             str_starts_with($path, Seo::FOLDER.'/') => 'تصویر سئو',
             str_starts_with($path, Category::FOLDER.'/') => self::BANNERS[Category::class],
             str_starts_with($path, Tag::FOLDER.'/') => self::BANNERS[Tag::class],
@@ -349,8 +349,7 @@ class Library
             });
 
         Page::query()
-            ->with('pageBuilderBlocks')
-            ->get(['id', 'title', 'cover', 'content'])
+            ->get(['id', 'title', 'cover', 'content', 'design', 'markup'])
             ->each(function (Page $page) use (&$map): void {
                 if (is_string($page->cover) && $page->cover !== '') {
                     $map[$page->cover][] = 'تصویر شاخص برگه '.$page->title;
@@ -360,14 +359,8 @@ class Library
                     $map[$path][] = 'محتوای برگه '.$page->title;
                 }
 
-                foreach ($page->pageBuilderBlocks as $block) {
-                    if (! in_array($block->block_type, Page::BUILDER, true)) {
-                        continue;
-                    }
-
-                    foreach ($block->block_type::pictures((array) $block->data) as $path) {
-                        $map[$path][] = 'بلوک '.$block->block_type::label().' برگه '.$page->title;
-                    }
+                foreach (Page::sources($page->design, $page->markup) as $path) {
+                    $map[$path][] = 'صفحه‌ساز برگه '.$page->title;
                 }
             });
 

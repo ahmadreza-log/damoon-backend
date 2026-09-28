@@ -3,18 +3,16 @@
 namespace App\Models;
 
 use App\Filament\Blocks\Code;
-use App\Filament\Builder;
 use App\Models\Concerns\Body;
 use App\Models\Concerns\Meta;
 use App\Models\Concerns\Tree;
+use App\Support\Library;
 use App\Support\Sizes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder as Query;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Redberry\PageBuilderPlugin\Models\PageBuilderBlock;
-use Redberry\PageBuilderPlugin\Traits\HasPageBuilder;
 
 /**
  * A standalone site page in the content group, such as درباره ما or تماس با ما.
@@ -27,21 +25,25 @@ use Redberry\PageBuilderPlugin\Traits\HasPageBuilder;
  * They stay in the library when the page is deleted, and new ones get their sizes
  * from Sizes when the page is saved.
  *
- * Besides the body, a page can be laid out with the page builder (صفحه‌ساز): an ordered
- * list of blocks such as a hero banner, a gallery, or questions, stored in
- * page_builder_blocks through HasPageBuilder. layout draws them for the site, and
- * deleting the page deletes its blocks. SEO title, description, and social image
- * live in seo_meta through Meta.
+ * Besides the body, a page can be laid out with the page builder (صفحه‌ساز), a drag and
+ * drop editor like Elementor built on GrapesJS. design keeps the editor's project:
+ * its component tree and style rules as JSON. markup and style are the HTML and CSS the
+ * editor exports on save, and layout joins them for the site. Pictures in the builder
+ * are media library files, written as /storage/{path}. SEO title, description, and
+ * social image live in seo_meta through Meta.
  *
  * Extending:
  * - Add a column in a pages migration, Fillable, and PageResource together.
- * - A new editor block goes in BLOCKS. A new page builder block goes in BUILDER.
+ * - A new editor block goes in BLOCKS. A new page builder block goes in resources/js/designer.js.
  * - A new column that stores a public path belongs in Library::uses and Library::drop.
  */
 #[Fillable([
     'title',
     'slug',
     'content',
+    'design',
+    'markup',
+    'style',
     'cover',
     'parent_id',
     'position',
@@ -51,7 +53,6 @@ use Redberry\PageBuilderPlugin\Traits\HasPageBuilder;
 class Page extends Model
 {
     use Body;
-    use HasPageBuilder;
     use Meta;
     use Tree;
 
@@ -62,35 +63,20 @@ class Page extends Model
      */
     public const BLOCKS = [Code::class];
 
-    /**
-     * Blocks the page builder offers, in the order they are listed.
-     *
-     * @var array<int, class-string<Builder\Block>>
-     */
-    public const BUILDER = [
-        Builder\Hero::class,
-        Builder\Text::class,
-        Builder\Image::class,
-        Builder\Gallery::class,
-        Builder\Features::class,
-        Builder\Callout::class,
-        Builder\Faq::class,
-        Builder\Video::class,
-        Builder\Posts::class,
-        Builder\Code::class,
-    ];
-
     /** The public folder for pictures uploaded inside the body editor. */
     public const FOLDER = 'pages/content';
 
     /** The public folder for cover images uploaded from the page form. */
     public const COVERS = 'pages/covers';
 
+    /** The public folder for pictures uploaded inside the page builder. */
+    public const DESIGNS = 'pages/design';
+
     /** The site path pages live under, used for the SEO address. Pages sit at the site root. */
     public const ADDRESS = '';
 
     /**
-     * Fills the slug, builds sizes for new pictures, and deletes the blocks with the page.
+     * Fills the slug and builds sizes for new pictures.
      *
      * Eloquent owns this method name.
      */
@@ -103,47 +89,95 @@ class Page extends Model
         static::saved(function (Page $page): void {
             $page->resize();
         });
-
-        static::deleting(function (Page $page): void {
-            $page->pageBuilderBlocks()->delete();
-        });
     }
 
     /**
-     * The page builder blocks drawn as HTML for the site, in page order.
-     *
-     * A block whose class is no longer in BUILDER is skipped, so removing a block type
-     * never breaks old pages.
+     * The page builder layout for the site: its CSS in a style tag, then its HTML.
      */
     public function layout(): string
     {
-        return $this->pageBuilderBlocks
-            ->sortBy('order')
-            ->map(fn (PageBuilderBlock $block): string => self::draw($block))
-            ->filter()
-            ->implode("\n");
+        $style = trim((string) $this->style);
+
+        return ($style === '' ? '' : '<style>'.$style.'</style>'."\n").(string) $this->markup;
     }
 
     /**
-     * One page builder block drawn as HTML for the site, or an empty string when its class is not in BUILDER.
+     * Public disk paths of the pictures a page builder layout uses, from its design and HTML.
+     *
+     * The editor writes each picture as /storage/{path}. Built sizes are left out, since
+     * the builder only offers originals.
+     *
+     * @return array<int, string>
      */
-    public static function draw(PageBuilderBlock $block): string
+    public static function sources(mixed $design, mixed $markup): array
     {
-        $type = $block->block_type;
+        $text = (is_array($design) ? json_encode(self::project($design), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '').' '.(string) $markup;
 
-        if (! in_array($type, self::BUILDER, true)) {
-            return '';
+        preg_match_all('~/storage/([^"\'\s)\\\\?#<>]+)~u', $text, $found);
+
+        return array_values(array_unique(array_filter(
+            array_map('rawurldecode', $found[1]),
+            fn (string $path): bool => ! str_starts_with($path, Sizes::ROOT.'/') && ! str_contains($path, '..'),
+        )));
+    }
+
+    /**
+     * The design and HTML with every picture component that shows one path taken out.
+     *
+     * @return array{0: array<string, mixed>|null, 1: string|null}
+     */
+    public static function erase(mixed $design, ?string $markup, string $path): array
+    {
+        $address = Library::url($path);
+
+        if (is_array($design)) {
+            $design = self::prune($design, $address);
         }
 
-        return view($type::getView(), [
-            'block' => [
-                'id' => $block->id,
-                'block_name' => $type::getBlockName(),
-                'block_type' => $type,
-                'data' => $type::formatForSingleView($block->data ?? []),
-            ],
-            'preview' => false,
-        ])->render();
+        if ($markup !== null) {
+            $markup = (string) preg_replace('~<img\b[^>]*\bsrc=["\']'.preg_quote($address, '~').'["\'][^>]*>~iu', '', $markup);
+        }
+
+        return [is_array($design) ? $design : null, $markup];
+    }
+
+    /**
+     * The design without the asset list GrapesJS keeps, which lists every offered picture and not only the used ones.
+     *
+     * @param  array<string, mixed>  $design
+     * @return array<string, mixed>
+     */
+    public static function project(array $design): array
+    {
+        unset($design['assets']);
+
+        return $design;
+    }
+
+    /**
+     * One design node and everything inside it, without components whose picture is the given address.
+     *
+     * @param  array<string, mixed>  $node
+     * @return array<string, mixed>
+     */
+    private static function prune(array $node, string $address): array
+    {
+        foreach ($node as $key => $value) {
+            if (! is_array($value)) {
+                continue;
+            }
+
+            if (array_is_list($value)) {
+                $node[$key] = array_values(array_filter(
+                    array_map(fn (mixed $item): mixed => is_array($item) ? self::prune($item, $address) : $item, $value),
+                    fn (mixed $item): bool => ! is_array($item) || (($item['src'] ?? $item['attributes']['src'] ?? null) !== $address),
+                ));
+            } else {
+                $node[$key] = self::prune($value, $address);
+            }
+        }
+
+        return $node;
     }
 
     /**
@@ -187,6 +221,7 @@ class Page extends Model
         return [
             'published_at' => 'datetime',
             'position' => 'integer',
+            'design' => 'array',
         ];
     }
 

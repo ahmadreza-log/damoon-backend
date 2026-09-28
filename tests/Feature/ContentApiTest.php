@@ -2,9 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Builder\Block;
-use App\Filament\Builder\Hero;
-use App\Filament\Builder\Text;
 use App\Models\Article;
 use App\Models\Asset;
 use App\Models\Category;
@@ -140,20 +137,33 @@ class ContentApiTest extends TestCase
     }
 
     /**
-     * Pages list only published ones; one page sends its blocks in order, with picture addresses, rich text as JSON, and HTML.
+     * Pages list only published ones; one page sends its page builder design as JSON, with picture addresses, and as HTML and CSS.
      *
      * Children scheduled for later are left out, and such a page gets 404.
      */
-    public function test_pages_send_blocks_and_children(): void
+    public function test_pages_send_design_and_children(): void
     {
         $disk = Storage::fake('public');
-        $disk->putFileAs(Block::FOLDER, $this->picture('hero.png'), 'hero.png');
+        $disk->putFileAs(Page::DESIGNS, $this->picture('hero.png'), 'hero.png');
+        $src = '/storage/'.Page::DESIGNS.'/hero.png';
 
-        $about = Page::query()->create(['title' => 'درباره ما', 'published_at' => now()->subDay()]);
+        $about = Page::query()->create([
+            'title' => 'درباره ما',
+            'published_at' => now()->subDay(),
+            'design' => [
+                'pages' => [['frames' => [['component' => ['type' => 'wrapper', 'components' => [
+                    ['tagName' => 'section', 'classes' => ['hero'], 'components' => [
+                        ['type' => 'text', 'tagName' => 'h1', 'components' => [['type' => 'textnode', 'content' => 'خوش آمدید']]],
+                        ['type' => 'image', 'attributes' => ['src' => $src, 'alt' => 'بنر']],
+                    ]],
+                ]]]]]],
+                'styles' => [['selectors' => ['hero'], 'style' => ['background-image' => 'url("'.$src.'")', 'padding' => '40px']]],
+            ],
+            'markup' => '<section class="hero"><h1>خوش آمدید</h1><img src="'.$src.'" alt="بنر"></section>',
+            'style' => '.hero{background-image:url("'.$src.'");}',
+        ]);
         $team = Page::query()->create(['title' => 'تیم ما', 'parent_id' => $about->getKey(), 'position' => 1, 'published_at' => now()->subDay()]);
         $hidden = Page::query()->create(['title' => 'پنهان', 'parent_id' => $about->getKey(), 'published_at' => now()->addWeek()]);
-        $about->pageBuilderBlocks()->create(['block_type' => Text::class, 'order' => 2, 'data' => ['heading' => 'داستان ما', 'text' => '<p>از ۱۴۰۰</p>']]);
-        $about->pageBuilderBlocks()->create(['block_type' => Hero::class, 'order' => 1, 'data' => ['heading' => 'خوش آمدید', 'image' => Block::FOLDER.'/hero.png']]);
 
         $this->get('/v1/pages')
             ->assertOk()
@@ -162,24 +172,29 @@ class ContentApiTest extends TestCase
 
         $response = $this->get('/v1/pages/'.urlencode((string) $about->slug))
             ->assertOk()
-            ->assertJsonCount(2, 'data.blocks')
-            ->assertJsonPath('data.blocks.0.type', 'hero')
-            ->assertJsonPath('data.blocks.0.name', Hero::label())
-            ->assertJsonPath('data.blocks.0.data.image.path', Block::FOLDER.'/hero.png')
-            ->assertJsonPath('data.blocks.1.type', 'text')
-            ->assertJsonPath('data.blocks.1.data.text.type', 'doc')
-            ->assertJsonPath('data.blocks.1.data.text.content.0.content.0.text', 'از ۱۴۰۰')
+            ->assertJsonCount(1, 'data.design.components')
+            ->assertJsonPath('data.design.components.0.tagName', 'section')
+            ->assertJsonPath('data.design.components.0.components.0.components.0.content', 'خوش آمدید')
+            ->assertJsonPath('data.design.components.0.components.1.type', 'image')
+            ->assertJsonPath('data.design.components.0.components.1.attributes.alt', 'بنر')
+            ->assertJsonPath('data.design.components.0.components.1.picture.path', Page::DESIGNS.'/hero.png')
+            ->assertJsonPath('data.design.styles.0.style.padding', '40px')
             ->assertJsonPath('data.content', ['type' => 'doc', 'content' => []])
             ->assertJsonCount(1, 'data.children')
             ->assertJsonPath('data.children.0.id', $team->getKey())
-            ->assertJsonPath('data.parent', null);
+            ->assertJsonPath('data.parent', null)
+            ->assertJsonMissingPath('data.blocks');
 
-        $this->assertStringContainsString('خوش آمدید', (string) $response->json('data.blocks.0.html'));
-        $layout = (string) $response->json('data.layout');
-        $this->assertLessThan(strpos($layout, 'داستان ما'), strpos($layout, 'خوش آمدید'));
+        $full = url($src);
+        $this->assertSame($full, $response->json('data.design.components.0.components.1.attributes.src'));
+        $this->assertSame('url("'.$full.'")', $response->json('data.design.styles.0.style.background-image'));
+        $this->assertStringContainsString('<img src="'.$full.'"', (string) $response->json('data.html'));
+        $this->assertStringContainsString('url("'.$full.'")', (string) $response->json('data.css'));
 
         $this->get('/v1/pages/'.urlencode((string) $team->slug))
             ->assertOk()
+            ->assertJsonPath('data.design', ['components' => [], 'styles' => []])
+            ->assertJsonPath('data.html', '')
             ->assertJsonPath('data.parent.id', $about->getKey())
             ->assertJsonPath('data.trail', 'درباره ما › تیم ما');
 

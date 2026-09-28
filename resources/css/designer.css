@@ -1,0 +1,1060 @@
+/*
+ * The page builder's look: a full-screen editor in the panel's colours, light or dark with the panel.
+ *
+ * The top bar and side panel are the Blade view's markup (dd- classes). GrapesJS parts are
+ * restyled through its --gjs- variables and its gjs- classes. The editor loads no icon font,
+ * so the few Font Awesome classes GrapesJS still writes are drawn as SVG masks here.
+ */
+
+html.damoon-designing {
+    overflow: hidden;
+}
+
+.damoon-designer {
+    --dd-bg: #ffffff;
+    --dd-soft: #f8fafc;
+    --dd-hover: #f1f5f9;
+    --dd-border: #e2e8f0;
+    --dd-text: #0f172a;
+    --dd-muted: #64748b;
+    --dd-accent: #1d4ed8;
+    --dd-accent-soft: rgba(29, 78, 216, 0.08);
+    --dd-field: #ffffff;
+    --dd-canvas: #e9edf3;
+    --dd-warn: #b45309;
+    --dd-warn-soft: rgba(245, 158, 11, 0.14);
+    --dd-select: #2563eb;
+    --dd-font: iranyekan, Tahoma, sans-serif;
+
+    --gjs-main-color: var(--dd-bg);
+    --gjs-primary-color: var(--dd-bg);
+    --gjs-secondary-color: var(--dd-text);
+    --gjs-tertiary-color: var(--dd-accent);
+    --gjs-quaternary-color: var(--dd-accent);
+    --gjs-font-color: var(--dd-text);
+    --gjs-font-color-active: var(--dd-text);
+    --gjs-main-dark-color: var(--dd-hover);
+    --gjs-secondary-dark-color: var(--dd-soft);
+    --gjs-main-light-color: var(--dd-accent-soft);
+    --gjs-secondary-light-color: var(--dd-muted);
+    --gjs-soft-light-color: var(--dd-soft);
+    --gjs-light-border: var(--dd-border);
+    --gjs-arrow-color: var(--dd-muted);
+    --gjs-dark-text-shadow: transparent;
+    --gjs-main-font: var(--dd-font);
+    --gjs-font-size: 12.5px;
+    --gjs-color-blue: var(--dd-select);
+    --gjs-color-highlight: #3b82f6;
+    --gjs-placeholder-background-color: var(--dd-select);
+    --gjs-canvas-top: 0px;
+    --gjs-input-padding: 6px;
+    --gjs-upload-padding: 2.25rem 1rem;
+
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    background: var(--dd-bg);
+    color: var(--dd-text);
+    font-family: var(--dd-font);
+}
+
+.dark .damoon-designer {
+    --dd-bg: #18181b;
+    --dd-soft: #1f1f23;
+    --dd-hover: #27272a;
+    --dd-border: rgba(255, 255, 255, 0.08);
+    --dd-text: #f4f4f5;
+    --dd-muted: #a1a1aa;
+    --dd-accent: #60a5fa;
+    --dd-accent-soft: rgba(96, 165, 250, 0.12);
+    --dd-field: #111113;
+    --dd-canvas: #0c0c0e;
+    --dd-warn: #fbbf24;
+    --dd-warn-soft: rgba(251, 191, 36, 0.12);
+}
+
+.damoon-designer .dd-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+}
+
+/* Top bar */
+
+.damoon-designer .dd-bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    height: 3.5rem;
+    padding: 0 0.75rem;
+    border-bottom: 1px solid var(--dd-border);
+    background: var(--dd-bg);
+    flex-shrink: 0;
+}
+
+.damoon-designer .dd-bar-start,
+.damoon-designer .dd-bar-end,
+.damoon-designer .dd-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.damoon-designer .dd-bar-end {
+    justify-content: flex-end;
+}
+
+.damoon-designer .dd-tools {
+    gap: 0.125rem;
+    margin-inline-end: 0.25rem;
+}
+
+.damoon-designer .dd-title {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.damoon-designer .dd-title-label {
+    font-size: 0.6875rem;
+    color: var(--dd-muted);
+}
+
+.damoon-designer .dd-title-page {
+    max-width: 16rem;
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.damoon-designer .dd-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.625rem;
+    border-radius: 999px;
+    background: var(--dd-warn-soft);
+    color: var(--dd-warn);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.damoon-designer .dd-state::before {
+    content: '';
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.damoon-designer .dd-devices {
+    display: flex;
+    gap: 0.125rem;
+    padding: 0.1875rem;
+    border-radius: 0.625rem;
+    background: var(--dd-hover);
+}
+
+.damoon-designer .dd-device {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 1.875rem;
+    border-radius: 0.4375rem;
+    color: var(--dd-muted);
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-designer .dd-device:hover {
+    color: var(--dd-text);
+}
+
+.damoon-designer .dd-device.dd-active {
+    background: var(--dd-bg);
+    color: var(--dd-accent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.damoon-designer .dd-divider {
+    width: 1px;
+    height: 1.25rem;
+    margin: 0 0.375rem;
+    background: var(--dd-border);
+}
+
+.damoon-designer .dd-tools .fi-icon-btn.dd-on {
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+}
+
+.damoon-designer .dd-tools .fi-icon-btn:disabled {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+/* Body: side panel on the right, canvas beside it */
+
+.damoon-designer .dd-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.damoon-designer .dd-side {
+    display: flex;
+    flex-direction: column;
+    width: 20rem;
+    flex-shrink: 0;
+    min-height: 0;
+    border-inline-end: 1px solid var(--dd-border);
+    background: var(--dd-bg);
+}
+
+.damoon-designer .dd-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--dd-border);
+    flex-shrink: 0;
+}
+
+.damoon-designer .dd-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.625rem 0.25rem 0.5rem;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    color: var(--dd-muted);
+    font-size: 0.71875rem;
+    font-weight: 600;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.damoon-designer .dd-tab:hover {
+    color: var(--dd-text);
+    background: var(--dd-soft);
+}
+
+.damoon-designer .dd-tab:focus-visible,
+.damoon-designer .dd-device:focus-visible {
+    outline: 2px solid var(--dd-accent);
+    outline-offset: -2px;
+}
+
+.damoon-designer .dd-tab:focus:not(:focus-visible),
+.damoon-designer .dd-device:focus:not(:focus-visible) {
+    outline: none;
+}
+
+.damoon-designer .dd-tab.dd-active {
+    color: var(--dd-accent);
+    border-bottom-color: var(--dd-accent);
+}
+
+.damoon-designer .dd-panel {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--dd-border) transparent;
+}
+
+.damoon-designer .dd-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.375rem;
+    margin: 0.75rem 0.75rem 0.25rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.625rem;
+    background: var(--dd-soft);
+    color: var(--dd-muted);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-designer .dd-search:focus-within {
+    border-color: var(--dd-accent);
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-designer .dd-search .dd-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.damoon-designer .dd-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--dd-text);
+    font: inherit;
+    font-size: 0.8125rem;
+}
+
+.damoon-designer .dd-empty {
+    padding: 3rem 1.5rem;
+    color: var(--dd-muted);
+    text-align: center;
+    font-size: 0.8125rem;
+    line-height: 1.9;
+}
+
+.damoon-designer .dd-empty-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: 0 auto 0.75rem;
+    opacity: 0.6;
+}
+
+.damoon-designer .dd-picked {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid var(--dd-border);
+    background: var(--dd-soft);
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+}
+
+.damoon-designer .dd-picked strong {
+    color: var(--dd-text);
+}
+
+.damoon-designer .dd-stage {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    background: var(--dd-canvas);
+}
+
+.damoon-designer .dd-stage > div {
+    height: 100%;
+}
+
+/* GrapesJS: editor and canvas */
+
+.damoon-designer .gjs-editor {
+    background: transparent;
+    font-family: var(--dd-font);
+}
+
+.damoon-designer .gjs-cv-canvas {
+    top: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    width: auto;
+    height: auto;
+    background: transparent;
+}
+
+.damoon-designer.dd-previewing .gjs-cv-canvas {
+    background: var(--dd-canvas);
+}
+
+.damoon-designer .gjs-frame-wrapper {
+    transition: width 0.25s ease;
+}
+
+.damoon-designer .gjs-frame {
+    border-radius: 0.5rem;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 12px 32px -8px rgba(15, 23, 42, 0.18);
+}
+
+.damoon-designer .gjs-off-prv {
+    display: none !important;
+}
+
+.damoon-designer .gjs-highlighter,
+.damoon-designer .gjs-highlighter-sel {
+    outline: 1px solid #3b82f6;
+    outline-offset: -1px;
+}
+
+.damoon-designer .gjs-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.3125rem;
+    background: var(--dd-select);
+    color: #ffffff;
+    font-family: var(--dd-font);
+    font-size: 0.6875rem;
+    white-space: nowrap;
+}
+
+.damoon-designer .gjs-toolbar {
+    border-radius: 0.375rem;
+    background: var(--dd-select);
+    box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.45);
+    overflow: hidden;
+}
+
+.damoon-designer .gjs-toolbar-item {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.625rem;
+    padding: 0;
+    color: #ffffff;
+}
+
+.damoon-designer .gjs-toolbar-item:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.damoon-designer .gjs-toolbar-item svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.damoon-designer .gjs-placeholder {
+    border-color: transparent var(--dd-select);
+}
+
+.damoon-designer .gjs-placeholder-int {
+    background-color: var(--dd-select);
+}
+
+.damoon-designer .gjs-resizer-h {
+    border: 2px solid var(--dd-select);
+    border-radius: 50%;
+    background: #ffffff;
+}
+
+.damoon-designer .gjs-rte-toolbar {
+    border: 1px solid var(--dd-border);
+    border-radius: 0.5rem;
+    background: var(--dd-bg);
+    box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+}
+
+.damoon-designer .gjs-rte-action {
+    min-width: 2rem;
+    height: 2rem;
+    border-right: 1px solid var(--dd-border);
+    color: var(--dd-text);
+}
+
+.damoon-designer .gjs-rte-action:hover,
+.damoon-designer .gjs-rte-active {
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+}
+
+/* GrapesJS: icons it still names after Font Awesome */
+
+.damoon-designer .fa {
+    display: inline-block;
+    width: 0.875rem;
+    height: 0.875rem;
+    background-color: currentColor;
+    font-style: normal;
+    vertical-align: middle;
+    -webkit-mask: var(--dd-glyph) center / contain no-repeat;
+    mask: var(--dd-glyph) center / contain no-repeat;
+}
+
+.damoon-designer .fa-caret-down {
+    --dd-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.damoon-designer .fa-caret-right {
+    --dd-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 18-6-6 6-6'/%3E%3C/svg%3E");
+}
+
+.damoon-designer .fa-pencil {
+    --dd-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16.9 3.6a2 2 0 0 1 2.8 2.8L8 18l-4 1 1-4Z'/%3E%3C/svg%3E");
+}
+
+.damoon-designer .fa-code {
+    --dd-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m16 18 6-6-6-6M8 6l-6 6 6 6'/%3E%3C/svg%3E");
+}
+
+.damoon-designer .fa-arrows {
+    --dd-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3'/%3E%3C/svg%3E");
+}
+
+.damoon-designer .gjs-toolbar-item.fa {
+    width: 1.75rem;
+    height: 1.625rem;
+    -webkit-mask-size: 1rem;
+    mask-size: 1rem;
+    background-color: #ffffff;
+}
+
+/* GrapesJS: blocks */
+
+.damoon-designer .gjs-blocks-cs {
+    background: transparent;
+}
+
+.damoon-designer .gjs-block-category {
+    border-bottom: 0;
+}
+
+.damoon-designer .gjs-block-category .gjs-title {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.875rem 1rem 0.5rem;
+    border: 0;
+    background: transparent;
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-align: right;
+}
+
+.damoon-designer .gjs-block-category .gjs-caret-icon {
+    margin: 0;
+}
+
+.damoon-designer .gjs-blocks-c {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem 0.75rem;
+}
+
+.damoon-designer .gjs-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: auto;
+    min-width: 0;
+    min-height: 5.25rem;
+    margin: 0;
+    padding: 0.75rem 0.375rem 0.625rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.625rem;
+    background: var(--dd-bg);
+    box-shadow: none;
+    color: var(--dd-text);
+    cursor: grab;
+    transition: border-color 0.15s, box-shadow 0.15s, color 0.15s, transform 0.15s;
+}
+
+.damoon-designer .gjs-block:hover {
+    border-color: var(--dd-accent);
+    color: var(--dd-accent);
+    box-shadow: 0 6px 16px -8px rgba(29, 78, 216, 0.45);
+    transform: translateY(-1px);
+}
+
+.damoon-designer .gjs-block__media {
+    margin: 0;
+    color: var(--dd-muted);
+    line-height: 0;
+}
+
+.damoon-designer .gjs-block:hover .gjs-block__media {
+    color: inherit;
+}
+
+.damoon-designer .gjs-block svg {
+    width: 1.625rem;
+    height: 1.625rem;
+}
+
+.damoon-designer .gjs-block-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* GrapesJS: classes and style properties */
+
+.damoon-designer .gjs-clm-tags {
+    padding: 0.75rem 1rem 0.25rem;
+    font-size: 0.75rem;
+}
+
+.damoon-designer .gjs-clm-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.damoon-designer .gjs-clm-header-label {
+    color: var(--dd-muted);
+    font-weight: 600;
+}
+
+.damoon-designer .gjs-clm-tag {
+    padding: 0.1875rem 0.5rem;
+    border-radius: 0.375rem;
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+    font-weight: 600;
+}
+
+.damoon-designer .gjs-clm-tags-btn {
+    border-radius: 0.375rem;
+    background: var(--dd-hover);
+    color: var(--dd-muted);
+}
+
+.damoon-designer .gjs-clm-sels-info {
+    margin-top: 0.5rem;
+    color: var(--dd-muted);
+    font-size: 0.6875rem;
+}
+
+.damoon-designer .gjs-clm-tags #gjs-clm-new,
+.damoon-designer .gjs-clm-select select {
+    border: 1px solid var(--dd-border);
+    border-radius: 0.375rem;
+    background: var(--dd-field);
+    color: var(--dd-text);
+    padding: 0.1875rem 0.5rem;
+}
+
+.damoon-designer .gjs-sm-sectors {
+    padding: 0;
+}
+
+.damoon-designer .gjs-sm-sector {
+    border-bottom: 1px solid var(--dd-border);
+}
+
+.damoon-designer .gjs-sm-sector-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 0;
+    background: transparent;
+    color: var(--dd-text);
+    font-size: 0.78125rem;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.damoon-designer .gjs-sm-sector-title:hover {
+    background: var(--dd-soft);
+}
+
+.damoon-designer .gjs-sm-sector-caret {
+    width: 1rem;
+    height: 1rem;
+    color: var(--dd-muted);
+}
+
+.damoon-designer .gjs-sm-sector:not(.gjs-sm-open) .gjs-sm-sector-caret {
+    transform: rotate(90deg);
+}
+
+.damoon-designer .gjs-sm-properties {
+    gap: 0.625rem 0.5rem;
+    padding: 0.25rem 1rem 1rem;
+    font-size: 0.75rem;
+}
+
+.damoon-designer .gjs-sm-property {
+    width: calc(50% - 0.25rem);
+    margin: 0;
+    padding: 0;
+    float: none;
+}
+
+.damoon-designer .gjs-sm-property--full,
+.damoon-designer .gjs-sm-composite,
+.damoon-designer .gjs-sm-stack {
+    width: 100%;
+}
+
+.damoon-designer .gjs-sm-label {
+    margin: 0 0 0.3125rem;
+    color: var(--dd-muted);
+    font-size: 0.71875rem;
+    font-weight: 500;
+}
+
+.damoon-designer .gjs-sm-clear {
+    color: var(--dd-accent);
+}
+
+.damoon-designer .gjs-four-color,
+.damoon-designer .gjs-four-color-h:hover {
+    color: var(--dd-accent);
+}
+
+.damoon-designer .gjs-field {
+    min-height: 2rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.5rem;
+    background: var(--dd-field);
+    color: var(--dd-text);
+    direction: ltr;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-designer .gjs-field:focus-within {
+    border-color: var(--dd-accent);
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-designer .gjs-field input,
+.damoon-designer .gjs-field select,
+.damoon-designer .gjs-field textarea {
+    color: var(--dd-text);
+    font-family: inherit;
+    font-size: 0.75rem;
+}
+
+.damoon-designer .gjs-field select option {
+    background: var(--dd-bg);
+    color: var(--dd-text);
+}
+
+.damoon-designer .gjs-field-arrows {
+    color: var(--dd-muted);
+}
+
+.damoon-designer .gjs-field-color-picker {
+    border-radius: 0.3125rem;
+    box-shadow: inset 0 0 0 1px var(--dd-border);
+}
+
+.damoon-designer .gjs-radio-items {
+    gap: 0.125rem;
+    padding: 0.125rem;
+}
+
+.damoon-designer .gjs-radio-item {
+    border: 0;
+    border-radius: 0.375rem;
+}
+
+.damoon-designer .gjs-radio-item-label {
+    border-radius: 0.375rem;
+    color: var(--dd-muted);
+}
+
+.damoon-designer .gjs-radio-item input:checked + .gjs-radio-item-label {
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+}
+
+.damoon-designer .gjs-sm-composite .gjs-sm-properties,
+.damoon-designer .gjs-sm-stack .gjs-sm-properties {
+    padding: 0.625rem;
+}
+
+.damoon-designer .gjs-sm-composite.gjs-sm-property,
+.damoon-designer .gjs-sm-stack.gjs-sm-property {
+    padding: 0;
+}
+
+.damoon-designer .gjs-sm-composite > .gjs-sm-property__fields,
+.damoon-designer .gjs-sm-composite .gjs-fields,
+.damoon-designer .gjs-sm-layers {
+    border: 1px solid var(--dd-border);
+    border-radius: 0.5rem;
+    background: var(--dd-soft);
+}
+
+.damoon-designer .gjs-sm-layer {
+    margin: 0.25rem;
+    border-radius: 0.375rem;
+    background: var(--dd-bg);
+    box-shadow: inset 0 0 0 1px var(--dd-border);
+}
+
+.damoon-designer .gjs-sm-layer.gjs-sm-active {
+    background: var(--dd-accent-soft);
+}
+
+/* GrapesJS: settings */
+
+.damoon-designer .gjs-traits-c,
+.damoon-designer .gjs-trt-traits {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    padding: 1rem;
+    font-size: 0.75rem;
+}
+
+.damoon-designer .gjs-trt-trait {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375rem;
+    padding: 0;
+    font-weight: 400;
+    text-align: right;
+}
+
+.damoon-designer .gjs-trt-trait .gjs-label-wrp {
+    width: 100%;
+    min-width: 0;
+}
+
+.damoon-designer .gjs-trt-trait .gjs-label {
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.damoon-designer .gjs-trt-trait--checkbox {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* GrapesJS: layers */
+
+.damoon-designer [x-ref='layers'] {
+    direction: ltr;
+}
+
+.damoon-designer .gjs-layer {
+    font-size: 0.78125rem;
+}
+
+.damoon-designer .gjs-layer-item {
+    min-height: 2.25rem;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    border-bottom: 1px solid var(--dd-border);
+    background: transparent;
+    color: var(--dd-text);
+}
+
+.damoon-designer .gjs-layer-name {
+    unicode-bidi: plaintext;
+}
+
+.damoon-designer .gjs-layer.gjs-hovered > .gjs-layer-item {
+    background: var(--dd-soft);
+}
+
+.damoon-designer .gjs-layer.gjs-selected > .gjs-layer-item {
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+}
+
+.damoon-designer .gjs-layer-caret,
+.damoon-designer .gjs-layer-move,
+.damoon-designer .gjs-layer-vis,
+.damoon-designer .gjs-layer-count {
+    color: var(--dd-muted);
+}
+
+/* GrapesJS: dialogs, code, and pictures */
+
+.damoon-designer .gjs-mdl-container {
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.damoon-designer .gjs-mdl-dialog {
+    display: flex;
+    flex-direction: column;
+    max-width: 55rem;
+    max-height: 100%;
+    margin: 0 auto;
+    border: 1px solid var(--dd-border);
+    border-radius: 1rem;
+    background: var(--dd-bg);
+    color: var(--dd-text);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    font-family: var(--dd-font);
+    direction: rtl;
+    overflow: hidden;
+}
+
+.damoon-designer .gjs-mdl-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--dd-border);
+}
+
+.damoon-designer .gjs-mdl-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+}
+
+.damoon-designer .gjs-mdl-btn-close {
+    position: static;
+    color: var(--dd-muted);
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.damoon-designer .gjs-mdl-btn-close:hover {
+    color: var(--dd-text);
+}
+
+.damoon-designer .gjs-mdl-content {
+    padding: 1.25rem;
+    border: 0;
+    overflow-y: auto;
+}
+
+.damoon-designer .gjs-cm-editor-c {
+    direction: ltr;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.625rem;
+    overflow: hidden;
+}
+
+.damoon-designer .gjs-cm-editor #gjs-cm-title {
+    padding: 0.5rem 0.75rem;
+    background: var(--dd-soft);
+    color: var(--dd-muted);
+    font-family: var(--dd-font);
+    text-align: left;
+}
+
+.damoon-designer .CodeMirror {
+    direction: ltr;
+    text-align: left;
+}
+
+.damoon-designer .gjs-am-file-uploader,
+.damoon-designer .gjs-am-assets-cont {
+    float: none;
+    width: 100%;
+}
+
+.damoon-designer .gjs-am-file-uploader {
+    margin-bottom: 1rem;
+}
+
+.damoon-designer .gjs-am-file-uploader > form {
+    margin: 0;
+    border: 2px dashed var(--dd-border);
+    border-radius: 0.75rem;
+    background: var(--dd-soft);
+    color: var(--dd-muted);
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.damoon-designer .gjs-am-file-uploader #gjs-am-title {
+    padding: var(--gjs-upload-padding);
+    font-size: 0.8125rem;
+}
+
+.damoon-designer .gjs-am-file-uploader:hover > form,
+.damoon-designer .gjs-am-file-uploader > form.gjs-am-hover {
+    border-color: var(--dd-accent);
+    color: var(--dd-accent);
+}
+
+.damoon-designer .gjs-am-assets-cont {
+    height: auto;
+    padding: 0;
+    background: transparent;
+}
+
+.damoon-designer .gjs-am-assets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    align-content: start;
+    gap: 0.75rem;
+    height: auto;
+    max-height: 22rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.damoon-designer .gjs-am-assets-header {
+    display: none;
+}
+
+.damoon-designer .gjs-am-asset {
+    width: auto;
+    margin: 0;
+    padding: 0.375rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.625rem;
+    background: var(--dd-bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-designer .gjs-am-asset:hover,
+.damoon-designer .gjs-am-asset.gjs-am-highlight {
+    border-color: var(--dd-accent);
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-designer .gjs-am-preview-cont {
+    display: block;
+    width: 100%;
+    height: 6.5rem;
+    float: none;
+    border-radius: 0.4375rem;
+    background: var(--dd-hover);
+    overflow: hidden;
+}
+
+.damoon-designer .gjs-am-preview {
+    background-size: cover;
+}
+
+.damoon-designer .gjs-am-preview-bg {
+    display: none;
+}
+
+.damoon-designer .gjs-am-meta {
+    width: 100%;
+    float: none;
+    padding: 0.375rem 0.125rem 0;
+    overflow: hidden;
+    color: var(--dd-muted);
+    font-size: 0.6875rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    direction: ltr;
+    text-align: center;
+}
+
+.damoon-designer .gjs-am-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.damoon-designer .gjs-am-close {
+    display: none;
+}
+
+@media (max-width: 1279px) {
+    .damoon-designer .dd-hide-sm {
+        display: none;
+    }
+}
+
+@media (max-width: 1023px) {
+    .damoon-designer .dd-side {
+        width: 17rem;
+    }
+
+    .damoon-designer .gjs-blocks-c {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .damoon-designer .dd-title-page {
+        max-width: 8rem;
+    }
+}

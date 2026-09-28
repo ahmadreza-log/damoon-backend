@@ -4,12 +4,19 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "designer": "esbuild resources/js/designer.js --bundle --format=esm --minify --outfile=resources/dist/designer.js"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
+        "esbuild": "^0.28.2",
+        "grapesjs": "^0.23.6",
+        "grapesjs-blocks-basic": "^1.0.2",
+        "grapesjs-custom-code": "^1.0.2",
+        "grapesjs-style-bg": "^2.0.2",
+        "grapesjs-tabs": "^1.0.6",
         "laravel-vite-plugin": "^2.0.0",
         "tailwindcss": "^4.0.0",
         "vite": "^7.0.7"

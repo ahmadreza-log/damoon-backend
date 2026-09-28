@@ -10,6 +10,9 @@ use App\Models\User;
 use App\Support\Seo;
 use App\Support\Shamsi;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
+use Filament\Support\Assets\AlpineComponent;
+use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Auth\RequestGuard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -28,6 +31,8 @@ use Illuminate\Support\ServiceProvider;
  * - permission.models.role points at App\Models\Role so a role can keep a Persian name.
  * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
  * - The SEO box fields are adjusted in Seo::boot.
+ * - The page builder script and styles are built into resources/dist with npm run designer and
+ *   registered here; php artisan filament:assets copies them into public.
  */
 class AppServiceProvider extends ServiceProvider
 {
@@ -57,6 +62,17 @@ class AppServiceProvider extends ServiceProvider
         config(['permission.events_enabled' => true]);
 
         Seo::boot();
+
+        FilamentAsset::register([
+            AlpineComponent::make('designer', resource_path('dist/designer.js')),
+            Css::make('designer', resource_path('dist/designer.css'))->loadedOnRequest(),
+        ]);
+
+        // Without an app version the builder files carry Filament's version, and browsers keep an old build after npm run designer.
+        FilamentAsset::appVersion((string) max(
+            (int) @filemtime(resource_path('dist/designer.js')),
+            (int) @filemtime(resource_path('dist/designer.css')),
+        ));
 
         $this->app->booted(function (): void {
             Shamsi::boot();

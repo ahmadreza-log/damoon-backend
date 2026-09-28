@@ -35,7 +35,7 @@ class PageController extends Controller
     }
 
     /**
-     * One published page by its slug, with its body, page builder blocks, children, and SEO.
+     * One published page by its slug, with its body, page builder design, children, and SEO.
      *
      * An unknown or unpublished slug gets 404.
      */
@@ -47,7 +47,6 @@ class PageController extends Controller
             ->with([
                 'parent' => fn ($query) => $query->published(),
                 'children' => fn ($query) => $query->published()->orderBy('position')->orderBy('title'),
-                'pageBuilderBlocks',
             ])
             ->first();
 

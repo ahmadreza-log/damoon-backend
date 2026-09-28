@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Pages;
 
 use App\Filament\Fields\MediaPicker;
 use App\Filament\Resources\Pages\Pages\CreatePage;
+use App\Filament\Resources\Pages\Pages\DesignPage;
 use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Filament\Schemas\Editor;
@@ -11,6 +12,7 @@ use App\Models\Article;
 use App\Models\Page;
 use App\Models\User;
 use App\Support\Shamsi;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -20,7 +22,6 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section as FormSection;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -29,11 +30,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
-use Redberry\PageBuilderPlugin\Components\Forms\Actions\CreatePageBuilderBlockAction;
-use Redberry\PageBuilderPlugin\Components\Forms\Actions\EditPageBuilderBlockAction;
-use Redberry\PageBuilderPlugin\Components\Forms\Actions\SelectBlockAction;
-use Redberry\PageBuilderPlugin\Components\Forms\PageBuilder;
-use Redberry\PageBuilderPlugin\Components\Forms\PageBuilderPreview;
 
 /**
  * The panel pages section (برگه‌ها), in the content group, like WordPress pages.
@@ -41,13 +37,13 @@ use Redberry\PageBuilderPlugin\Components\Forms\PageBuilderPreview;
  * Each page has a title, slug, body, cover, parent page, order, author, publish date,
  * and an SEO box. The body uses the same editor as articles, with pictures in Page::FOLDER.
  * The SEO box is seoSection() from rankbeam/laravel-seo-filament, fitted to the panel in Seo::boot.
- * Below it, the page builder (صفحه‌ساز) lays the page out from blocks, each edited in a
- * side panel with a live preview, and a collapsed box previews the whole layout.
+ * The page builder (صفحه‌ساز) is its own full-width page, DesignPage, opened with the
+ * designer action from the list and the edit page.
  * The parent list shows each page's full trail and hides the page itself and everything under it.
  *
  * Extending:
  * - Add a field here and in a pages migration together.
- * - A new block goes in Page::BUILDER; the field lists it on its own.
+ * - A new page builder block goes in resources/js/designer.js.
  * - Filament owns the form, table, getEloquentQuery, and getPages method names.
  */
 class PageResource extends Resource
@@ -106,25 +102,7 @@ class PageResource extends Resource
                 ->helperText('اگر خالی بماند، از عنوان ساخته می‌شود.'),
             Editor::body(Page::FOLDER, Page::BLOCKS)
                 ->required(false)
-                ->helperText('برای متن ساده کافی است. برای چیدن بخش‌هایی مثل بنر، گالری و سوالات از صفحه‌ساز پایین استفاده کنید.'),
-            FormSection::make('صفحه‌ساز')
-                ->description('بخش‌های برگه را اضافه کنید، با کشیدن جابه‌جا کنید، و هنگام ویرایش هر بخش پیش‌نمایش آن را ببینید.')
-                ->icon(Heroicon::OutlinedSquares2x2)
-                ->columnSpanFull()
-                ->schema([
-                    self::builder(),
-                ]),
-            FormSection::make('پیش‌نمایش صفحه‌ساز')
-                ->description('چیدمان فعلی بلوک‌ها، پیش از ذخیره.')
-                ->icon(Heroicon::OutlinedEye)
-                ->collapsible()
-                ->collapsed()
-                ->columnSpanFull()
-                ->schema([
-                    PageBuilderPreview::make('outline')
-                        ->hiddenLabel()
-                        ->pageBuilderField('builder'),
-                ]),
+                ->helperText('برای متن ساده کافی است. برای چیدن کامل برگه با کشیدن و رها کردن، پس از ذخیره دکمهٔ «صفحه‌ساز» بالای همین صفحه را بزنید.'),
             MediaPicker::make('cover')
                 ->label('تصویر شاخص')
                 ->directory(Page::COVERS)
@@ -173,38 +151,16 @@ class PageResource extends Resource
     }
 
     /**
-     * The page builder field with Persian action labels.
-     *
-     * The package saves the blocks itself after the page is saved, so the field is not
-     * part of the page's own data.
+     * The link that opens the page builder for one page.
      */
-    private static function builder(): PageBuilder
+    public static function designer(): Action
     {
-        return PageBuilder::make('builder')
-            ->label('بلوک‌ها')
-            ->hiddenLabel()
-            ->blocks(Page::BUILDER)
-            ->reorderable()
-            ->selectBlockAction(fn (SelectBlockAction $action): SelectBlockAction => $action
-                ->label('افزودن بلوک')
-                ->modalHeading('انتخاب بلوک')
-                ->modalSubmitActionLabel('ادامه')
-                ->selectField(fn (Select $field): Select => $field
-                    ->label('نوع بلوک')
-                    ->placeholder('یک بلوک انتخاب کنید')
-                    ->native()))
-            ->createAction(fn (CreatePageBuilderBlockAction $action): CreatePageBuilderBlockAction => $action
-                ->label('افزودن')
-                ->modalHeading('بلوک تازه')
-                ->modalSubmitActionLabel('افزودن به برگه')
-                ->successNotificationTitle('بلوک اضافه شد. برای ماندگاری، برگه را ذخیره کنید.')
-                ->pageBuilderPreviewField(fn (PageBuilderPreview $field): PageBuilderPreview => $field->label('پیش‌نمایش')))
-            ->editAction(fn (EditPageBuilderBlockAction $action): EditPageBuilderBlockAction => $action
-                ->label('ویرایش')
-                ->modalHeading('ویرایش بلوک')
-                ->modalSubmitActionLabel('اعمال')
-                ->successNotificationTitle('بلوک به‌روز شد. برای ماندگاری، برگه را ذخیره کنید.')
-                ->pageBuilderPreviewField(fn (PageBuilderPreview $field): PageBuilderPreview => $field->label('پیش‌نمایش')));
+        return Action::make('design')
+            ->label('صفحه‌ساز')
+            ->icon(Heroicon::OutlinedPaintBrush)
+            ->color('primary')
+            ->url(fn (Page $record): string => static::getUrl('design', ['record' => $record]))
+            ->visible(fn (Page $record): bool => static::canEdit($record));
     }
 
     /**
@@ -228,6 +184,7 @@ class PageResource extends Resource
             ->defaultSort('position')
             ->emptyStateHeading('برگه‌ای نیست.')
             ->recordActions([
+                self::designer(),
                 EditAction::make(),
                 DeleteAction::make()
                     ->modalDescription('زیربرگه‌های این برگه حذف نمی‌شوند، به بالاترین سطح منتقل می‌شوند.'),
@@ -260,6 +217,7 @@ class PageResource extends Resource
             'index' => ListPages::route('/'),
             'create' => CreatePage::route('/create'),
             'edit' => EditPage::route('/{record}/edit'),
+            'design' => DesignPage::route('/{record}/design'),
         ];
     }
 }
