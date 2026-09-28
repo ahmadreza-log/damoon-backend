@@ -4,6 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Laravel's starting tables for staff accounts, password resets, and sessions.
+ *
+ * users holds the staff who sign in to the panel; later migrations replace name with
+ * username, first and last name, and add the profile, avatar, and status columns.
+ * password_reset_tokens keeps one pending reset per email.
+ * sessions stores web sessions because SESSION_DRIVER is database.
+ *
+ * Extending:
+ * - Change users in a new migration instead of editing this one, so existing databases follow.
+ */
 return new class extends Migration
 {
     /**

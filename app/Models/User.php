@@ -38,7 +38,8 @@ use Spatie\Permission\Traits\HasRoles;
  * Extending:
  * - Add a shared account field in Fillable, the migration, and Fields::account together.
  * - A staff-only field belongs in Fields::staff, Fillable, and a users migration.
- * - The avatar is Fields::avatar. getFilamentAvatarUrl owns the panel image.
+ * - The avatar is Fields::avatar, a media library file that stays in the library when replaced or when the user is deleted.
+ *   getFilamentAvatarUrl owns the panel image.
  * - active is Fields::status. A false value blocks the panel. The owner is forced back to true.
  * - Add a panel section in App\Auth\Section, then check it from the page or policy.
  * - Do not write the owner role from a form. created and the role events keep it.
@@ -93,23 +94,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
 
         static::saved(function (User $user): void {
             if ($user->isDirty('avatar') && is_string($user->avatar) && $user->avatar !== '') {
-                Sizes::make($user->avatar);
+                Sizes::ensure($user->avatar);
             }
-        });
-
-        static::updating(function (User $user): void {
-            static::forget($user);
         });
 
         static::updated(function (User $user): void {
             static::halt($user);
-        });
-
-        static::deleted(function (User $user): void {
-            if (is_string($user->avatar) && $user->avatar !== '') {
-                Storage::disk('public')->delete($user->avatar);
-                Sizes::drop($user->avatar);
-            }
         });
 
         static::deleting(function (User $user): bool {
@@ -237,25 +227,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
         }
 
         return '/images/default-avatar.png';
-    }
-
-    /**
-     * Deletes the previous avatar file and its sizes when a new one replaces it.
-     */
-    private static function forget(User $user): void
-    {
-        if (! $user->isDirty('avatar')) {
-            return;
-        }
-
-        $previous = $user->getOriginal('avatar');
-
-        if (! is_string($previous) || $previous === '' || $previous === $user->avatar) {
-            return;
-        }
-
-        Storage::disk('public')->delete($previous);
-        Sizes::drop($previous);
     }
 
     /**

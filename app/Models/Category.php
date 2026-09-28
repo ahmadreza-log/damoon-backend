@@ -2,26 +2,51 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Taxonomy;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * A group an article can belong to.
+ * A group articles can belong to, optionally inside a parent category.
+ * An article can sit in many categories through the article_category table.
+ *
+ * Slug, parent, children, and sidebar banners come from Taxonomy, shared with Tag.
  *
  * Extending:
- * - The article form creates a category inline. A category page would read this model.
+ * - Add a column in a categories migration, Fillable, and CategoryResource together.
+ * - The article form creates categories with the CategoryResource form.
  */
-#[Fillable(['name'])]
+#[Fillable(['name', 'slug', 'parent_id', 'description', 'banners', 'questions'])]
 class Category extends Model
 {
+    use Taxonomy;
+
+    /** The public folder for sidebar banner images. */
+    public const FOLDER = 'categories/banners';
+
     /**
-     * Articles in this category.
+     * Articles in this category. An article can sit in more than one category.
      *
-     * @return HasMany<Article, $this>
+     * @return BelongsToMany<Article, $this>
      */
-    public function articles(): HasMany
+    public function articles(): BelongsToMany
     {
-        return $this->hasMany(Article::class);
+        return $this->belongsToMany(Article::class);
+    }
+
+    /**
+     * Column casts.
+     *
+     * Eloquent owns this method name.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'banners' => 'array',
+            'questions' => 'array',
+        ];
     }
 }

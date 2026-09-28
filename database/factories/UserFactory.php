@@ -8,6 +8,15 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
+ * Builds fake staff users for tests and local sample data.
+ *
+ * Every user gets a unique username, email, and Iranian mobile number, a verified
+ * email, and the password "password". The first user created on an empty database
+ * becomes the owner, so tests create the owner before any other staff member.
+ *
+ * Extending:
+ * - A new users column needs a default here so User::factory()->create() keeps working.
+ *
  * @extends Factory<User>
  */
 class UserFactory extends Factory

@@ -38,20 +38,28 @@ use Illuminate\Database\Eloquent\Model;
  */
 class UserResource extends Resource
 {
+    /** The Eloquent model this page lists, creates, and edits: staff accounts. */
     protected static ?string $model = User::class;
 
+    /** The item name in the side menu. */
     protected static ?string $navigationLabel = 'کاربران';
 
+    /** The singular name used in buttons and headings, such as "ایجاد کاربر". */
     protected static ?string $modelLabel = 'کاربر';
 
+    /** The plural name used for the list page title and breadcrumbs. */
     protected static ?string $pluralModelLabel = 'کاربران';
 
+    /** The menu group shared with customers and roles. */
     protected static string|\UnitEnum|null $navigationGroup = 'دسترسی';
 
+    /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
+    /** The position inside the access group; users come first. */
     protected static ?int $navigationSort = 1;
 
+    /** The column used as the record's title in global search and breadcrumbs. */
     protected static ?string $recordTitleAttribute = 'username';
 
     /**

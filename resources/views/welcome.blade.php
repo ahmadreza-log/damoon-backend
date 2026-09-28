@@ -1,3 +1,12 @@
+{{--
+    Laravel's default welcome page, served at / until the public site is built.
+
+    It loads resources/css/app.css and resources/js/app.js through Vite when a build or
+    dev server exists, and otherwise falls back to the inline Tailwind copy below.
+
+    Extending:
+    - Replace this view, or the / route in routes/web.php, with the real home page.
+--}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>

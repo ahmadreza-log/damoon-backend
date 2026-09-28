@@ -4,6 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Makes sure exactly one user holds the owner role.
+ *
+ * When no user is the owner yet, the oldest user becomes the owner.
+ * On PostgreSQL a partial unique index on a constant then lets the database itself
+ * refuse a second owner: every owner row would share the same index key (true).
+ * Other drivers, such as the in-memory SQLite the tests use, skip the index.
+ *
+ * Extending:
+ * - The owner rule is also guarded in User; keep both in step when the owner rule changes.
+ */
 return new class extends Migration
 {
     /**

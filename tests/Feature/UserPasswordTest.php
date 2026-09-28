@@ -12,10 +12,23 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Covers the password box on the staff user form.
+ *
+ * Creating a user asks for a new password twice. Editing a user asks for the current
+ * password as well, and only changes the password when the current one matches.
+ * Leaving the box empty on edit keeps the old password.
+ *
+ * Extending:
+ * - The box is built in Fields::password(); its checks are Fields::known(), length(), and agree().
+ */
 class UserPasswordTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,6 +40,13 @@ class UserPasswordTest extends TestCase
         ]);
     }
 
+    /**
+     * The password fields appear where expected on each form.
+     *
+     * Create shows new password and repeat but no current password. Edit shows current,
+     * new, and repeat, in that order, before section access. The customer form has a
+     * single password field and no current password.
+     */
     public function test_the_password_box_sits_before_section_access(): void
     {
         $owner = User::factory()->create([
@@ -60,6 +80,9 @@ class UserPasswordTest extends TestCase
             ->assertDontSee('رمز عبور فعلی');
     }
 
+    /**
+     * Create refuses a repeat that does not match, and stores a matching password hashed.
+     */
     public function test_create_stores_a_repeated_new_password(): void
     {
         $owner = User::factory()->create([
@@ -109,6 +132,13 @@ class UserPasswordTest extends TestCase
         $this->assertTrue(Hash::check('password123', $staff->password));
     }
 
+    /**
+     * Edit changes the password only when the current password is right.
+     *
+     * A wrong current password fails validation and keeps the old password. Saving
+     * with the password box empty also keeps it. The right current password with a
+     * matching new password replaces it.
+     */
     public function test_edit_changes_the_password_only_when_the_previous_one_matches(): void
     {
         $owner = User::factory()->create([

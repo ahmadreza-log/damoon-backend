@@ -35,20 +35,28 @@ use Illuminate\Database\Eloquent\Model;
  */
 class RoleResource extends Resource
 {
+    /** The Eloquent model this page lists, creates, and edits: the app's Spatie role subclass. */
     protected static ?string $model = Role::class;
 
+    /** The item name in the side menu. */
     protected static ?string $navigationLabel = 'نقش‌ها';
 
+    /** The singular name used in buttons and headings, such as "ایجاد نقش". */
     protected static ?string $modelLabel = 'نقش';
 
+    /** The plural name used for the list page title and breadcrumbs. */
     protected static ?string $pluralModelLabel = 'نقش‌ها';
 
+    /** The menu group shared with users and customers. */
     protected static string|\UnitEnum|null $navigationGroup = 'دسترسی';
 
+    /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
 
+    /** The position inside the access group; roles come last. */
     protected static ?int $navigationSort = 3;
 
+    /** The Persian label is the record's title; the name column is the internal key. */
     protected static ?string $recordTitleAttribute = 'label';
 
     /**

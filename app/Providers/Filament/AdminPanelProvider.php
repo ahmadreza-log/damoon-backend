@@ -16,6 +16,8 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -33,6 +35,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * AuthenticatePanelToken builds the session from the Sanctum cookie.
  * spa keeps CSS, JavaScript, and fonts loaded while moving between panel pages.
  * The sidebar groups are دسترسی, then محتوا.
+ * The media picker styles are added to the page head, since the panel has no custom theme.
  *
  * Extending:
  * - Put a new resource in app/Filament/Resources. discoverResources picks it up.
@@ -62,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
                     600 => '#00377B',
                 ]),
             ])
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): View => view('filament.fields.media-style'))
             ->navigationGroups([
                 NavigationGroup::make('دسترسی'),
                 NavigationGroup::make('محتوا'),

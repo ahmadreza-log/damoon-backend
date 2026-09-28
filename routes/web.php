@@ -15,6 +15,9 @@ Route::middleware(SetPersianLocale::class)->group(function () {
     Route::post('/install', [InstallController::class, 'store'])->name('install.store');
 });
 
+/**
+ * The public home page. It shows Laravel's welcome view until the site front end is built.
+ */
 Route::get('/', function () {
     return view('welcome');
 });

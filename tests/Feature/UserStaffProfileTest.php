@@ -13,10 +13,23 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Covers the staff profile fields on the user form.
+ *
+ * Staff have a personnel code, national ID, job title, degree, field of study, and
+ * gender. The tests check that the fields and their Persian options appear, that
+ * create and edit store them, and that an invalid national ID is refused.
+ *
+ * Extending:
+ * - The fields are built in Fields::staff(); the national ID check is App\Rules\National.
+ */
 class UserStaffProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +41,9 @@ class UserStaffProfileTest extends TestCase
         ]);
     }
 
+    /**
+     * The create form shows every profile field and option, and create and edit save them.
+     */
     public function test_create_and_edit_store_the_staff_profile(): void
     {
         $owner = User::factory()->create([
@@ -96,6 +112,11 @@ class UserStaffProfileTest extends TestCase
         $this->assertSame(Gender::MAN, $staff->gender);
     }
 
+    /**
+     * A national ID with a wrong check digit fails validation and no user is created.
+     *
+     * 0013542419 is valid; changing only its last digit to 0 must be refused.
+     */
     public function test_an_invalid_national_id_is_rejected(): void
     {
         $owner = User::factory()->create([

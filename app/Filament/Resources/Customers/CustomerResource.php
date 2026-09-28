@@ -30,20 +30,28 @@ use Filament\Tables\Table;
  */
 class CustomerResource extends Resource
 {
+    /** The Eloquent model this page lists, creates, and edits: site members. */
     protected static ?string $model = Customer::class;
 
+    /** The item name in the side menu. */
     protected static ?string $navigationLabel = 'مشتریان';
 
+    /** The singular name used in buttons and headings, such as "ایجاد مشتری". */
     protected static ?string $modelLabel = 'مشتری';
 
+    /** The plural name used for the list page title and breadcrumbs. */
     protected static ?string $pluralModelLabel = 'مشتریان';
 
+    /** The menu group shared with users and roles. */
     protected static string|\UnitEnum|null $navigationGroup = 'دسترسی';
 
+    /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
+    /** The position inside the access group; customers come after users. */
     protected static ?int $navigationSort = 2;
 
+    /** The column used as the record's title in global search and breadcrumbs. */
     protected static ?string $recordTitleAttribute = 'username';
 
     /**

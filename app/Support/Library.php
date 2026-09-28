@@ -4,8 +4,9 @@ namespace App\Support;
 
 use App\Models\Article;
 use App\Models\Asset;
+use App\Models\Category;
+use App\Models\Tag;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,6 +23,12 @@ use Illuminate\Support\Facades\Storage;
  */
 class Library
 {
+    /** Models with sidebar banners, and the Persian label for their banner images. */
+    private const BANNERS = [
+        Category::class => 'بنر دسته‌بندی',
+        Tag::class => 'بنر برچسب',
+    ];
+
     /**
      * Files on the public disk, newest first.
      *
@@ -92,6 +99,30 @@ class Library
     }
 
     /**
+     * Library rows that are pictures, newest first. The media picker lists these.
+     *
+     * @return array<int, array{__key: string, path: string, name: string, title: string, preview: ?string, place: string, usage: string, size: int, mime: string, modified: string}>
+     */
+    public static function pictures(): array
+    {
+        return array_values(array_filter(self::rows(), fn (array $row): bool => $row['preview'] !== null));
+    }
+
+    /**
+     * Whether a path is a picture stored on the public disk that the media page shows.
+     */
+    public static function picture(string $path): bool
+    {
+        if ($path === '' || str_contains($path, '..') || self::hidden($path)) {
+            return false;
+        }
+
+        $disk = Storage::disk('public');
+
+        return $disk->exists($path) && self::image($path, (string) $disk->mimeType($path));
+    }
+
+    /**
      * Public URL for a stored path.
      */
     public static function url(string $path): string
@@ -107,6 +138,9 @@ class Library
 
     /**
      * Deletes a public file with its sizes and clears it from users, articles, and the detail text.
+     *
+     * A picture from an article body is also taken out of that body, and a
+     * category or tag banner is taken off that record.
      */
     public static function drop(string $path): void
     {
@@ -133,6 +167,32 @@ class Library
                 $article->gallery = $left === [] ? null : $left;
                 $article->saveQuietly();
             });
+
+        foreach (array_keys(self::BANNERS) as $model) {
+            $model::query()
+                ->whereNotNull('banners')
+                ->get()
+                ->filter(fn (Category|Tag $record): bool => in_array($path, $model::pictures($record->banners), true))
+                ->each(function (Category|Tag $record) use ($path): void {
+                    $left = array_values(array_filter(
+                        (array) $record->banners,
+                        fn (mixed $banner): bool => ! is_array($banner) || ($banner['image'] ?? null) !== $path,
+                    ));
+
+                    $record->banners = $left === [] ? null : $left;
+                    $record->saveQuietly();
+                });
+        }
+
+        if (str_starts_with($path, Article::FOLDER.'/')) {
+            Article::query()
+                ->get()
+                ->filter(fn (Article $article): bool => in_array($path, Article::images($article->content), true))
+                ->each(function (Article $article) use ($path): void {
+                    $article->content = Article::strip($article->content, $path);
+                    $article->saveQuietly();
+                });
+        }
     }
 
     /**
@@ -210,6 +270,9 @@ class Library
             str_starts_with($path, 'avatars/') => 'آواتار',
             str_starts_with($path, 'articles/covers/') => 'تصویر شاخص',
             str_starts_with($path, 'articles/gallery/') => 'گالری',
+            str_starts_with($path, Article::FOLDER.'/') => 'تصویر محتوا',
+            str_starts_with($path, Category::FOLDER.'/') => self::BANNERS[Category::class],
+            str_starts_with($path, Tag::FOLDER.'/') => self::BANNERS[Tag::class],
             str_starts_with($path, 'media/') => 'رسانه',
             default => 'سایر',
         };
@@ -237,10 +300,7 @@ class Library
             });
 
         Article::query()
-            ->where(function (Builder $query): void {
-                $query->whereNotNull('cover')->orWhereNotNull('gallery');
-            })
-            ->get(['title', 'cover', 'gallery'])
+            ->get(['title', 'cover', 'gallery', 'content'])
             ->each(function (Article $article) use (&$map): void {
                 if (is_string($article->cover) && $article->cover !== '') {
                     $map[$article->cover][] = 'تصویر شاخص '.$article->title;
@@ -251,7 +311,22 @@ class Library
                         $map[$path][] = 'گالری '.$article->title;
                     }
                 }
+
+                foreach (array_unique(Article::images($article->content)) as $path) {
+                    $map[$path][] = 'محتوای '.$article->title;
+                }
             });
+
+        foreach (self::BANNERS as $model => $label) {
+            $model::query()
+                ->whereNotNull('banners')
+                ->get(['name', 'banners'])
+                ->each(function (Category|Tag $record) use (&$map, $model, $label): void {
+                    foreach ($model::pictures($record->banners) as $path) {
+                        $map[$path][] = $label.' '.$record->name;
+                    }
+                });
+        }
 
         $labels = [];
 

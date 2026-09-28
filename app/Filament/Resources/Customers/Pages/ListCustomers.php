@@ -13,6 +13,7 @@ use Filament\Resources\Pages\ListRecords;
  */
 class ListCustomers extends ListRecords
 {
+    /** The resource whose table, model, and labels this page uses. */
     protected static string $resource = CustomerResource::class;
 
     /**

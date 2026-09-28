@@ -52,9 +52,11 @@ Inside the panel, **پیشخوان** is the home page. The **دسترسی** grou
 - an SEO box (title and description) and a list of frequently asked questions
 - related articles and related products
 
-Categories, tags, and products can be added from the article form. Deleting an article also deletes its images.
+Categories, tags, and products can be added from the article form. **دسته‌بندی‌ها** and **برچسب‌ها** sit under نوشته‌ها and each have a name, slug, parent, description, sidebar banners, and questions.
 
-**رسانه‌ها** is a grid of every file on the public disk: avatars, article images, and files uploaded on that page. Each card shows where the file is used. Deleting a file also removes it from the user or article that points to it.
+**رسانه‌ها** is a grid of every file on the public disk: avatars, article images, banners, and files uploaded on that page. Each card shows where the file is used. Deleting a file also removes it from the user, article, category, or tag that points to it.
+
+Every image field works like the WordPress media box. Clicking it opens a popup with the media library and an upload tab. A picture uploaded there is added to the library, and a gallery can be reordered by dragging. Like WordPress, files stay in the library when a user, article, category, or tag is deleted or its picture is replaced. They are deleted only from رسانه‌ها.
 
 Each file has a detail page with a title, alt text, image title, and description, plus an information box with the file name, type, size, dimensions, date, location, usage, and address.
 

@@ -11,10 +11,24 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Covers per-user section access (دسترسی بخش‌ها).
+ *
+ * Each panel section, such as home, users, customers, roles, articles, and media, is a
+ * Spatie permission. A user may open only the sections granted to them or to their
+ * roles; the owner always has every section. The tests check saving sections from the
+ * user form, the menu and 403 responses for a limited user, and the owner's full menu.
+ *
+ * Extending:
+ * - A new section in App\Auth\Section needs an assertSee on the form and a 403 check here.
+ */
 class SectionAccessTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,6 +40,9 @@ class SectionAccessTest extends TestCase
         ]);
     }
 
+    /**
+     * The user edit page lists every section and saves the chosen ones as permissions.
+     */
     public function test_edit_page_saves_the_sections_a_user_may_open(): void
     {
         $owner = User::factory()->create([
@@ -65,6 +82,13 @@ class SectionAccessTest extends TestCase
         $this->assertFalse($member->can(Section::CUSTOMERS));
     }
 
+    /**
+     * A member with only the users section sees only that section.
+     *
+     * The first user is the owner and the second is not. The member's menu hides the
+     * links to other sections, and opening those pages directly, including the
+     * dashboard and a media detail page, returns 403.
+     */
     public function test_a_user_without_a_section_cannot_open_that_page(): void
     {
         $owner = User::factory()->create([
@@ -114,6 +138,9 @@ class SectionAccessTest extends TestCase
             ->assertForbidden();
     }
 
+    /**
+     * The owner's menu shows every section and group without any sections being granted.
+     */
     public function test_the_owner_sees_every_section_in_the_panel(): void
     {
         $owner = User::factory()->create([

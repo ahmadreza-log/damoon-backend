@@ -13,6 +13,7 @@ use Filament\Resources\Pages\ListRecords;
  */
 class ListArticles extends ListRecords
 {
+    /** The resource whose table, model, and labels this page uses. */
     protected static string $resource = ArticleResource::class;
 
     /**

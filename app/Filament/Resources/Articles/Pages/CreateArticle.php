@@ -15,6 +15,7 @@ use Filament\Resources\Pages\CreateRecord;
  */
 class CreateArticle extends CreateRecord
 {
+    /** The resource whose form, model, and labels this page uses. */
     protected static string $resource = ArticleResource::class;
 
     /**

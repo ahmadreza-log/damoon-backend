@@ -7,13 +7,26 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 
 /**
+ * Builds fake customers for tests and local sample data.
+ *
+ * Every customer gets a unique username, email, and Iranian mobile number, a
+ * verified email, and the password "password".
+ *
+ * Extending:
+ * - A new customers column needs a default here so Customer::factory()->create() keeps working.
+ *
  * @extends Factory<Customer>
  */
 class CustomerFactory extends Factory
 {
+    /**
+     * The hash of "password", computed once and reused, because hashing is slow on purpose.
+     */
     protected static ?string $password;
 
     /**
+     * The default column values for one fake customer; tests override any of them with create([...]).
+     *
      * @return array<string, mixed>
      */
     public function definition(): array

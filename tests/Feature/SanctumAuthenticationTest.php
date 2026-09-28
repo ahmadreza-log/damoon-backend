@@ -16,10 +16,24 @@ use Morilog\Jalali\CalendarUtils;
 use Morilog\Jalali\Jalalian;
 use Tests\TestCase;
 
+/**
+ * Covers sign-in for both kinds of accounts, all built on Sanctum tokens.
+ *
+ * Staff open the panel with an httpOnly panel_token cookie that carries a token with
+ * the panel ability; a plain session login is not enough. Customers use the /v1 API
+ * with a bearer token that has the api ability. A token of one kind must never open
+ * the other side. The tests also check that dates show in the Shamsi calendar.
+ *
+ * Extending:
+ * - Token rules live in App\Auth\AccessTokens; the panel cookie is read by AuthenticatePanelToken.
+ */
 class SanctumAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,6 +45,14 @@ class SanctumAuthenticationTest extends TestCase
         ]);
     }
 
+    /**
+     * Only a staff token with the panel ability opens the panel.
+     *
+     * A session login without the cookie and a customer API token in the cookie are
+     * both sent to the login page. With a valid panel cookie the dashboard, users list,
+     * and customers list open. The lists show the last login in the Shamsi calendar with
+     * Persian digits and never the Gregorian month name.
+     */
     public function test_panel_requires_a_user_sanctum_cookie(): void
     {
         $logged = Carbon::parse('2026-09-27 08:03:19', 'UTC');
@@ -80,6 +102,13 @@ class SanctumAuthenticationTest extends TestCase
             ->assertSee($shamsi);
     }
 
+    /**
+     * Logging in queues the panel cookie, and logging out revokes its token.
+     *
+     * Login records last_login and creates exactly one token. The queued cookie opens
+     * the panel on its own. After logout the token is deleted, so the same cookie is
+     * sent back to the login page.
+     */
     public function test_panel_login_issues_a_sanctum_cookie_and_logout_revokes_it(): void
     {
         $user = User::factory()->create([
@@ -123,6 +152,9 @@ class SanctumAuthenticationTest extends TestCase
             ->assertRedirect(route('filament.admin.auth.login'));
     }
 
+    /**
+     * The login field accepts an email address as well as a username.
+     */
     public function test_panel_login_accepts_email(): void
     {
         $user = User::factory()->create([
@@ -141,6 +173,14 @@ class SanctumAuthenticationTest extends TestCase
         $this->assertNotNull($user->fresh()->last_login);
     }
 
+    /**
+     * The customer API login returns a bearer token that only works on customer routes.
+     *
+     * /v1/auth/login returns access_token, token_type Bearer, and expires_in, and the
+     * token opens /v1/auth/me. A staff panel token sent as a bearer token is refused,
+     * and so is a wrong password. Auth::forgetGuards() clears the guard cached by the
+     * previous request so the next request is checked from scratch.
+     */
     public function test_customer_api_login_returns_a_sanctum_bearer_token(): void
     {
         $customer = Customer::factory()->create([

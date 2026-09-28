@@ -13,6 +13,7 @@ use Filament\Resources\Pages\EditRecord;
  */
 class EditArticle extends EditRecord
 {
+    /** The resource whose form, model, and labels this page uses. */
     protected static string $resource = ArticleResource::class;
 
     /**

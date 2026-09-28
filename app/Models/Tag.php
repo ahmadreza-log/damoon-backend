@@ -2,19 +2,28 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Taxonomy;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * A label that can be attached to many articles.
+ * A label that can be attached to many articles, optionally inside a parent tag.
+ *
+ * Slug, parent, children, and sidebar banners come from Taxonomy, shared with Category.
  *
  * Extending:
- * - The article form creates a tag inline. A tag page would read this model.
+ * - Add a column in a tags migration, Fillable, and TagResource together.
+ * - The article form creates tags with the TagResource form.
  */
-#[Fillable(['name'])]
+#[Fillable(['name', 'slug', 'parent_id', 'description', 'banners', 'questions'])]
 class Tag extends Model
 {
+    use Taxonomy;
+
+    /** The public folder for sidebar banner images. */
+    public const FOLDER = 'tags/banners';
+
     /**
      * Articles that carry this tag.
      *
@@ -23,5 +32,20 @@ class Tag extends Model
     public function articles(): BelongsToMany
     {
         return $this->belongsToMany(Article::class);
+    }
+
+    /**
+     * Column casts.
+     *
+     * Eloquent owns this method name.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'banners' => 'array',
+            'questions' => 'array',
+        ];
     }
 }

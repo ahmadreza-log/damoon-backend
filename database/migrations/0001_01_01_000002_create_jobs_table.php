@@ -4,6 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Laravel's tables for the database queue.
+ *
+ * jobs holds queued jobs waiting for a worker. job_batches tracks Bus::batch() groups
+ * and how many of their jobs are still pending or failed. failed_jobs keeps every job
+ * that ran out of attempts, with its exception, so it can be retried with queue:retry.
+ *
+ * Extending:
+ * - jobs is only used when QUEUE_CONNECTION is database; with Redis, Horizon runs the queue.
+ * - failed_jobs is used by every queue connection.
+ */
 return new class extends Migration
 {
     /**

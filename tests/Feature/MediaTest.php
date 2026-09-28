@@ -16,10 +16,23 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Covers the media library page (رسانه‌ها) and the file detail page.
+ *
+ * The library lists every file on the public disk, says where each one is used,
+ * uploads new files, and is the only place that deletes a file. The detail page
+ * edits a file's title, alt text, caption, and description, stored in the assets table.
+ *
+ * Extending:
+ * - When a new model stores library paths, add it to Library and assert its usage label here.
+ */
 class MediaTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,6 +44,15 @@ class MediaTest extends TestCase
         ]);
     }
 
+    /**
+     * The library lists every file and deleting one clears it wherever it is used.
+     *
+     * An avatar, an article cover, a gallery picture, and an unused file must all be
+     * listed with their usage ("آواتار ...", "تصویر شاخص ...", "گالری ...", "بدون استفاده");
+     * hidden files such as .gitignore are not. Deleting the avatar removes the file and
+     * empties the user's avatar. Deleting the cover and gallery picture empties those
+     * article fields. The unused file is left alone.
+     */
     public function test_the_library_lists_every_public_file_and_delete_clears_its_use(): void
     {
         $disk = Storage::fake('public');
@@ -102,6 +124,9 @@ class MediaTest extends TestCase
         $disk->assertExists('media/loose.png');
     }
 
+    /**
+     * The library's upload button stores the file under media/ and lists it with the place "رسانه".
+     */
     public function test_a_file_can_be_uploaded_from_the_library(): void
     {
         $disk = Storage::fake('public');
@@ -131,6 +156,13 @@ class MediaTest extends TestCase
         $this->assertSame('رسانه', collect(Library::rows())->firstWhere('path', $stored)['place'] ?? null);
     }
 
+    /**
+     * Each file has a detail page with editable text and read-only image facts.
+     *
+     * The page shows the text fields and the image's name, pixel size, and file size.
+     * An unknown key returns 404. Saving stores the texts in the assets table, and
+     * deleting the file from the library removes both the file and its assets row.
+     */
     public function test_a_file_has_a_detail_page_for_its_text_and_image_facts(): void
     {
         $disk = Storage::fake('public');

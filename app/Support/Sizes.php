@@ -103,6 +103,28 @@ class Sizes
     }
 
     /**
+     * Builds the sizes of one image only when some are missing.
+     *
+     * A picture chosen again from the media library already has them.
+     */
+    public static function ensure(string $path): void
+    {
+        if (! self::fits($path)) {
+            return;
+        }
+
+        $disk = Storage::disk('public');
+
+        foreach (array_keys(self::LIST) as $size) {
+            if (! $disk->exists(self::path($path, $size))) {
+                self::make($path);
+
+                return;
+            }
+        }
+    }
+
+    /**
      * Removes every size of one original.
      */
     public static function drop(string $path): void

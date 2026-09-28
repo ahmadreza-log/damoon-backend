@@ -4,6 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Replaces the single name column on users with the staff profile fields.
+ *
+ * username is the unique login name; phone is optional but unique when given.
+ * firstname and lastname are shown in the panel. last_login and last_login_ip record
+ * the most recent sign-in. code and token are unique spare columns kept in line with
+ * the customers table; nothing in the application reads them yet.
+ *
+ * Extending:
+ * - down() brings name back empty; the old names cannot be rebuilt from first and last name.
+ */
 return new class extends Migration
 {
     /**

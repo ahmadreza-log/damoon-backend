@@ -14,10 +14,23 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Covers the roles page and the sections each role grants.
+ *
+ * A role has a Persian label, a lowercase key, and a set of sections. The owner and
+ * developer roles are fixed: they always keep every section, keep their name and
+ * label, and cannot be deleted. The page itself needs the roles section.
+ *
+ * Extending:
+ * - Fixed role names are in App\Auth\RoleName; the rules that protect them live in App\Models\Role.
+ */
 class RoleSectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,6 +42,12 @@ class RoleSectionTest extends TestCase
         ]);
     }
 
+    /**
+     * The roles list shows the fixed roles, and the create form stores a new role.
+     *
+     * The key typed as "Editor" is saved in lowercase as "editor", with its label and
+     * the chosen sections.
+     */
     public function test_the_roles_page_stores_a_custom_role(): void
     {
         $owner = User::factory()->create([
@@ -72,6 +91,13 @@ class RoleSectionTest extends TestCase
         $this->assertSame([Section::HOME], $role->sections());
     }
 
+    /**
+     * The owner and developer roles cannot be changed or removed.
+     *
+     * The owner edit page explains that the role always has every section. Saving it
+     * with a new name, label, and fewer sections still leaves "owner", "مالک", and all
+     * sections, and delete() returns false for both fixed roles.
+     */
     public function test_fixed_roles_keep_every_section_and_cannot_be_deleted(): void
     {
         $owner = User::factory()->create([
@@ -116,6 +142,9 @@ class RoleSectionTest extends TestCase
         $this->assertFalse($developer->delete());
     }
 
+    /**
+     * A member with only the users section gets 403 on the roles page.
+     */
     public function test_a_user_without_the_roles_section_cannot_open_it(): void
     {
         User::factory()->create([

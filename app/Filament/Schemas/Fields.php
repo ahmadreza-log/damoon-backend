@@ -2,13 +2,12 @@
 
 namespace App\Filament\Schemas;
 
+use App\Filament\Fields\MediaPicker;
 use App\Models\Degree;
 use App\Models\Gender;
 use App\Models\User;
 use App\Rules\National;
-use App\Support\Sizes;
 use Closure;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
@@ -16,7 +15,6 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Form fields for users and customers.
@@ -88,23 +86,15 @@ class Fields
     }
 
     /**
-     * The avatar upload shown at the top of the user form.
+     * The avatar picker shown at the top of the user form. It opens the media library.
      */
     public static function avatar(): Component
     {
-        return FileUpload::make('avatar')
+        return MediaPicker::make('avatar')
             ->label('آواتار')
-            ->avatar()
-            ->disk('public')
+            ->round()
             ->directory('avatars')
-            ->visibility('public')
-            ->nullable()
-            ->maxSize(2048)
-            ->columnSpanFull()
-            ->deleteUploadedFileUsing(function (string $file): void {
-                Storage::disk('public')->delete($file);
-                Sizes::drop($file);
-            });
+            ->columnSpanFull();
     }
 
     /**

@@ -18,6 +18,7 @@ use Filament\Resources\Pages\EditRecord;
  */
 class EditUser extends EditRecord
 {
+    /** The resource whose form, model, and labels this page uses. */
     protected static string $resource = UserResource::class;
 
     /**

@@ -40,20 +40,28 @@ use Morilog\Jalali\Jalalian;
  */
 class Asset extends Page
 {
+    /** The URL after /admin; {asset} is the file's key, the SHA-1 of its path on the public disk. */
     protected static ?string $slug = 'media/{asset}';
 
+    /** The page is reached from the library cards, so it gets no menu item of its own. */
     protected static bool $shouldRegisterNavigation = false;
 
+    /** Keeps the content group open in the menu while this page is shown. */
     protected static string|\UnitEnum|null $navigationGroup = 'محتوا';
 
     /**
+     * The library row for this file, as returned by Library::find(): path, name, size, usage, and so on.
+     *
      * @var array<string, mixed>
      */
     public array $facts = [];
 
+    /** The file key taken from the URL; mount() looks the file up by it. */
     public string $asset = '';
 
     /**
+     * The form state for the editable texts: title, alt, caption, and description.
+     *
      * @var array<string, mixed>|null
      */
     public ?array $data = [];
@@ -103,6 +111,10 @@ class Asset extends Page
     }
 
     /**
+     * The trail above the heading: a link back to the media library, then this file's title.
+     *
+     * Filament owns this method name. Keys are URLs; an entry without a key is shown as plain text.
+     *
      * @return array<string|Htmlable>
      */
     public function getBreadcrumbs(): array

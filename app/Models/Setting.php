@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\Schema;
  */
 class Setting extends Model
 {
+    /**
+     * Columns the install page may write in one create() call.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'title',
         'description',

@@ -6,6 +6,17 @@ use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
 
+/**
+ * Sets up Laravel Horizon, the dashboard and supervisor for the Redis queues.
+ *
+ * Horizon runs the queue workers described in config/horizon.php and serves its
+ * dashboard at /horizon. Locally everyone may open the dashboard; in every other
+ * environment only the users allowed by the viewHorizon gate may.
+ *
+ * Extending:
+ * - Add an email to the list in gate() to let that user open the dashboard outside local.
+ * - Uncomment a route*NotificationsTo call in boot() to be told when a queue waits too long.
+ */
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
 {
     /**

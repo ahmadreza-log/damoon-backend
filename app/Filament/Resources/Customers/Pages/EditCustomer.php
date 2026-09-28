@@ -10,5 +10,6 @@ use Filament\Resources\Pages\EditRecord;
  */
 class EditCustomer extends EditRecord
 {
+    /** The resource whose form, model, and labels this page uses. */
     protected static string $resource = CustomerResource::class;
 }

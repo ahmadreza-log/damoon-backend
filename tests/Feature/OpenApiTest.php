@@ -6,8 +6,24 @@ use Dedoc\Scramble\Generator;
 use Dedoc\Scramble\Scramble;
 use Tests\TestCase;
 
+/**
+ * Covers the OpenAPI document that Scramble builds for the customer API.
+ *
+ * Scramble reads the routes and controllers and publishes the document at /docs/api.
+ * Paths in the document are relative to the v1 prefix, so /v1/auth/login is listed
+ * as /auth/login.
+ *
+ * Extending:
+ * - Add an assertContains here for each new customer route so the docs cannot silently lose it.
+ */
 class OpenApiTest extends TestCase
 {
+    /**
+     * The document lists login and me, leaves out routes that do not exist, and has version 1.0.0.
+     *
+     * setThrowExceptions(true) makes the test fail when Scramble cannot read a route,
+     * instead of silently dropping that route from the document.
+     */
     public function test_customer_routes_are_in_the_openapi_document(): void
     {
         $spec = app(Generator::class)

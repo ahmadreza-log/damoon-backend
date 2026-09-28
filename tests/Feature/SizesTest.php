@@ -17,10 +17,25 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Covers the WebP sizes built for every image (App\Support\Sizes).
+ *
+ * Each picture gets thumb (150×150 crop), small (480 wide), medium (960 wide), and
+ * large (1600 wide) copies under sizes/<size>/ on the public disk. The tests check
+ * the pixel sizes, that small pictures are never enlarged, that uploads, avatars, and
+ * article pictures get sizes on save, that only the media library deletes them, and
+ * the media:sizes command for older files.
+ *
+ * Extending:
+ * - A new entry in Sizes::LIST needs an assertPixels line in the first test.
+ */
 class SizesTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,6 +47,12 @@ class SizesTest extends TestCase
         ]);
     }
 
+    /**
+     * A 2000×1000 upload gets all four sizes, and deleting it from the library removes them.
+     *
+     * The crop is exactly 150×150; the other sizes keep the 2:1 ratio. The library uses
+     * the small size as the preview, and the detail page lists every size with its pixels.
+     */
     public function test_an_uploaded_image_gets_every_size_and_loses_them_on_delete(): void
     {
         $disk = Storage::fake('public');
@@ -77,6 +98,13 @@ class SizesTest extends TestCase
         }
     }
 
+    /**
+     * A picture that was put on disk without sizes can get them from its detail page.
+     *
+     * The page first says no sizes exist yet. The resize action builds them; a 300×200
+     * picture keeps 300×200 for the wide sizes instead of being enlarged, while the
+     * thumb is still cropped to 150×150.
+     */
     public function test_a_small_image_is_not_enlarged_and_the_detail_page_rebuilds_sizes(): void
     {
         $disk = Storage::fake('public');
@@ -99,6 +127,13 @@ class SizesTest extends TestCase
         $this->assertPixels($disk, Sizes::path('media/tiny.png', 'thumb'), 150, 150);
     }
 
+    /**
+     * Saving a user or an article builds sizes for the pictures it points at.
+     *
+     * The avatar gets sizes and the panel shows its thumb. The article cover gets
+     * sizes on create, and a gallery picture gets them when it is added later.
+     * Deleting the article keeps every size; only Library::drop removes them.
+     */
     public function test_article_images_and_avatars_get_sizes(): void
     {
         $disk = Storage::fake('public');
@@ -128,10 +163,17 @@ class SizesTest extends TestCase
 
         $article->delete();
 
+        $disk->assertExists(Sizes::path('articles/covers/cover.jpg', 'medium'));
+        $disk->assertExists(Sizes::path('articles/gallery/shot.png', 'thumb'));
+
+        Library::drop('articles/covers/cover.jpg');
+
         $disk->assertMissing(Sizes::path('articles/covers/cover.jpg', 'medium'));
-        $disk->assertMissing(Sizes::path('articles/gallery/shot.png', 'thumb'));
     }
 
+    /**
+     * php artisan media:sizes builds sizes for images already on disk and skips other files.
+     */
     public function test_the_command_builds_sizes_for_older_images(): void
     {
         $disk = Storage::fake('public');
@@ -147,6 +189,8 @@ class SizesTest extends TestCase
     }
 
     /**
+     * Creates the owner account, with any extra columns such as an avatar path.
+     *
      * @param  array<string, mixed>  $extra
      */
     private function owner(array $extra = []): User
@@ -158,6 +202,9 @@ class SizesTest extends TestCase
         ], $extra));
     }
 
+    /**
+     * Asserts that the file exists, is a WebP image, and has exactly the given width and height.
+     */
     private function assertPixels(FilesystemAdapter $disk, string $path, int $width, int $height): void
     {
         $disk->assertExists($path);

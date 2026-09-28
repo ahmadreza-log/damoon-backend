@@ -22,6 +22,11 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AuthenticatePanelToken
 {
+    /**
+     * Receives the token service from the container.
+     *
+     * AccessTokens resolves, refreshes, and revokes the Sanctum token behind the cookie.
+     */
     public function __construct(private readonly AccessTokens $tokens) {}
 
     /**

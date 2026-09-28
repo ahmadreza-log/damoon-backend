@@ -8,16 +8,31 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Library;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Covers the staff avatar: where the field sits and how its file is kept.
+ *
+ * The avatar is a round MediaPicker at the top of the user form. Customers have no
+ * avatar. Files picked or uploaded for an avatar stay in the media library even
+ * when the avatar changes or the user is deleted.
+ *
+ * Extending:
+ * - The field is built in Fields::avatar(); test a change to its options here.
+ */
 class UserAvatarTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Marks the site as installed so EnsureInstalled lets panel requests through.
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,6 +44,9 @@ class UserAvatarTest extends TestCase
         ]);
     }
 
+    /**
+     * The avatar is the first field on the user create and edit forms and absent from the customer form.
+     */
     public function test_the_avatar_field_is_first_on_the_user_form(): void
     {
         $owner = User::factory()->create([
@@ -67,7 +85,14 @@ class UserAvatarTest extends TestCase
             ->assertFormFieldDoesNotExist('avatar');
     }
 
-    public function test_create_stores_the_avatar_and_a_replacement_drops_the_old_file(): void
+    /**
+     * An avatar uploaded through the picker is saved under avatars/ and never deleted by the user record.
+     *
+     * The new user's avatar URL points at the stored file. A user without an avatar
+     * shows the default avatar image. Changing the avatar keeps the old file, which the
+     * library still labels as an avatar, and deleting the user keeps the current file.
+     */
+    public function test_an_avatar_uploaded_in_the_picker_is_stored_and_stays_in_the_library(): void
     {
         $disk = Storage::fake('public');
 
@@ -84,6 +109,10 @@ class UserAvatarTest extends TestCase
 
         Livewire::withCookie((string) config('sanctum.panel_cookie'), $token)
             ->test(CreateUser::class)
+            ->callAction(TestAction::make('pick')->schemaComponent('avatar'), data: [
+                'files' => $this->picture('face.png', 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='),
+            ])
+            ->assertHasNoFormErrors()
             ->fillForm([
                 'firstname' => 'سارا',
                 'lastname' => 'کریمی',
@@ -92,7 +121,6 @@ class UserAvatarTest extends TestCase
                 'phone' => '09120000003',
                 'password' => 'password123',
                 'confirmation' => 'password123',
-                'avatar' => $this->picture('face.png', 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='),
             ])
             ->call('create')
             ->assertHasNoFormErrors();
@@ -119,16 +147,17 @@ class UserAvatarTest extends TestCase
 
         $staff->update(['avatar' => 'avatars/next.png']);
 
-        $disk->assertMissing($previous);
+        $disk->assertExists($previous);
         $disk->assertExists('avatars/next.png');
+        $this->assertSame('آواتار', collect(Library::rows())->firstWhere('path', $previous)['place']);
 
         $staff->delete();
 
-        $disk->assertMissing('avatars/next.png');
+        $disk->assertExists('avatars/next.png');
     }
 
     /**
-     * A one-pixel image. The test PHP build has no GD extension.
+     * A fake upload built from base64 image bytes, so no GD extension is needed to create it.
      */
     private function picture(string $name, string $encoded): UploadedFile
     {

@@ -10,5 +10,6 @@ use Filament\Resources\Pages\CreateRecord;
  */
 class CreateUser extends CreateRecord
 {
+    /** The resource whose form, model, and labels this page uses. */
     protected static string $resource = UserResource::class;
 }

@@ -18,6 +18,7 @@ use Filament\Resources\Pages\CreateRecord;
  */
 class CreateRole extends CreateRecord
 {
+    /** The resource whose form, model, and labels this page uses. */
     protected static string $resource = RoleResource::class;
 
     /**

@@ -1,3 +1,14 @@
+/*
+ * Tailwind CSS for the site's own pages, built by Vite.
+ *
+ * The Filament panel uses its own stylesheet and does not load this file.
+ * Each @source line tells Tailwind where to look for class names, so only the
+ * classes actually used end up in the build.
+ *
+ * Extending:
+ * - Add an @source line for any new folder whose files contain Tailwind classes.
+ * - Put design tokens such as fonts and colours in @theme.
+ */
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

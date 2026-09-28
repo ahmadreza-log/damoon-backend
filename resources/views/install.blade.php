@@ -1,3 +1,14 @@
+{{--
+    The one-time install page at /install (InstallController::create).
+
+    A standalone RTL page with inline styles, because the panel and its theme are not
+    available before install. It asks for the site title and description and the owner
+    account; InstallController::store validates the fields, creates the owner and the
+    settings row, and sends the owner to the panel login. Once installed, the page redirects.
+
+    Extending:
+    - A new field needs an input here with old() and @error, a rule in InstallController::store, and a column to save it in.
+--}}
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>

@@ -44,16 +44,22 @@ class Media extends Page implements HasTable
 {
     use InteractsWithTable;
 
+    /** The item name in the side menu. */
     protected static ?string $navigationLabel = 'رسانه‌ها';
 
+    /** The page heading and browser tab title. */
     protected static ?string $title = 'رسانه‌ها';
 
+    /** The menu group shared with articles. */
     protected static string|\UnitEnum|null $navigationGroup = 'محتوا';
 
+    /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
+    /** The position inside the content group; the library comes after articles. */
     protected static ?int $navigationSort = 2;
 
+    /** The URL after /admin; each file's detail page (Asset) lives under it at media/{asset}. */
     protected static ?string $slug = 'media';
 
     /**

@@ -4,8 +4,22 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * The table of the spatie/laravel-medialibrary package.
+ *
+ * Each row would attach one file to a model through the model morph, with its
+ * collection, disk, size, and generated conversions. The panel's own media library
+ * (App\Support\Library) reads files straight from the public disk and does not use
+ * this table; it is here because the package is installed.
+ *
+ * Extending:
+ * - The package ships no down(); roll this table back with a new migration if the package is removed.
+ */
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('media', function (Blueprint $table) {

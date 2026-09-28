@@ -6,6 +6,18 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Builds the Laravel application: routes, middleware, and exception handling.
+ *
+ * Routes: routes/web.php for the site and install page, routes/console.php for artisan
+ * commands, /up as the health check, and routes/api.php for the customer API. The API
+ * file is loaded in then() with only the api middleware group, so its paths have no
+ * /api prefix and start at /v1. The Filament panel registers its own /admin routes.
+ *
+ * Extending:
+ * - Register new middleware aliases in withMiddleware() and custom exception reporting in withExceptions().
+ * - Service providers are listed in bootstrap/providers.php, not here.
+ */
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

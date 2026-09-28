@@ -19,8 +19,10 @@ use Filament\Pages\Dashboard as BaseDashboard;
  */
 class Dashboard extends BaseDashboard
 {
+    /** The item name in the side menu. */
     protected static ?string $navigationLabel = 'پیشخوان';
 
+    /** The page heading and browser tab title. */
     protected static ?string $title = 'پیشخوان';
 
     /**
