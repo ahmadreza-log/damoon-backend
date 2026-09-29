@@ -14,8 +14,11 @@ use Filament\Support\Assets\AlpineComponent;
 use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Auth\RequestGuard;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -28,6 +31,7 @@ use Illuminate\Support\ServiceProvider;
  * - Add a new guard here with Auth::extend and register its name in config/auth.php.
  * - OpenAPI docs are configured for the v1 prefix in config/scramble.php.
  * - The owner bypass belongs in boot. Section checks stay in the policies.
+ * - Named request limits, such as comments for sending comments, are defined in boot with RateLimiter::for.
  * - permission.models.role points at App\Models\Role so a role can keep a Persian name.
  * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
  * - The SEO box fields are adjusted in Seo::boot.
@@ -77,6 +81,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->booted(function (): void {
             Shamsi::boot();
         });
+
+        // Counted apart from the reading limit, so browsing a site does not use up a visitor's comments.
+        RateLimiter::for('comments', fn (Request $request): Limit => Limit::perMinute(5)->by('comments|'.$request->ip()));
 
         Gate::before(function (mixed $user, string $ability, array $arguments): ?bool {
             if ($user instanceof User && $user->owner()) {

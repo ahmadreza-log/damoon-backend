@@ -82,6 +82,7 @@ class ArticleController extends Controller
                 'tags',
                 'related' => fn ($query) => $query->published()->with(['author', 'categories', 'tags']),
             ])
+            ->withCount(['comments' => fn ($query) => $query->approved()])
             ->first();
 
         abort_if($article === null, 404, 'نوشته پیدا نشد.');

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * A panel article in the content group.
@@ -22,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * library when the article is deleted, like WordPress, and are removed only from the media page.
  * New pictures get their smaller copies from Sizes when the article is saved.
  * SEO title, description, and social image live in seo_meta through Meta.
+ * commentable says whether visitors may send comments; it is on by default.
+ * Comments are Comment rows and leave with the article.
  *
  * Extending:
  * - Add a column in the articles migration, Fillable, and ArticleResource together.
@@ -37,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
     'published_at',
     'questions',
     'gallery',
+    'commentable',
 ])]
 class Article extends Model
 {
@@ -70,6 +74,20 @@ class Article extends Model
         static::saved(function (Article $article): void {
             $article->resize();
         });
+
+        static::deleted(function (Article $article): void {
+            $article->comments()->delete();
+        });
+    }
+
+    /**
+     * Visitor comments on this article, of every status.
+     *
+     * @return MorphMany<Comment, $this>
+     */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'subject');
     }
 
     /**
@@ -156,6 +174,7 @@ class Article extends Model
     {
         return [
             'published_at' => 'datetime',
+            'commentable' => 'boolean',
             'questions' => 'array',
             'gallery' => 'array',
         ];

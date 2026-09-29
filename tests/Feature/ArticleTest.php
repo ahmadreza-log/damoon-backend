@@ -109,6 +109,7 @@ class ArticleTest extends TestCase
             ->assertSee('برچسب')
             ->assertSee('نویسنده')
             ->assertSee('تاریخ انتشار')
+            ->assertSee('اجازه به ارسال دیدگاه')
             ->assertSee('سئو')
             ->assertSee('سوالات متداول')
             ->assertSee('گالری تصاویر')
@@ -126,6 +127,7 @@ class ArticleTest extends TestCase
             ->assertFormFieldExists('tags')
             ->assertFormFieldExists('author_id')
             ->assertFormFieldExists('published_at')
+            ->assertFormSet(['commentable' => true])
             ->assertFormFieldExists('seo_meta.title')
             ->assertFormFieldExists('seo_meta.description')
             ->assertFormFieldExists('seo_meta.og_image')
@@ -148,6 +150,7 @@ class ArticleTest extends TestCase
                 'tags' => [$tag->getKey()],
                 'author_id' => $owner->getKey(),
                 'published_at' => now()->toDateTimeString(),
+                'commentable' => false,
                 'seo_meta' => [
                     'title' => 'عنوان سئو',
                     'description' => 'توضیح سئو',
@@ -176,6 +179,7 @@ class ArticleTest extends TestCase
         $this->assertStringContainsString('<div class="box">سلام</div>', $article->html());
         $this->assertEqualsCanonicalizing([$category->getKey(), $second->getKey()], $article->categories->modelKeys());
         $this->assertSame($owner->getKey(), $article->author_id);
+        $this->assertFalse($article->commentable);
         $this->assertSame('عنوان سئو', $article->seoMeta->title);
         $this->assertSame('توضیح سئو', $article->seoMeta->description);
         $this->assertSame('/storage/articles/covers/cover.png', $article->seoMeta->og_image);

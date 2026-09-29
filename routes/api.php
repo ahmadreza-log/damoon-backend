@@ -3,9 +3,11 @@
 use App\Http\Controllers\V1\ArticleController;
 use App\Http\Controllers\V1\AuthController;
 use App\Http\Controllers\V1\CategoryController;
+use App\Http\Controllers\V1\CommentController;
 use App\Http\Controllers\V1\MediaController;
 use App\Http\Controllers\V1\PageController;
 use App\Http\Controllers\V1\TagController;
+use App\Models\Comment;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -14,7 +16,8 @@ use Illuminate\Support\Facades\Route;
  * The version is part of the path: /v1/...
  * Register a new route inside this v1 group so Scramble includes it at /docs/api.
  * Protected routes need the auth.customer middleware. The content routes (articles,
- * pages, categories, tags, and media) are public and read-only, with a request limit.
+ * pages, categories, tags, media, and comments) are public and read-only, with a request limit.
+ * Sending a comment is the one public write; it has a tighter limit and waits for approval.
  */
 Route::prefix('v1')->name('v1.')->group(function () {
     Route::prefix('auth')->name('auth.')->group(function () {
@@ -33,5 +36,16 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('tags/{slug}', [TagController::class, 'show'])->name('tags.show');
         Route::get('media', [MediaController::class, 'index'])->name('media.index');
         Route::get('media/{key}', [MediaController::class, 'show'])->name('media.show');
+
+        foreach (array_keys(Comment::SUBJECTS) as $type) {
+            Route::get($type.'/{slug}/comments', [CommentController::class, 'index'])->defaults('type', $type)->name($type.'.comments.index');
+        }
     });
+
+    foreach (array_keys(Comment::SUBJECTS) as $type) {
+        Route::post($type.'/{slug}/comments', [CommentController::class, 'store'])
+            ->defaults('type', $type)
+            ->middleware('throttle:comments')
+            ->name($type.'.comments.store');
+    }
 });

@@ -25,6 +25,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section as FormSection;
 use Filament\Schemas\Components\Utilities\Get;
@@ -41,7 +42,7 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
  * The panel articles section, in the content group.
  *
  * Each article has a title, slug, body, cover, categories, tags, author,
- * publish date, an SEO box, questions, a gallery, and related articles and products.
+ * publish date, a switch that allows comments, an SEO box, questions, a gallery, and related articles and products.
  * The SEO box is seoSection() from rankbeam/laravel-seo-filament, fitted to the panel in Seo::boot.
  * The body editor is Editor::body, shared with pages. It saves Tiptap JSON,
  * offers the blocks in Article::BLOCKS, and stores pictures in Article::FOLDER.
@@ -164,6 +165,10 @@ class ArticleResource extends Resource
                 ->label('تاریخ انتشار')
                 ->required()
                 ->default(now()),
+            Toggle::make('commentable')
+                ->label('اجازه به ارسال دیدگاه')
+                ->default(true)
+                ->columnSpanFull(),
             static::seoSection(),
             FormSection::make('سوالات متداول')
                 ->columnSpan(2)

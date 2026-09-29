@@ -7,6 +7,8 @@ use App\Http\Resources\V1\TermDetailResource;
 use App\Http\Resources\V1\TermResource;
 use App\Models\Category;
 use App\Models\Tag;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -17,6 +19,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  *
  * Extending:
  * - A new article group extends this class, sets MODEL and MISSING, and gets its two routes in routes/api.php.
+ * - Add a list filter to the validate rules in index so the OpenAPI document lists it.
  */
 abstract class TermController extends Controller
 {
@@ -27,16 +30,30 @@ abstract class TermController extends Controller
     protected const MISSING = '';
 
     /**
-     * Every record with its parent id and published article count, ordered by name.
+     * Records with their parent id and published article count, ordered by name.
+     *
+     * The whole list comes back by default. Send page or per_page (up to 100, 50 when left out)
+     * to get it a page at a time, with links and meta. q searches the name. parent takes an id
+     * and lists its children; 0 lists the top-level ones.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $terms = static::MODEL::query()
-            ->withCount(['articles' => fn ($query) => $query->published()])
-            ->orderBy('name')
-            ->get();
+        $data = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'parent' => ['nullable', 'integer', 'min:0'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:'.self::CEILING],
+        ]);
 
-        return TermResource::collection($terms);
+        $query = static::MODEL::query()
+            ->withCount(['articles' => fn ($query) => $query->published()])
+            ->when($data['q'] ?? null, fn (Builder $query, string $text) => $query->where('name', 'like', '%'.$text.'%'))
+            ->when(isset($data['parent']), fn (Builder $query) => (int) $data['parent'] === 0
+                ? $query->whereNull('parent_id')
+                : $query->where('parent_id', (int) $data['parent']))
+            ->orderBy('name');
+
+        return TermResource::collection($this->paged($query, $data));
     }
 
     /**

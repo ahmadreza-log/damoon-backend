@@ -39,6 +39,9 @@ class Section
     /** The media library page. */
     public const MEDIA = 'media';
 
+    /** The comments resource. */
+    public const COMMENTS = 'comments';
+
     /** Guard used by the staff panel. */
     public const GUARD = 'web';
 
@@ -57,6 +60,7 @@ class Section
             self::ARTICLES => 'نوشته‌ها',
             self::PAGES => 'برگه‌ها',
             self::MEDIA => 'رسانه‌ها',
+            self::COMMENTS => 'دیدگاه‌ها',
         ];
     }
 

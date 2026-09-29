@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder as Query;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * A standalone site page in the content group, such as درباره ما or تماس با ما.
@@ -31,6 +32,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * editor exports on save, and layout joins them for the site. Pictures in the builder
  * are media library files, written as /storage/{path}. SEO title, description, and
  * social image live in seo_meta through Meta.
+ * commentable says whether visitors may send comments; it is on by default.
+ * Comments are Comment rows and leave with the page.
  *
  * Extending:
  * - Add a column in a pages migration, Fillable, and PageResource together.
@@ -49,6 +52,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'position',
     'author_id',
     'published_at',
+    'commentable',
 ])]
 class Page extends Model
 {
@@ -89,6 +93,20 @@ class Page extends Model
         static::saved(function (Page $page): void {
             $page->resize();
         });
+
+        static::deleted(function (Page $page): void {
+            $page->comments()->delete();
+        });
+    }
+
+    /**
+     * Visitor comments on this page, of every status.
+     *
+     * @return MorphMany<Comment, $this>
+     */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'subject');
     }
 
     /**
@@ -220,6 +238,7 @@ class Page extends Model
     {
         return [
             'published_at' => 'datetime',
+            'commentable' => 'boolean',
             'position' => 'integer',
             'design' => 'array',
         ];

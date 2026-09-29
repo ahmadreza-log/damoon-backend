@@ -21,6 +21,7 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -35,7 +36,7 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
  * The panel pages section (برگه‌ها), in the content group, like WordPress pages.
  *
  * Each page has a title, slug, body, cover, parent page, order, author, publish date,
- * and an SEO box. The body uses the same editor as articles, with pictures in Page::FOLDER.
+ * a switch that allows comments, and an SEO box. The body uses the same editor as articles, with pictures in Page::FOLDER.
  * The SEO box is seoSection() from rankbeam/laravel-seo-filament, fitted to the panel in Seo::boot.
  * The page builder (صفحه‌ساز) is its own full-width page, DesignPage, opened with the
  * designer action from the list and the edit page.
@@ -146,6 +147,10 @@ class PageResource extends Resource
                 ->label('تاریخ انتشار')
                 ->required()
                 ->default(now()),
+            Toggle::make('commentable')
+                ->label('اجازه به ارسال دیدگاه')
+                ->default(true)
+                ->columnSpanFull(),
             static::seoSection(),
         ]);
     }

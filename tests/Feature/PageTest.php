@@ -85,6 +85,7 @@ class PageTest extends TestCase
             ->assertSee('ترتیب')
             ->assertSee('نویسنده')
             ->assertSee('تاریخ انتشار')
+            ->assertSee('اجازه به ارسال دیدگاه')
             ->assertSee('سئو');
 
         Livewire::withCookie((string) config('sanctum.panel_cookie'), $token)
@@ -97,6 +98,7 @@ class PageTest extends TestCase
             ->assertFormFieldExists('position')
             ->assertFormFieldExists('author_id')
             ->assertFormFieldExists('published_at')
+            ->assertFormSet(['commentable' => true])
             ->assertFormFieldExists('seo_meta.title')
             ->assertFormFieldExists('seo_meta.description')
             ->assertFormFieldExists('seo_meta.og_image')
@@ -135,17 +137,19 @@ class PageTest extends TestCase
         $this->assertSame($parent->getKey(), $page->parent_id);
         $this->assertSame(3, $page->position);
         $this->assertSame($owner->getKey(), $page->author_id);
+        $this->assertTrue($page->commentable);
         $this->assertSame('عنوان سئو برگه', $page->seoMeta->title);
         $this->assertSame('توضیح سئو برگه', $page->seoMeta->description);
         $this->assertSame('درباره ما › تیم ما', $page->trail());
 
         Livewire::withCookie((string) config('sanctum.panel_cookie'), $token)
             ->test(EditPage::class, ['record' => $page->getKey()])
-            ->fillForm(['title' => 'تیم دامون'])
+            ->fillForm(['title' => 'تیم دامون', 'commentable' => false])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $this->assertSame('تیم دامون', $page->refresh()->title);
+        $this->assertFalse($page->commentable);
 
         $this->withCookie((string) config('sanctum.panel_cookie'), $token)
             ->get('/admin/pages')

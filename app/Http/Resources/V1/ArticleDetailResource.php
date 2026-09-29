@@ -10,7 +10,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * One published article with everything its site page shows.
  *
  * Besides the list fields: the body as a Tiptap JSON document through Document, the gallery, questions, related articles
- * that are published too, and the resolved SEO for the page head.
+ * that are published too, whether visitors may send comments and how many approved ones there are,
+ * and the resolved SEO for the page head. The comments themselves come from CommentController.
  *
  * Extending:
  * - A new Article column or relation is one more key here. Load the relation in ArticleController::show.
@@ -36,6 +37,8 @@ class ArticleDetailResource extends JsonResource
             'tags' => TermResource::collection($this->whenLoaded('tags')),
             'published_at' => $this->published_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+            'commentable' => (bool) $this->commentable,
+            'comments_count' => $this->whenCounted('comments'),
             'content' => Document::make($this->content),
             'gallery' => Picture::list($this->gallery),
             'questions' => Questions::make($this->questions),

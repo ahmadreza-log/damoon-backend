@@ -101,6 +101,7 @@ class ContentApiTest extends TestCase
                 ['question' => 'دامون چیست؟', 'answer' => 'یک سامانه مدیریت محتوا'],
                 ['question' => '', 'answer' => 'بدون سوال'],
             ],
+            'commentable' => false,
         ]);
         $shown = Article::query()->create(['title' => 'مرتبط منتشرشده', 'author_id' => $author->getKey(), 'published_at' => now()->subHour()]);
         $draft = Article::query()->create(['title' => 'مرتبط پیش‌نویس', 'author_id' => $author->getKey(), 'published_at' => now()->addWeek()]);
@@ -110,6 +111,7 @@ class ContentApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.title', 'راهنمای دامون')
             ->assertJsonPath('data.author', $author->getFilamentName())
+            ->assertJsonPath('data.commentable', false)
             ->assertJsonPath('data.gallery.0.path', 'articles/gallery/one.png')
             ->assertJsonCount(1, 'data.questions')
             ->assertJsonPath('data.questions.0.question', 'دامون چیست؟')
@@ -179,6 +181,7 @@ class ContentApiTest extends TestCase
             ->assertJsonPath('data.design.components.0.components.1.attributes.alt', 'بنر')
             ->assertJsonPath('data.design.components.0.components.1.picture.path', Page::DESIGNS.'/hero.png')
             ->assertJsonPath('data.design.styles.0.style.padding', '40px')
+            ->assertJsonPath('data.commentable', true)
             ->assertJsonPath('data.content', ['type' => 'doc', 'content' => []])
             ->assertJsonCount(1, 'data.children')
             ->assertJsonPath('data.children.0.id', $team->getKey())
@@ -285,6 +288,51 @@ class ContentApiTest extends TestCase
         $this->get('/v1/tags')->assertOk()->assertJsonPath('data.0.articles_count', 1);
         $this->get('/v1/tags/'.urlencode((string) $tag->slug))->assertOk()->assertJsonPath('data.name', 'اندروید');
         $this->get('/v1/tags/missing')->assertNotFound()->assertJsonPath('message', 'برچسب پیدا نشد.');
+    }
+
+    /**
+     * Pages, categories, and tags come whole by default, a page at a time with page or per_page, and filter by text and parent.
+     */
+    public function test_pages_and_terms_page_and_filter_on_request(): void
+    {
+        $about = Page::query()->create(['title' => 'درباره ما', 'published_at' => now()->subDay()]);
+        Page::query()->create(['title' => 'تماس', 'published_at' => now()->subDay()]);
+        $team = Page::query()->create(['title' => 'تیم ما', 'parent_id' => $about->getKey(), 'published_at' => now()->subDay()]);
+
+        $this->get('/v1/pages')->assertOk()->assertJsonCount(3, 'data')->assertJsonMissingPath('meta');
+        $this->get('/v1/pages?per_page=2')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.total', 3)
+            ->assertJsonPath('meta.last_page', 2);
+        $this->get('/v1/pages?page=2&per_page=2')->assertOk()->assertJsonCount(1, 'data');
+        $this->get('/v1/pages?page=1')->assertOk()->assertJsonPath('meta.per_page', 50);
+        $this->get('/v1/pages?parent=0')->assertOk()->assertJsonCount(2, 'data');
+        $this->get('/v1/pages?parent='.$about->getKey())
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $team->getKey());
+        $this->get('/v1/pages?q='.urlencode('تیم'))->assertOk()->assertJsonCount(1, 'data');
+        $this->get('/v1/pages?per_page=101')->assertStatus(422)->assertJsonValidationErrors('per_page');
+
+        $parent = Category::query()->create(['name' => 'فناوری']);
+        $child = Category::query()->create(['name' => 'موبایل', 'parent_id' => $parent->getKey()]);
+        Category::query()->create(['name' => 'ورزش']);
+
+        $this->get('/v1/categories')->assertOk()->assertJsonCount(3, 'data')->assertJsonMissingPath('meta');
+        $this->get('/v1/categories?per_page=1&page=2')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('meta.total', 3);
+        $this->get('/v1/categories?parent=0')->assertOk()->assertJsonCount(2, 'data');
+        $this->get('/v1/categories?parent='.$parent->getKey())->assertOk()->assertJsonPath('data.0.id', $child->getKey());
+        $this->get('/v1/categories?q='.urlencode('ورز'))->assertOk()->assertJsonCount(1, 'data');
+
+        Tag::query()->create(['name' => 'اندروید']);
+        Tag::query()->create(['name' => 'آیفون']);
+
+        $this->get('/v1/tags?q='.urlencode('اندر'))->assertOk()->assertJsonCount(1, 'data');
+        $this->get('/v1/tags?per_page=1')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('meta.total', 2);
     }
 
     /**

@@ -11,7 +11,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * Besides the list fields: the body as a Tiptap JSON document through Document, the
  * page builder layout as JSON through Design, the same layout as HTML and CSS, the
- * trail of parent titles, the parent and published children, and the resolved SEO.
+ * trail of parent titles, the parent and published children, whether visitors may send
+ * comments and how many approved ones there are, and the resolved SEO. The comments
+ * themselves come from CommentController.
  * A site can draw the design tree itself or print html with css.
  *
  * Extending:
@@ -36,6 +38,8 @@ class PageDetailResource extends JsonResource
             'cover' => Picture::make($this->cover),
             'published_at' => $this->published_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+            'commentable' => (bool) $this->commentable,
+            'comments_count' => $this->whenCounted('comments'),
             'content' => Document::make($this->content),
             'trail' => $this->trail(),
             'parent' => new PageResource($this->whenLoaded('parent')),
