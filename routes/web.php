@@ -19,5 +19,5 @@ Route::middleware(SetPersianLocale::class)->group(function () {
  * The public home page. It shows Laravel's welcome view until the site front end is built.
  */
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/admin');
 });

@@ -8,11 +8,13 @@ use App\Support\Seo;
  * A page builder layout as the content API sends it: the GrapesJS component tree and style rules as JSON.
  *
  * components is the tree the editor built. Each node has a type (text, image, link, video,
- * map, posts, or empty for a plain box), a tagName, attributes, content, and its own
- * components. styles are the CSS rules, each with selectors, an optional media state,
- * and style properties. The site reads each node by its type and draws it the way it wants.
- * Library pictures are written as /storage/{path} by the editor; here image nodes get a
- * full src and a picture with the built sizes, and background images get full addresses.
+ * map, posts, slider, or empty for a plain box), a tagName, attributes, content, and its own
+ * components. A slider node also has slides, each with title, text, label, href, and src.
+ * styles are the CSS rules, each with selectors, an optional media state, and style
+ * properties. The site reads each node by its type and draws it the way it wants.
+ * Library pictures are written as /storage/{path} by the editor; here image nodes and
+ * slides get a full src and a picture with the built sizes, and background images get
+ * full addresses.
  *
  * Extending:
  * - A new component type in resources/js/designer.js arrives here as is; give it extra data in walk() when the site needs it.
@@ -62,6 +64,13 @@ final class Design
             $node['style'] = self::absolute($node['style']);
         }
 
+        if (($node['type'] ?? null) === 'slider' && is_array($node['slides'] ?? null)) {
+            $node['slides'] = array_values(array_map(
+                fn (mixed $slide): mixed => is_array($slide) ? self::slide($slide) : $slide,
+                $node['slides'],
+            ));
+        }
+
         if (is_array($node['components'] ?? null)) {
             $node['components'] = array_values(array_map(
                 fn (mixed $child): mixed => is_array($child) ? self::walk($child) : $child,
@@ -70,6 +79,25 @@ final class Design
         }
 
         return $node;
+    }
+
+    /**
+     * One slider item with its library picture made absolute.
+     *
+     * @param  array<string, mixed>  $slide
+     * @return array<string, mixed>
+     */
+    private static function slide(array $slide): array
+    {
+        $picture = Picture::make(Seo::path($slide['src'] ?? null));
+
+        if ($picture !== null) {
+            $slide['src'] = $picture['url'];
+        }
+
+        $slide['picture'] = $picture;
+
+        return $slide;
     }
 
     /**

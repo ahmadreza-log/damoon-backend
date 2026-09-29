@@ -8,7 +8,8 @@
  *
  * Extending:
  * - A new block is one more entry in BLOCKS. A block that needs its own settings also gets a component type in types().
- * - Persian names for style properties and element types live in MESSAGES.
+ * - Persian names for style properties, their choices, and element types live in MESSAGES; tooltips in TOOLS and ACTIONS.
+ * - A plugin block gets a line icon in MEDIA so it matches the others.
  * - Build with npm run designer, then php artisan filament:assets copies the result into public.
  */
 import grapesjs from 'grapesjs';
@@ -19,6 +20,7 @@ import basicModule from 'grapesjs-blocks-basic';
 import codeModule from 'grapesjs-custom-code';
 import tabsModule from 'grapesjs-tabs';
 import backgroundModule from 'grapesjs-style-bg';
+import slider from './widgets/slider';
 
 // These plugins are CommonJS builds that export { default: plugin } without marking themselves as ES modules.
 const unwrap = (module) => (typeof module === 'function' ? module : module.default);
@@ -31,9 +33,10 @@ const PRIMARY = '#00377B';
 
 const LAYOUT = 'چیدمان';
 const BASIC = 'پایه';
+const WIDGETS = 'ویجت‌ها';
 const READY = 'بخش‌های آماده';
 const EXTRA = 'پیشرفته';
-const CATEGORIES = [LAYOUT, BASIC, READY, EXTRA];
+const CATEGORIES = [LAYOUT, BASIC, WIDGETS, READY, EXTRA];
 
 const icon = (path) => `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 
@@ -79,6 +82,14 @@ const BLOCKS = {
         category: BASIC,
         media: icon('<path d="M7 7h4v4H8a1 1 0 0 0-1 1v3M13 7h4v4h-3a1 1 0 0 0-1 1v3"/>'),
         content: `<blockquote style="margin:0;padding:16px 24px;border-inline-start:4px solid ${PRIMARY};background:#f8fafc;line-height:1.9;">جمله‌ای که می‌خواهید برجسته شود.</blockquote>`,
+    },
+    slider: {
+        label: 'اسلایدر',
+        category: WIDGETS,
+        media: icon('<rect x="5" y="5" width="14" height="12" rx="2"/><path d="M2 9v4M22 9v4M9 21h.01M12 21h.01M15 21h.01"/>'),
+        content: { type: 'slider' },
+        activate: true,
+        select: true,
     },
     hero: {
         label: 'بنر اصلی',
@@ -130,6 +141,21 @@ const BLOCKS = {
         media: icon('<rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/>'),
         content: { type: 'posts' },
     },
+};
+
+/** Line icons for the plugin blocks, so every block card matches the Damoon ones. */
+const MEDIA = {
+    column1: icon('<rect x="3" y="5" width="18" height="14" rx="2"/>'),
+    column2: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/>'),
+    column3: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14M15 5v14"/>'),
+    'column3-7': icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14"/>'),
+    text: icon('<path d="M5 6V4h14v2M12 4v16M9 20h6"/>'),
+    link: icon('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
+    image: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'),
+    video: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/>'),
+    map: icon('<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
+    tabs: icon('<path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM3 9V5a1 1 0 0 1 1-1h5l1 5M10 9V5a1 1 0 0 1 1-1h4l1 5"/>'),
+    'custom-code': icon('<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>'),
 };
 
 /**
@@ -287,6 +313,70 @@ const MESSAGES = {
             'flex-grow': 'رشد',
             'flex-shrink': 'کوچک شدن',
             'align-self': 'چینش خود',
+            direction: 'جهت متن',
+        },
+        options: {
+            display: { block: 'بلوکی', inline: 'درون‌خطی', 'inline-block': 'بلوک درون‌خطی', flex: 'فلکس', grid: 'شبکه', none: 'پنهان' },
+            float: { none: 'هیچ', left: 'چپ', right: 'راست' },
+            position: { static: 'عادی', relative: 'نسبی', absolute: 'مطلق', fixed: 'ثابت', sticky: 'چسبان' },
+            direction: { rtl: 'راست به چپ', ltr: 'چپ به راست' },
+            'text-align': { right: 'راست', center: 'وسط', left: 'چپ', justify: 'هم‌تراز' },
+            'font-weight': {
+                100: 'خیلی نازک',
+                200: 'نازک‌تر',
+                300: 'نازک',
+                400: 'معمولی',
+                500: 'متوسط',
+                600: 'نیمه‌ضخیم',
+                700: 'ضخیم',
+                800: 'خیلی ضخیم',
+                900: 'سیاه',
+            },
+            'flex-direction': { row: 'افقی', 'row-reverse': 'افقی وارونه', column: 'عمودی', 'column-reverse': 'عمودی وارونه' },
+            'flex-wrap': { nowrap: 'بدون شکستن', wrap: 'شکستن', 'wrap-reverse': 'شکستن وارونه' },
+            'justify-content': {
+                'flex-start': 'آغاز',
+                'flex-end': 'پایان',
+                center: 'وسط',
+                'space-between': 'فاصلهٔ بین',
+                'space-around': 'فاصلهٔ دور',
+                'space-evenly': 'فاصلهٔ برابر',
+            },
+            'align-items': { 'flex-start': 'آغاز', 'flex-end': 'پایان', center: 'وسط', baseline: 'خط پایه', stretch: 'کشیده' },
+            'align-content': {
+                'flex-start': 'آغاز',
+                'flex-end': 'پایان',
+                center: 'وسط',
+                'space-between': 'فاصلهٔ بین',
+                'space-around': 'فاصلهٔ دور',
+                stretch: 'کشیده',
+            },
+            'align-self': { auto: 'خودکار', 'flex-start': 'آغاز', 'flex-end': 'پایان', center: 'وسط', baseline: 'خط پایه', stretch: 'کشیده' },
+            'border-style': {
+                none: 'هیچ',
+                solid: 'پیوسته',
+                dotted: 'نقطه‌چین',
+                dashed: 'خط‌چین',
+                double: 'دوخطی',
+                groove: 'شیاردار',
+                ridge: 'برجسته',
+                inset: 'فرورفته',
+                outset: 'بیرون‌زده',
+            },
+            'box-shadow-type': { '': 'بیرونی', inset: 'درونی' },
+            'background-repeat': { repeat: 'تکرار', 'repeat-x': 'تکرار افقی', 'repeat-y': 'تکرار عمودی', 'no-repeat': 'بدون تکرار' },
+            'background-attachment': { scroll: 'همراه صفحه', fixed: 'ثابت', local: 'همراه محتوا' },
+            'background-size': { auto: 'خودکار', cover: 'پوشاندن', contain: 'جا شدن' },
+            'transition-property': {
+                all: 'همه',
+                width: 'پهنا',
+                height: 'بلندی',
+                'background-color': 'رنگ پس‌زمینه',
+                transform: 'تبدیل',
+                'box-shadow': 'سایه',
+                opacity: 'شفافیت',
+            },
+            'transition-timing-function': { linear: 'یکنواخت', ease: 'نرم', 'ease-in': 'آرام در آغاز', 'ease-out': 'آرام در پایان', 'ease-in-out': 'آرام در آغاز و پایان' },
         },
     },
     traitManager: {
@@ -311,9 +401,40 @@ const MESSAGES = {
 };
 
 // Parts of a composite property, such as the top of margin, carry a -sub suffix in GrapesJS.
-Object.entries({ ...MESSAGES.styleManager.properties }).forEach(([id, label]) => {
-    MESSAGES.styleManager.properties[`${id}-sub`] = label;
+['properties', 'options'].forEach((group) => {
+    Object.entries({ ...MESSAGES.styleManager[group] }).forEach(([id, value]) => {
+        MESSAGES.styleManager[group][`${id}-sub`] = value;
+    });
 });
+
+/** Tooltips for the tools GrapesJS shows over the selected element, keyed by command. */
+const TOOLS = {
+    'core:component-exit': 'انتخاب والد',
+    'select-parent': 'انتخاب والد',
+    'tlb-move': 'جابه‌جایی',
+    'tlb-clone': 'رونوشت',
+    'tlb-delete': 'حذف',
+};
+
+/** Tooltips for the text editor's buttons, keyed by action name. */
+const ACTIONS = {
+    bold: 'پررنگ',
+    italic: 'کج',
+    underline: 'زیرخط',
+    strikethrough: 'خط‌خورده',
+    link: 'پیوند',
+    wrap: 'جدا کردن برای استایل',
+};
+
+/** Texts of the colour picker, which GrapesJS hands to Spectrum. */
+const PICKER = {
+    chooseText: 'تأیید',
+    cancelText: '⨯',
+    togglePaletteMoreText: 'بیشتر',
+    togglePaletteLessText: 'کمتر',
+    clearText: 'بدون رنگ',
+    noColorSelectedText: 'رنگی انتخاب نشده',
+};
 
 /** Fonts offered in the style panel; iranyekan is the site's own font. */
 const FONTS = [
@@ -321,7 +442,7 @@ const FONTS = [
     { id: 'Tahoma, sans-serif', label: 'تاهوما' },
     { id: 'Arial, Helvetica, sans-serif', label: 'Arial' },
     { id: 'Georgia, serif', label: 'Georgia' },
-    { id: 'monospace', label: 'Monospace' },
+    { id: 'monospace', label: 'هم‌عرض (کد)' },
 ];
 
 /**
@@ -352,7 +473,12 @@ function types(editor) {
 /** Styles only the canvas uses: right to left, the site font, softer outlines, and the posts placeholder. */
 const CANVAS = `
     html { direction: rtl; }
-    body { font-family: iranyekan, Tahoma, sans-serif; margin: 0; color: #0f172a; }
+    body { font-family: iranyekan, Tahoma, sans-serif; margin: 0; color: #0f172a; line-height: 1.8; }
+    [data-gjs-type="wrapper"]:empty::before {
+        content: 'بلوک‌ها را از زبانهٔ «افزودن» بکشید و اینجا رها کنید.';
+        display: grid; place-items: center; min-height: calc(100vh - 48px); margin: 24px;
+        border: 2px dashed #cbd5e1; border-radius: 16px; color: #64748b; font-size: 15px;
+    }
     .gjs-dashed *[data-gjs-highlightable] { outline: 1px dashed rgba(100, 116, 139, .35); outline-offset: -1px; }
     .gjs-selected, .gjs-dashed *[data-gjs-highlightable].gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -2px; }
     .gjs-selected-parent { outline: 2px dashed rgba(37, 99, 235, .45) !important; }
@@ -411,6 +537,7 @@ export default function designer({ project, markup, style, assets, fonts }) {
                 cssIcons: '',
                 panels: { defaults: [] },
                 textViewCode: 'کد صفحه',
+                colorPicker: PICKER,
                 ...start,
                 i18n: { locale: 'fa', detectLocale: false, messages: { fa: merge(fa, MESSAGES) } },
                 canvas: { styles: [fonts] },
@@ -455,22 +582,23 @@ export default function designer({ project, markup, style, assets, fonts }) {
                     }),
                     (instance) => background(instance, {}),
                     types,
+                    slider,
                 ],
             });
 
             this.blocks();
+            this.show();
 
             editor.on('load', () => {
-                const family = editor.StyleManager.getProperty('typography', 'font-family');
-                family?.set('options', FONTS);
+                this.properties();
 
                 // With appendTo, GrapesJS draws the class box into its container twice.
                 this.$refs.selectors.replaceChildren(editor.SelectorManager.render());
+                this.mirror();
 
                 editor.runCommand('core:component-outline');
                 editor.UndoManager.clear();
                 editor.clearDirtyCount();
-                this.show();
                 this.sync();
             });
 
@@ -479,9 +607,19 @@ export default function designer({ project, markup, style, assets, fonts }) {
                 const picked = editor.getSelected();
                 this.selected = picked ? picked.getName() : '';
 
-                if (picked && this.tab === 'blocks') {
+                if (picked?.get('widget')) {
+                    this.tab = 'traits';
+                } else if (picked && this.tab === 'blocks') {
                     this.tab = 'style';
                 }
+            });
+            editor.on('component:selected', (component) => this.label(component));
+            editor.on('rte:enable', () => {
+                editor.RichTextEditor.getAll().forEach((action) => {
+                    if (action.btn && ACTIONS[action.name]) {
+                        action.btn.title = ACTIONS[action.name];
+                    }
+                });
             });
             editor.on('change:device', () => {
                 this.device = editor.getDevice();
@@ -503,6 +641,7 @@ export default function designer({ project, markup, style, assets, fonts }) {
 
         destroy() {
             window.removeEventListener('beforeunload', this.leave);
+            this.observer?.disconnect();
             document.documentElement.classList.remove('damoon-designing');
             editor?.destroy();
             editor = null;
@@ -515,6 +654,62 @@ export default function designer({ project, markup, style, assets, fonts }) {
             Object.entries(BLOCKS).forEach(([id, block]) => manager.add(id, block));
 
             ['column1', 'column2', 'column3', 'column3-7'].forEach((id) => manager.get(id)?.set('category', LAYOUT));
+            Object.entries(MEDIA).forEach(([id, media]) => manager.get(id)?.set('media', media));
+        },
+
+        /** Offers the site fonts, puts right before left in float and text alignment, and adds a text direction choice. */
+        properties() {
+            const manager = editor.StyleManager;
+
+            manager.getProperty('general', 'float')?.set('options', ['none', 'right', 'left'].map((id) => ({ id })));
+            manager.getProperty('typography', 'font-family')?.set('options', FONTS);
+            manager.getProperty('typography', 'text-align')?.set('options', ['right', 'center', 'left', 'justify'].map((id) => ({ id })));
+            manager.addProperty('typography', {
+                type: 'radio',
+                property: 'direction',
+                default: 'rtl',
+                options: [{ id: 'rtl' }, { id: 'ltr' }],
+            }, { at: 0 });
+        },
+
+        /**
+         * Indents nested layers from the right.
+         *
+         * GrapesJS writes each level's indent as an inline padding-left, which CSS cannot mirror.
+         */
+        mirror() {
+            const selector = '.gjs-layer-title[style*="padding-left"]';
+            const flip = (root) => {
+                if (!(root instanceof Element)) {
+                    return;
+                }
+
+                [...(root.matches(selector) ? [root] : []), ...root.querySelectorAll(selector)].forEach((title) => {
+                    title.style.paddingInlineStart = title.style.paddingLeft;
+                    title.style.removeProperty('padding-left');
+                });
+            };
+
+            this.observer = new MutationObserver((changes) => changes.forEach((change) => flip(change.target)));
+            this.observer.observe(this.$refs.layers, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+            flip(this.$refs.layers);
+        },
+
+        /** Gives the tools over the selected element Persian tooltips. */
+        label(component) {
+            const toolbar = component.get('toolbar');
+
+            if (!Array.isArray(toolbar) || toolbar.every((item) => item.attributes?.title)) {
+                return;
+            }
+
+            component.set('toolbar', toolbar.map((item) => {
+                // The select-parent tool's command is a function that runs core:component-exit.
+                const command = typeof item.command === 'function' && String(item.command).includes('core:component-exit') ? 'core:component-exit' : item.command;
+                const title = TOOLS[typeof command === 'string' ? command : ''];
+
+                return title ? { ...item, attributes: { ...item.attributes, title } } : item;
+            }));
         },
 
         /** Lists the blocks that match the search box, grouped in CATEGORIES order. */
@@ -623,7 +818,9 @@ export default function designer({ project, markup, style, assets, fonts }) {
                 const data = editor.getProjectData();
                 delete data.assets;
 
-                const html = editor.getHtml().replace(/^<body[^>]*>/i, '').replace(/<\/body>$/i, '');
+                // Widget scripts, such as the slider's arrows, travel with the HTML so they also run on the site.
+                const js = editor.getJs();
+                const html = editor.getWrapper().getInnerHTML() + (js ? `<script>${js}</script>` : '');
                 const css = editor.getCss({ avoidProtected: true });
 
                 await this.$wire.save(data, html, css);

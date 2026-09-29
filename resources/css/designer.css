@@ -75,6 +75,17 @@ html.damoon-designing {
     --dd-warn-soft: rgba(251, 191, 36, 0.12);
 }
 
+/* GrapesJS sets Helvetica on some parts and letter-spacing on titles, which breaks Persian letter joining. */
+.damoon-designer *,
+.damoon-designer *::placeholder {
+    font-family: inherit;
+    letter-spacing: normal;
+}
+
+.damoon-designer .CodeMirror {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 .damoon-designer .dd-icon {
     width: 1.125rem;
     height: 1.125rem;
@@ -109,8 +120,37 @@ html.damoon-designing {
 }
 
 .damoon-designer .dd-tools {
-    gap: 0.125rem;
+    gap: 0.5rem;
     margin-inline-end: 0.25rem;
+}
+
+.damoon-designer .dd-group {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.1875rem;
+    border-radius: 0.625rem;
+    background: var(--dd-hover);
+}
+
+.damoon-designer .dd-group .fi-icon-btn {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 1.875rem;
+    margin: 0;
+    border-radius: 0.4375rem;
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-designer .dd-group .fi-icon-btn:hover {
+    background: var(--dd-bg);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+
+.damoon-designer .dd-group .fi-icon-btn .fi-icon {
+    width: 1.125rem;
+    height: 1.125rem;
 }
 
 .damoon-designer .dd-title {
@@ -183,16 +223,10 @@ html.damoon-designing {
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 
-.damoon-designer .dd-divider {
-    width: 1px;
-    height: 1.25rem;
-    margin: 0 0.375rem;
-    background: var(--dd-border);
-}
-
 .damoon-designer .dd-tools .fi-icon-btn.dd-on {
-    background: var(--dd-accent-soft);
+    background: var(--dd-bg);
     color: var(--dd-accent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 
 .damoon-designer .dd-tools .fi-icon-btn:disabled {
@@ -524,6 +558,7 @@ html.damoon-designing {
 .damoon-designer .gjs-blocks-c {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
     gap: 0.5rem;
     padding: 0.25rem 0.75rem 0.75rem;
 }
@@ -568,6 +603,7 @@ html.damoon-designing {
 .damoon-designer .gjs-block svg {
     width: 1.625rem;
     height: 1.625rem;
+    fill: none;
 }
 
 .damoon-designer .gjs-block-label {
@@ -610,10 +646,54 @@ html.damoon-designing {
     color: var(--dd-muted);
 }
 
+.damoon-designer .gjs-clm-header-status {
+    margin-inline-start: auto;
+}
+
+.damoon-designer .gjs-clm-header-status .gjs-field {
+    min-width: 8.5rem;
+}
+
+.damoon-designer .gjs-clm-tags #gjs-clm-tags-field {
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0.25rem;
+}
+
+.damoon-designer #gjs-clm-add-tag,
+.damoon-designer .gjs-clm-tags-btn {
+    display: grid;
+    place-items: center;
+    margin: 0;
+    border: 0;
+}
+
+.damoon-designer .gjs-clm-tag {
+    margin: 0;
+    gap: 0.25rem;
+}
+
 .damoon-designer .gjs-clm-sels-info {
-    margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0.5rem 0 0;
     color: var(--dd-muted);
     font-size: 0.6875rem;
+    text-align: start;
+}
+
+.damoon-designer .gjs-clm-label-sel {
+    float: none;
+    padding: 0;
+}
+
+.damoon-designer .gjs-clm-sel-id {
+    direction: ltr;
+    unicode-bidi: isolate;
+    opacity: 0.75;
 }
 
 .damoon-designer .gjs-clm-tags #gjs-clm-new,
@@ -660,34 +740,141 @@ html.damoon-designing {
     transform: rotate(90deg);
 }
 
+.damoon-designer .gjs-sm-sector.gjs-sm-open > .gjs-sm-sector-title {
+    color: var(--dd-accent);
+}
+
+/* Each property is one row, label on the right and control on the left, like Elementor. */
 .damoon-designer .gjs-sm-properties {
-    gap: 0.625rem 0.5rem;
-    padding: 0.25rem 1rem 1rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.25rem 1rem 1.125rem;
     font-size: 0.75rem;
 }
 
 .damoon-designer .gjs-sm-property {
-    width: calc(50% - 0.25rem);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
     margin: 0;
     padding: 0;
     float: none;
 }
 
-.damoon-designer .gjs-sm-property--full,
-.damoon-designer .gjs-sm-composite,
-.damoon-designer .gjs-sm-stack {
+.damoon-designer .gjs-sm-property > .gjs-sm-label {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+}
+
+.damoon-designer .gjs-sm-property > .gjs-fields {
+    flex: 0 0 60%;
+    min-width: 0;
+}
+
+.damoon-designer .gjs-sm-property.gjs-sm-radio,
+.damoon-designer .gjs-sm-property.gjs-sm-composite,
+.damoon-designer .gjs-sm-property.gjs-sm-stack,
+.damoon-designer .gjs-sm-property.gjs-sm-slider {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375rem;
+}
+
+.damoon-designer .gjs-sm-property.gjs-sm-radio > .gjs-fields,
+.damoon-designer .gjs-sm-property.gjs-sm-composite > .gjs-fields,
+.damoon-designer .gjs-sm-property.gjs-sm-stack > .gjs-fields,
+.damoon-designer .gjs-sm-property.gjs-sm-slider > .gjs-fields {
+    flex-basis: auto;
     width: 100%;
 }
 
 .damoon-designer .gjs-sm-label {
-    margin: 0 0 0.3125rem;
+    gap: 0.25rem;
     color: var(--dd-muted);
-    font-size: 0.71875rem;
+    font-size: 0.75rem;
     font-weight: 500;
 }
 
+.damoon-designer .gjs-sm-label .gjs-sm-icon {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 .damoon-designer .gjs-sm-clear {
+    display: inline-grid;
+    place-items: center;
+    width: 1rem;
+    height: 1rem;
     color: var(--dd-accent);
+    cursor: pointer;
+}
+
+.damoon-designer .gjs-sm-clear svg {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+/* Parts of a composite property sit side by side with their label under them: four for margin, padding, and corners. */
+.damoon-designer .gjs-sm-composite .gjs-sm-properties {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem 0.5rem;
+    padding: 0.625rem;
+}
+
+.damoon-designer .gjs-sm-property__margin .gjs-sm-properties,
+.damoon-designer .gjs-sm-property__padding .gjs-sm-properties,
+.damoon-designer .gjs-sm-property__border-radius .gjs-sm-properties {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.375rem;
+}
+
+.damoon-designer .gjs-sm-composite .gjs-sm-property,
+.damoon-designer .gjs-sm-stack .gjs-sm-property {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+}
+
+.damoon-designer .gjs-sm-composite .gjs-sm-property > .gjs-fields,
+.damoon-designer .gjs-sm-stack .gjs-sm-property > .gjs-fields {
+    flex-basis: auto;
+    width: 100%;
+}
+
+.damoon-designer .gjs-sm-property__margin .gjs-sm-property,
+.damoon-designer .gjs-sm-property__padding .gjs-sm-property,
+.damoon-designer .gjs-sm-property__border-radius .gjs-sm-property {
+    flex-direction: column-reverse;
+}
+
+.damoon-designer .gjs-sm-property__margin .gjs-sm-property > .gjs-sm-label,
+.damoon-designer .gjs-sm-property__padding .gjs-sm-property > .gjs-sm-label,
+.damoon-designer .gjs-sm-property__border-radius .gjs-sm-property > .gjs-sm-label {
+    justify-content: center;
+    font-size: 0.65625rem;
+}
+
+.damoon-designer .gjs-sm-property__margin .gjs-field-integer input,
+.damoon-designer .gjs-sm-property__padding .gjs-field-integer input,
+.damoon-designer .gjs-sm-property__border-radius .gjs-field-integer input {
+    padding-inline: 0.375rem 1.5rem;
+    text-align: center;
+}
+
+.damoon-designer .gjs-sm-property__margin .gjs-field-units,
+.damoon-designer .gjs-sm-property__padding .gjs-field-units,
+.damoon-designer .gjs-sm-property__border-radius .gjs-field-units {
+    right: 0.125rem;
+}
+
+.damoon-designer .gjs-sm-property__border .gjs-sm-property__border-color-sub {
+    grid-column: 1 / -1;
 }
 
 .damoon-designer .gjs-four-color,
@@ -701,8 +888,14 @@ html.damoon-designing {
     border-radius: 0.5rem;
     background: var(--dd-field);
     color: var(--dd-text);
-    direction: ltr;
+    direction: rtl;
     transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* A number with its unit and a colour code read left to right. */
+.damoon-designer .gjs-field-integer,
+.damoon-designer .gjs-field-color {
+    direction: ltr;
 }
 
 .damoon-designer .gjs-field:focus-within {
@@ -723,8 +916,59 @@ html.damoon-designing {
     color: var(--dd-text);
 }
 
+.damoon-designer .gjs-field select {
+    cursor: pointer;
+}
+
+/* Choices read right to left, so the arrow moves to the left edge. */
+.damoon-designer .gjs-field.gjs-select select,
+.damoon-designer .gjs-field.gjs-field-select select {
+    padding-inline: 0.625rem 1.75rem;
+    text-align: start;
+}
+
+.damoon-designer .gjs-field .gjs-sel-arrow {
+    right: auto;
+    left: 0;
+    width: 1.5rem;
+}
+
+.damoon-designer .gjs-field .gjs-d-s-arrow {
+    right: auto;
+    left: 0.625rem;
+    border-top-color: var(--dd-muted);
+}
+
+/* Values are typed and nudged with the arrow keys, so the tiny spinner goes. */
 .damoon-designer .gjs-field-arrows {
+    display: none;
+}
+
+.damoon-designer .gjs-field-integer input {
+    padding-inline: 0.625rem 2.25rem;
+}
+
+.damoon-designer .gjs-field-units {
+    right: 0.375rem;
+    display: flex;
+    align-items: center;
+}
+
+.damoon-designer .gjs-input-unit {
+    padding: 0 0.125rem;
     color: var(--dd-muted);
+    font-size: 0.6875rem;
+    cursor: pointer;
+}
+
+.damoon-designer .gjs-field-color input {
+    padding-inline-end: 2.25rem;
+}
+
+.damoon-designer .gjs-field-colorp {
+    width: 2rem;
+    padding: 0.3125rem;
+    border-left: 1px solid var(--dd-border);
 }
 
 .damoon-designer .gjs-field-color-picker {
@@ -737,19 +981,37 @@ html.damoon-designing {
     padding: 0.125rem;
 }
 
+.damoon-designer .gjs-field-radio {
+    direction: rtl;
+    background: var(--dd-hover);
+}
+
 .damoon-designer .gjs-radio-item {
+    flex: 1 1 0;
+    min-width: 0;
     border: 0;
     border-radius: 0.375rem;
 }
 
+.damoon-designer .gjs-radio-item:hover {
+    background: var(--dd-hover);
+}
+
 .damoon-designer .gjs-radio-item-label {
+    overflow: hidden;
+    padding: 0.3125rem 0.25rem;
     border-radius: 0.375rem;
     color: var(--dd-muted);
+    font-size: 0.71875rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .damoon-designer .gjs-radio-item input:checked + .gjs-radio-item-label {
-    background: var(--dd-accent-soft);
+    background: var(--dd-bg);
     color: var(--dd-accent);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 
 .damoon-designer .gjs-sm-composite .gjs-sm-properties,
@@ -793,35 +1055,323 @@ html.damoon-designing {
 }
 
 .damoon-designer .gjs-trt-trait {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.375rem;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0;
     font-weight: 400;
-    text-align: right;
+    text-align: start;
 }
 
 .damoon-designer .gjs-trt-trait .gjs-label-wrp {
-    width: 100%;
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}
+
+.damoon-designer .gjs-trt-trait .gjs-field-wrp {
+    flex: 0 0 60%;
     min-width: 0;
 }
 
 .damoon-designer .gjs-trt-trait .gjs-label {
     color: var(--dd-muted);
     font-size: 0.75rem;
+    font-weight: 500;
+    text-align: start;
+}
+
+.damoon-designer .gjs-trt-trait .gjs-field input,
+.damoon-designer .gjs-trt-trait .gjs-field textarea {
+    padding-inline: 0.625rem;
+}
+
+.damoon-designer .gjs-trt-trait--checkbox .gjs-field-wrp {
+    flex: 0 0 auto;
+}
+
+/* Checkbox settings as switches; the knob starts on the right and moves left when on. */
+.damoon-designer .gjs-field-checkbox {
+    position: relative;
+    width: 2.25rem;
+    height: 1.25rem;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: var(--dd-border);
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.damoon-designer .gjs-field-checkbox:has(input:checked) {
+    background: var(--dd-accent);
+}
+
+.damoon-designer .gjs-field-checkbox:has(input:focus-visible) {
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-designer .gjs-field-checkbox input {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.damoon-designer .gjs-field-checkbox .gjs-chk-icon,
+.damoon-designer .gjs-field-checkbox input:checked + .gjs-chk-icon {
+    position: absolute;
+    top: 0.125rem;
+    inset-inline-start: 0.125rem;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+    transform: none;
+    transition: inset-inline-start 0.15s;
+}
+
+.damoon-designer .gjs-field-checkbox input:checked + .gjs-chk-icon {
+    inset-inline-start: 1.125rem;
+}
+
+/* Widget repeaters, such as the slider's slides: a list of cards that open to edit one item. */
+
+.damoon-designer .gjs-trt-trait--slides {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--dd-border);
+}
+
+.damoon-designer .gjs-trt-trait--slides .gjs-field-wrp {
+    flex: 1 1 auto;
+}
+
+.damoon-designer .gjs-field-slides {
+    min-height: 0;
+    border: 0;
+    background: transparent;
+}
+
+.damoon-designer .gjs-field-slides:focus-within {
+    box-shadow: none;
+}
+
+.damoon-designer .dd-repeater {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.damoon-designer .dd-rep-label {
+    color: var(--dd-muted);
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
-.damoon-designer .gjs-trt-trait--checkbox {
-    flex-direction: row;
+.damoon-designer .dd-rep-item {
+    border: 1px solid var(--dd-border);
+    border-radius: 0.625rem;
+    background: var(--dd-bg);
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-designer .dd-rep-item.dd-open {
+    border-color: var(--dd-accent);
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-designer .dd-rep-head {
+    display: flex;
     align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem;
+    cursor: pointer;
 }
 
-/* GrapesJS: layers */
-
-.damoon-designer [x-ref='layers'] {
-    direction: ltr;
+.damoon-designer .dd-rep-head:hover {
+    background: var(--dd-soft);
 }
+
+.damoon-designer .dd-rep-head:focus-visible {
+    outline: 2px solid var(--dd-accent);
+    outline-offset: -2px;
+}
+
+.damoon-designer .dd-rep-thumb {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 0.375rem;
+    background: var(--dd-hover);
+    color: var(--dd-muted);
+    object-fit: cover;
+}
+
+.damoon-designer .dd-rep-thumb svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.damoon-designer .dd-rep-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--dd-text);
+    font-size: 0.78125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.damoon-designer .dd-rep-actions {
+    display: flex;
+    gap: 0.125rem;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+}
+
+.damoon-designer .dd-rep-head:hover .dd-rep-actions,
+.damoon-designer .dd-open .dd-rep-actions {
+    opacity: 1;
+}
+
+.damoon-designer .dd-rep-action {
+    display: grid;
+    place-items: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    border-radius: 0.375rem;
+    color: var(--dd-muted);
+}
+
+.damoon-designer .dd-rep-action:hover {
+    background: var(--dd-hover);
+    color: var(--dd-text);
+}
+
+.damoon-designer .dd-rep-action.dd-rep-danger:hover,
+.damoon-designer .dd-rep-link.dd-rep-danger {
+    color: #dc2626;
+}
+
+.damoon-designer .dd-rep-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-top: 1px solid var(--dd-border);
+    background: var(--dd-soft);
+}
+
+.damoon-designer .dd-rep-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3125rem;
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.damoon-designer .dd-rep-input {
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.5rem;
+    outline: 0;
+    background: var(--dd-field);
+    color: var(--dd-text);
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    resize: vertical;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-designer .dd-rep-input:focus {
+    border-color: var(--dd-accent);
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-designer .dd-rep-input[dir='ltr'] {
+    text-align: left;
+}
+
+.damoon-designer .dd-rep-picture {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.damoon-designer .dd-rep-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    border: 2px dashed var(--dd-border);
+    border-radius: 0.625rem;
+    background: var(--dd-field) center / cover no-repeat;
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.damoon-designer .dd-rep-preview[style] {
+    border-style: solid;
+}
+
+.damoon-designer .dd-rep-preview:hover {
+    border-color: var(--dd-accent);
+    color: var(--dd-accent);
+}
+
+.damoon-designer .dd-rep-picture-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.damoon-designer .dd-rep-link {
+    color: var(--dd-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.damoon-designer .dd-rep-link:hover {
+    text-decoration: underline;
+}
+
+.damoon-designer .dd-rep-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    height: 2.5rem;
+    border: 1px dashed var(--dd-accent);
+    border-radius: 0.625rem;
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition: background-color 0.15s;
+}
+
+.damoon-designer .dd-rep-add:hover {
+    background: var(--dd-bg);
+}
+
+/* GrapesJS: layers, right to left; designer.js moves the nesting indent to the right. */
 
 .damoon-designer .gjs-layer {
     font-size: 0.78125rem;
@@ -829,15 +1379,41 @@ html.damoon-designing {
 
 .damoon-designer .gjs-layer-item {
     min-height: 2.25rem;
-    padding-top: 0.375rem;
-    padding-bottom: 0.375rem;
+    padding: 0.375rem 0.75rem;
     border-bottom: 1px solid var(--dd-border);
     background: transparent;
     color: var(--dd-text);
 }
 
+.damoon-designer .gjs-layer-caret {
+    transform: rotate(-90deg);
+}
+
+.damoon-designer .gjs-layer.open > .gjs-layer-item .gjs-layer-caret {
+    transform: rotate(180deg);
+}
+
 .damoon-designer .gjs-layer-name {
-    unicode-bidi: plaintext;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.damoon-designer .gjs-layer-count {
+    min-width: 1.25rem;
+    padding: 0 0.3125rem;
+    border-radius: 999px;
+    background: var(--dd-hover);
+    font-size: 0.65625rem;
+    text-align: center;
+}
+
+.damoon-designer .gjs-layer-count:empty {
+    display: none;
+}
+
+.damoon-designer .gjs-layer-move {
+    cursor: grab;
 }
 
 .damoon-designer .gjs-layer.gjs-hovered > .gjs-layer-item {

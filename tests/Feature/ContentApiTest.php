@@ -204,6 +204,41 @@ class ContentApiTest extends TestCase
     }
 
     /**
+     * A slider sends its slides with their texts, link, and a full picture address with the built sizes.
+     */
+    public function test_slider_sends_its_slides(): void
+    {
+        $disk = Storage::fake('public');
+        $disk->putFileAs(Page::DESIGNS, $this->picture('slide.png'), 'slide.png');
+        $src = '/storage/'.Page::DESIGNS.'/slide.png';
+
+        $page = Page::query()->create([
+            'title' => 'خانه',
+            'published_at' => now()->subDay(),
+            'design' => [
+                'pages' => [['frames' => [['component' => ['type' => 'wrapper', 'components' => [
+                    ['type' => 'slider', 'attributes' => ['data-slider' => '', 'data-autoplay' => '5'], 'slides' => [
+                        ['title' => 'بهار', 'text' => 'تخفیف فصل', 'label' => 'خرید', 'href' => '/shop', 'src' => $src],
+                        ['title' => 'بی‌تصویر', 'text' => '', 'label' => '', 'href' => '', 'src' => ''],
+                    ]],
+                ]]]]]],
+            ],
+        ]);
+
+        $response = $this->get('/v1/pages/'.urlencode((string) $page->slug))
+            ->assertOk()
+            ->assertJsonPath('data.design.components.0.type', 'slider')
+            ->assertJsonCount(2, 'data.design.components.0.slides')
+            ->assertJsonPath('data.design.components.0.slides.0.title', 'بهار')
+            ->assertJsonPath('data.design.components.0.slides.0.href', '/shop')
+            ->assertJsonPath('data.design.components.0.slides.0.picture.path', Page::DESIGNS.'/slide.png')
+            ->assertJsonPath('data.design.components.0.slides.1.src', '')
+            ->assertJsonPath('data.design.components.0.slides.1.picture', null);
+
+        $this->assertSame(url($src), $response->json('data.design.components.0.slides.0.src'));
+    }
+
+    /**
      * Categories and tags list with published article counts; one sends banners, questions, children, and its trail.
      */
     public function test_categories_and_tags_send_their_details(): void

@@ -25,8 +25,19 @@
 @endphp
 
 <x-filament-panels::page>
+    {{-- Shown until the editor's CSS and script arrive; the editor covers it once Alpine starts it. --}}
+    <style>
+        .dd-loading { position: fixed; inset: 0; z-index: 39; display: grid; place-content: center; justify-items: center; gap: 0.75rem; background: #fff; color: #64748b; font-size: 0.875rem; }
+        .dark .dd-loading { background: #18181b; color: #a1a1aa; }
+    </style>
+    <div class="dd-loading" wire:ignore>
+        <x-filament::loading-indicator style="width: 2rem; height: 2rem;" />
+        <span>در حال بارگذاری صفحه‌ساز…</span>
+    </div>
+
     <div
         wire:ignore
+        x-cloak
         class="damoon-designer"
         x-load
         x-load-src="{{ FilamentAsset::getAlpineComponentSrc('designer') }}"
@@ -78,20 +89,27 @@
 
             <div class="dd-bar-end">
                 <div class="dd-tools">
-                    <x-filament::icon-button :icon="Heroicon::OutlinedArrowUturnRight" color="gray" label="واگرد" tooltip="واگرد" x-on:click="undo()" x-bind:disabled="! undoable" />
-                    <x-filament::icon-button :icon="Heroicon::OutlinedArrowUturnLeft" color="gray" label="ازنو" tooltip="ازنو" x-on:click="redo()" x-bind:disabled="! redoable" />
-                    <span class="dd-divider"></span>
-                    <x-filament::icon-button :icon="Heroicon::OutlinedViewfinderCircle" color="gray" label="نمایش مرز بخش‌ها" tooltip="نمایش مرز بخش‌ها" x-on:click="toggleOutlines()" x-bind:class="{ 'dd-on': outlines }" />
-                    <x-filament::icon-button :icon="Heroicon::OutlinedEye" color="gray" label="پیش‌نمایش" tooltip="پیش‌نمایش" x-on:click="togglePreview()" x-bind:class="{ 'dd-on': previewing }" />
-                    <x-filament::icon-button :icon="Heroicon::OutlinedCodeBracket" color="gray" label="مشاهدهٔ کد" tooltip="مشاهدهٔ کد" x-on:click="showCode()" />
-                    <x-filament::icon-button :icon="Heroicon::OutlinedTrash" color="danger" label="پاک کردن همه" tooltip="پاک کردن همه" x-on:click="clear()" />
+                    <div class="dd-group" role="group" aria-label="تاریخچه">
+                        <x-filament::icon-button :icon="Heroicon::OutlinedArrowUturnRight" color="gray" label="واگرد" tooltip="واگرد (Ctrl+Z)" x-on:click="undo()" x-bind:disabled="! undoable" />
+                        <x-filament::icon-button :icon="Heroicon::OutlinedArrowUturnLeft" color="gray" label="ازنو" tooltip="ازنو (Ctrl+Shift+Z)" x-on:click="redo()" x-bind:disabled="! redoable" />
+                    </div>
+
+                    <div class="dd-group" role="group" aria-label="نمایش">
+                        <x-filament::icon-button :icon="Heroicon::OutlinedViewfinderCircle" color="gray" label="نمایش مرز بخش‌ها" tooltip="نمایش مرز بخش‌ها" x-on:click="toggleOutlines()" x-bind:class="{ 'dd-on': outlines }" />
+                        <x-filament::icon-button :icon="Heroicon::OutlinedEye" color="gray" label="پیش‌نمایش" tooltip="پیش‌نمایش" x-on:click="togglePreview()" x-bind:class="{ 'dd-on': previewing }" />
+                        <x-filament::icon-button :icon="Heroicon::OutlinedCodeBracket" color="gray" label="مشاهدهٔ کد" tooltip="مشاهدهٔ کد" x-on:click="showCode()" />
+                    </div>
+
+                    <div class="dd-group" role="group" aria-label="پاک کردن">
+                        <x-filament::icon-button :icon="Heroicon::OutlinedTrash" color="danger" label="پاک کردن همه" tooltip="پاک کردن همه" x-on:click="clear()" />
+                    </div>
                 </div>
 
                 <x-filament::button tag="a" :href="$edit" color="gray" :icon="Heroicon::OutlinedPencilSquare" class="dd-hide-sm">
                     مشخصات برگه
                 </x-filament::button>
 
-                <x-filament::button :icon="Heroicon::OutlinedCheck" x-on:click="save()" x-bind:disabled="saving">
+                <x-filament::button :icon="Heroicon::OutlinedCheck" x-on:click="save()" x-bind:disabled="saving" tooltip="ذخیره (Ctrl+S)">
                     <span x-text="saving ? 'در حال ذخیره…' : 'ذخیره'">ذخیره</span>
                 </x-filament::button>
             </div>

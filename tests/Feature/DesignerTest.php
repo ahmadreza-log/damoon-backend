@@ -202,6 +202,39 @@ class DesignerTest extends TestCase
     }
 
     /**
+     * Slider slide pictures count as used, and deleting one takes its slide out of the slider.
+     */
+    public function test_slider_pictures_show_their_use_and_leave_on_delete(): void
+    {
+        $disk = Storage::fake('public');
+        $disk->putFileAs(Page::DESIGNS, UploadedFile::fake()->image('first.jpg', 800, 400), 'first.jpg');
+        $disk->putFileAs(Page::DESIGNS, UploadedFile::fake()->image('second.jpg', 800, 400), 'second.jpg');
+        $first = '/storage/'.Page::DESIGNS.'/first.jpg';
+        $second = '/storage/'.Page::DESIGNS.'/second.jpg';
+
+        $page = Page::query()->create([
+            'title' => 'خانه',
+            'author_id' => $this->owner()->getKey(),
+            'design' => [
+                'pages' => [['frames' => [['component' => ['type' => 'wrapper', 'components' => [
+                    ['type' => 'slider', 'slides' => [
+                        ['title' => 'یک', 'src' => $first],
+                        ['title' => 'دو', 'src' => $second],
+                    ]],
+                ]]]]]],
+            ],
+        ]);
+
+        $this->assertSame([Page::DESIGNS.'/first.jpg', Page::DESIGNS.'/second.jpg'], Page::sources($page->design, $page->markup));
+        $this->assertSame('صفحه‌ساز برگه خانه', collect(Library::rows())->firstWhere('path', Page::DESIGNS.'/first.jpg')['usage']);
+
+        Library::drop(Page::DESIGNS.'/first.jpg');
+
+        $slides = $page->refresh()->design['pages'][0]['frames'][0]['component']['components'][0]['slides'];
+        $this->assertSame([['title' => 'دو', 'src' => $second]], $slides);
+    }
+
+    /**
      * The first user, who becomes the owner.
      */
     private function owner(): User
