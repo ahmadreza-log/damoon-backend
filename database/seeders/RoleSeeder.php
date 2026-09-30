@@ -7,7 +7,7 @@ use App\Models\Role;
 use Illuminate\Database\Seeder;
 
 /**
- * Sample panel roles: نویسنده for content and پشتیبان for customers and comments.
+ * Sample panel roles: نویسنده for content and پشتیبان for customers, comments, and the forms inbox.
  *
  * The developer and owner roles come from Role::settle. Running this again keeps
  * one row per role and resets its sections to the list here.
@@ -24,7 +24,7 @@ class RoleSeeder extends Seeder
      */
     public const ROLES = [
         'writer' => ['نویسنده', [Section::HOME, Section::ARTICLES, Section::PAGES, Section::BRANDS, Section::PROJECTS, Section::MEDIA, Section::COMMENTS]],
-        'support' => ['پشتیبان', [Section::HOME, Section::CUSTOMERS, Section::COMMENTS]],
+        'support' => ['پشتیبان', [Section::HOME, Section::CUSTOMERS, Section::COMMENTS, Section::INBOX]],
     ];
 
     /**

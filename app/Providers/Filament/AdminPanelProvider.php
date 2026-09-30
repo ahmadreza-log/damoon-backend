@@ -37,7 +37,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * spa keeps CSS, JavaScript, and fonts loaded while moving between panel pages.
  * Link prefetching is on only in production. php artisan serve has one worker on Windows,
  * so hover prefetches would queue in front of the page that was actually clicked.
- * The sidebar groups are دسترسی, then محتوا.
+ * The sidebar groups are دسترسی, then محتوا, then فرم‌ها.
  * The media picker styles are added to the page head, since the panel has no custom theme.
  *
  * Extending:
@@ -74,6 +74,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 NavigationGroup::make('دسترسی'),
                 NavigationGroup::make('محتوا'),
+                NavigationGroup::make('فرم‌ها'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

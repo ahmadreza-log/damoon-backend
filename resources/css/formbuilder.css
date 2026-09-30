@@ -1,0 +1,910 @@
+/*
+ * The form builder's own look, laid over the page builder's stylesheet.
+ *
+ * The top bar, side panel, tabs, and colour variables (--dd-) come from designer.css, so both
+ * builders look alike, light or dark with the panel. This file adds the field cards, the
+ * settings, and the form on the canvas (fb- classes). The form itself sits on white paper in
+ * both themes, like a page on the page builder's canvas.
+ */
+
+.damoon-forms .dd-tabs {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.damoon-forms .fb-star {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.damoon-forms .fb-note,
+.damoon-forms .fb-field small {
+    color: var(--dd-muted);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    line-height: 1.7;
+}
+
+.damoon-forms .fb-icon-btn {
+    display: grid;
+    place-items: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    flex-shrink: 0;
+    border-radius: 0.4375rem;
+    color: var(--dd-muted);
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.damoon-forms .fb-icon-btn:hover {
+    background: var(--dd-hover);
+    color: var(--dd-text);
+}
+
+.damoon-forms .fb-icon-btn:disabled {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.damoon-forms .fb-icon-btn.fb-danger:hover {
+    color: #dc2626;
+}
+
+/* Add tab: field cards */
+
+.damoon-forms .fb-category-title {
+    padding: 0.875rem 1rem 0.5rem;
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.damoon-forms .fb-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem 0.75rem;
+}
+
+.damoon-forms .fb-cards-wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.damoon-forms .fb-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: 5.25rem;
+    padding: 0.75rem 0.375rem 0.625rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.625rem;
+    background: var(--dd-bg);
+    color: var(--dd-text);
+    cursor: grab;
+    transition: border-color 0.15s, box-shadow 0.15s, color 0.15s, transform 0.15s;
+}
+
+.damoon-forms .fb-card:hover {
+    border-color: var(--dd-accent);
+    color: var(--dd-accent);
+    box-shadow: 0 6px 16px -8px rgba(29, 78, 216, 0.45);
+    transform: translateY(-1px);
+}
+
+.damoon-forms .fb-card:active {
+    cursor: grabbing;
+}
+
+.damoon-forms .fb-card-row {
+    flex-direction: row;
+    justify-content: flex-start;
+    min-height: 3rem;
+    padding: 0.625rem 0.75rem;
+}
+
+.damoon-forms .fb-card-icon {
+    width: 1.625rem;
+    height: 1.625rem;
+    color: var(--dd-muted);
+}
+
+.damoon-forms .fb-card-row .fb-card-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.damoon-forms .fb-card:hover .fb-card-icon {
+    color: inherit;
+}
+
+.damoon-forms .fb-card-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.damoon-forms .fb-tip {
+    margin: 0.5rem 1rem 1.25rem;
+    color: var(--dd-muted);
+    font-size: 0.71875rem;
+    line-height: 1.9;
+}
+
+/* Settings tab */
+
+.damoon-forms .fb-picked {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-block: 0.375rem;
+}
+
+.damoon-forms .fb-picked-actions {
+    display: flex;
+    gap: 0.125rem;
+}
+
+.damoon-forms .fb-alert {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.75rem 1rem 0;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    background: rgba(220, 38, 38, 0.08);
+    color: #dc2626;
+    font-size: 0.75rem;
+    line-height: 1.8;
+}
+
+.damoon-forms .fb-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--dd-border);
+}
+
+.damoon-forms .fb-section-title {
+    color: var(--dd-text);
+    font-size: 0.78125rem;
+    font-weight: 700;
+}
+
+.damoon-forms .fb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3125rem;
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.damoon-forms .fb-input {
+    width: 100%;
+    min-height: 2.25rem;
+    padding: 0.4375rem 0.625rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.5rem;
+    outline: 0;
+    background: var(--dd-field);
+    color: var(--dd-text);
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-forms textarea.fb-input {
+    resize: vertical;
+}
+
+.damoon-forms .fb-input:focus {
+    border-color: var(--dd-accent);
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-forms .fb-input[dir='ltr'] {
+    text-align: left;
+}
+
+.damoon-forms select.fb-input option {
+    background: var(--dd-bg);
+    color: var(--dd-text);
+}
+
+.damoon-forms .fb-with-button {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.damoon-forms .fb-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+/* A switch whose knob starts on the right and moves left when on, like the page builder's. */
+.damoon-forms .fb-switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--dd-text);
+    font-size: 0.78125rem;
+    cursor: pointer;
+}
+
+.damoon-forms .fb-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.damoon-forms .fb-switch-track {
+    position: relative;
+    width: 2.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--dd-border);
+    transition: background-color 0.15s;
+}
+
+.damoon-forms .fb-switch-track::after {
+    content: '';
+    position: absolute;
+    top: 0.125rem;
+    inset-inline-start: 0.125rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+    transition: inset-inline-start 0.15s;
+}
+
+.damoon-forms .fb-switch input:checked + .fb-switch-track {
+    background: var(--dd-accent);
+}
+
+.damoon-forms .fb-switch input:checked + .fb-switch-track::after {
+    inset-inline-start: 1.125rem;
+}
+
+.damoon-forms .fb-switch input:focus-visible + .fb-switch-track {
+    box-shadow: 0 0 0 3px var(--dd-accent-soft);
+}
+
+.damoon-forms .fb-segment {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.125rem;
+    padding: 0.1875rem;
+    border-radius: 0.625rem;
+    background: var(--dd-hover);
+}
+
+.damoon-forms .fb-segment button {
+    padding: 0.375rem;
+    border-radius: 0.4375rem;
+    color: var(--dd-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.damoon-forms .fb-segment button.fb-on {
+    background: var(--dd-bg);
+    color: var(--dd-accent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.damoon-forms .fb-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.damoon-forms .fb-option {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+.damoon-forms .fb-option .fb-input {
+    margin-inline-end: 0.25rem;
+}
+
+.damoon-forms .fb-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    height: 2.25rem;
+    border: 1px dashed var(--dd-accent);
+    border-radius: 0.5rem;
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+    font-size: 0.78125rem;
+    font-weight: 600;
+    transition: background-color 0.15s;
+}
+
+.damoon-forms .fb-add:hover {
+    background: var(--dd-bg);
+}
+
+.damoon-forms .fb-kinds {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.375rem;
+}
+
+.damoon-forms .fb-kind {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4375rem 0.625rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.5rem;
+    color: var(--dd-text);
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.damoon-forms .fb-kind:has(input:checked) {
+    border-color: var(--dd-accent);
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+}
+
+.damoon-forms .fb-kind input {
+    accent-color: var(--dd-accent);
+}
+
+/* Outline tab */
+
+.damoon-forms .fb-outline {
+    margin: 0;
+    padding: 0.5rem;
+    list-style: none;
+}
+
+.damoon-forms .fb-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.damoon-forms .fb-row:hover {
+    background: var(--dd-soft);
+}
+
+.damoon-forms .fb-row.fb-on {
+    background: var(--dd-accent-soft);
+    color: var(--dd-accent);
+}
+
+.damoon-forms .fb-row.fb-row-error .fb-row-title {
+    color: #dc2626;
+}
+
+.damoon-forms .fb-row-icon {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 0.4375rem;
+    background: var(--dd-hover);
+    color: var(--dd-muted);
+}
+
+.damoon-forms .fb-row-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.5;
+}
+
+.damoon-forms .fb-row-title {
+    overflow: hidden;
+    font-size: 0.78125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.damoon-forms .fb-row-key {
+    color: var(--dd-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.6875rem;
+    text-align: right;
+}
+
+.damoon-forms .fb-row-actions {
+    display: flex;
+    opacity: 0.55;
+}
+
+.damoon-forms .fb-row:hover .fb-row-actions {
+    opacity: 1;
+}
+
+/* Canvas */
+
+.damoon-forms .fb-stage {
+    flex: 1;
+    min-width: 0;
+    padding: 2rem 1.25rem 4rem;
+    overflow-y: auto;
+    background: var(--dd-canvas);
+    scrollbar-width: thin;
+}
+
+.damoon-forms .fb-paper {
+    margin: 0 auto;
+    padding: 2rem 2rem 2.25rem;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 12px 32px -8px rgba(15, 23, 42, 0.18);
+    transition: max-width 0.25s ease;
+}
+
+.damoon-forms .fb-preview-note {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.5rem;
+    background: #eef4ff;
+    color: #1d4ed8;
+    font-size: 0.78125rem;
+}
+
+.damoon-forms .fb-head {
+    margin-bottom: 1.5rem;
+}
+
+.damoon-forms .fb-head h1 {
+    margin: 0 0 0.375rem;
+    font-size: 1.375rem;
+    font-weight: 800;
+}
+
+.damoon-forms .fb-head p {
+    margin: 0;
+    color: #475569;
+    font-size: 0.875rem;
+    line-height: 1.9;
+    white-space: pre-line;
+}
+
+.damoon-forms .fb-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 0.75rem;
+    min-height: 6rem;
+}
+
+.damoon-forms .fb-empty {
+    display: grid;
+    place-items: center;
+    grid-column: 1 / -1;
+    gap: 0.5rem;
+    min-height: 14rem;
+    padding: 2rem;
+    border: 2px dashed #cbd5e1;
+    border-radius: 1rem;
+    color: #64748b;
+    font-size: 0.875rem;
+    text-align: center;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.damoon-forms .fb-empty.fb-before {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.damoon-forms .fb-empty-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    opacity: 0.6;
+}
+
+.damoon-forms .fb-item {
+    position: relative;
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding: 0.75rem;
+    border-radius: 0.625rem;
+    outline: 1px dashed transparent;
+    outline-offset: -1px;
+    cursor: pointer;
+    transition: outline-color 0.15s, background-color 0.15s, opacity 0.15s;
+}
+
+.damoon-forms .fb-item.fb-half {
+    grid-column: auto;
+}
+
+.damoon-forms:not(.dd-previewing) .fb-item:hover {
+    outline-color: rgba(100, 116, 139, 0.55);
+}
+
+.damoon-forms .fb-item.fb-selected,
+.damoon-forms .fb-item.fb-selected:hover {
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+    background: rgba(37, 99, 235, 0.03);
+}
+
+.damoon-forms .fb-item.fb-error,
+.damoon-forms .fb-item.fb-error:hover {
+    outline: 2px solid #dc2626;
+    outline-offset: -2px;
+    background: rgba(220, 38, 38, 0.03);
+}
+
+.damoon-forms .fb-item.fb-dragged {
+    opacity: 0.4;
+}
+
+.damoon-forms.dd-previewing .fb-item {
+    cursor: default;
+}
+
+/* The drop line: above a full-width field, on the right edge of a half-width one, or under the last. */
+.damoon-forms .fb-item.fb-before::before,
+.damoon-forms .fb-item.fb-after::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: 3px;
+    border-radius: 3px;
+    background: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    pointer-events: none;
+}
+
+.damoon-forms .fb-item.fb-before::before {
+    top: -0.3125rem;
+}
+
+.damoon-forms .fb-item.fb-after::after {
+    bottom: -0.3125rem;
+}
+
+.damoon-forms .fb-item.fb-half.fb-before::before {
+    inset-block: 0;
+    inset-inline: -0.4375rem auto;
+    width: 3px;
+    height: auto;
+}
+
+/* Edit mode draws the controls but does not let them take input; preview mode does. */
+.damoon-forms:not(.dd-previewing) .fb-item :is(input, select, textarea, .fb-drop, .fb-choice) {
+    pointer-events: none;
+}
+
+.damoon-forms .fb-tools {
+    position: absolute;
+    top: -0.8125rem;
+    inset-inline-end: 0.5rem;
+    z-index: 2;
+    display: none;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 0.375rem;
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.45);
+}
+
+.damoon-forms .fb-item:hover .fb-tools,
+.damoon-forms .fb-item.fb-selected .fb-tools {
+    display: flex;
+}
+
+.damoon-forms .fb-item.fb-error .fb-tools {
+    background: #dc2626;
+}
+
+.damoon-forms .fb-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+    cursor: grab;
+}
+
+.damoon-forms .fb-grip {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.damoon-forms .fb-tool {
+    display: grid;
+    place-items: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    color: #ffffff;
+}
+
+.damoon-forms .fb-tool:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.damoon-forms .fb-tool:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.damoon-forms .fb-tool .dd-icon {
+    width: 0.9375rem;
+    height: 0.9375rem;
+}
+
+/* The form's own controls */
+
+.damoon-forms .fb-label {
+    margin-bottom: 0.375rem;
+    color: #0f172a;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.damoon-forms .fb-control {
+    display: block;
+    width: 100%;
+    min-height: 2.625rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    outline: 0;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.damoon-forms .fb-control::placeholder {
+    color: #94a3b8;
+}
+
+.damoon-forms .fb-control:focus {
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.damoon-forms .fb-control[dir='ltr'] {
+    text-align: left;
+}
+
+.damoon-forms textarea.fb-control {
+    resize: vertical;
+}
+
+.damoon-forms .fb-multi {
+    min-height: 6rem;
+}
+
+.damoon-forms .fb-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+}
+
+.damoon-forms .fb-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f172a;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.damoon-forms .fb-choice input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #1d4ed8;
+}
+
+.damoon-forms .fb-consent {
+    align-items: flex-start;
+    line-height: 1.8;
+}
+
+.damoon-forms .fb-consent input {
+    margin-top: 0.3125rem;
+}
+
+.damoon-forms .fb-drop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 1.25rem 1rem;
+    border: 2px dashed #cbd5e1;
+    border-radius: 0.625rem;
+    color: #475569;
+    font-size: 0.8125rem;
+    text-align: center;
+    cursor: pointer;
+}
+
+.damoon-forms .fb-drop small {
+    color: #94a3b8;
+    font-size: 0.6875rem;
+}
+
+.damoon-forms .fb-file {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.damoon-forms .fb-help {
+    margin: 0.375rem 0 0;
+    color: #64748b;
+    font-size: 0.75rem;
+    line-height: 1.8;
+}
+
+.damoon-forms .fb-missing,
+.damoon-forms .fb-problem {
+    margin: 0.375rem 0 0;
+    color: #dc2626;
+    font-size: 0.75rem;
+    line-height: 1.8;
+}
+
+.damoon-forms .fb-condition {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0.5rem 0 0;
+    color: #b45309;
+    font-size: 0.71875rem;
+}
+
+.damoon-forms .fb-condition .dd-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.damoon-forms .fb-paragraph h3 {
+    margin: 0 0 0.375rem;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.damoon-forms .fb-paragraph p {
+    margin: 0;
+    color: #475569;
+    font-size: 0.875rem;
+    line-height: 1.9;
+    white-space: pre-line;
+}
+
+.damoon-forms .fb-submit-row {
+    margin-top: 1.25rem;
+    padding-inline: 0.75rem;
+}
+
+.damoon-forms .fb-submit {
+    min-width: 8rem;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.5rem;
+    background: #00377b;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: default;
+}
+
+.damoon-forms.dd-previewing .fb-submit {
+    cursor: pointer;
+}
+
+/* Code window */
+
+.damoon-forms .fb-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.damoon-forms .fb-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: min(52rem, 100%);
+    max-height: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--dd-border);
+    border-radius: 1rem;
+    background: var(--dd-bg);
+    color: var(--dd-text);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+.damoon-forms .fb-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.damoon-forms .fb-dialog-head div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.damoon-forms .fb-dialog-head small {
+    color: var(--dd-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.71875rem;
+    text-align: right;
+}
+
+.damoon-forms .fb-dialog-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.damoon-forms .fb-code {
+    max-height: 60vh;
+    margin: 0;
+    padding: 1rem;
+    overflow: auto;
+    border: 1px solid var(--dd-border);
+    border-radius: 0.625rem;
+    background: var(--dd-soft);
+    color: var(--dd-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    text-align: left;
+    white-space: pre;
+}
+
+.damoon-forms .fb-code,
+.damoon-forms .fb-dialog-head small,
+.damoon-forms .fb-row-key {
+    unicode-bidi: plaintext;
+}
+
+@media (max-width: 1023px) {
+    .damoon-forms .fb-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .damoon-forms .fb-paper {
+        padding: 1.25rem;
+    }
+}

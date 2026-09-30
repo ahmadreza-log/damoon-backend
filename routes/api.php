@@ -5,6 +5,7 @@ use App\Http\Controllers\V1\AuthController;
 use App\Http\Controllers\V1\BrandController;
 use App\Http\Controllers\V1\CategoryController;
 use App\Http\Controllers\V1\CommentController;
+use App\Http\Controllers\V1\FormController;
 use App\Http\Controllers\V1\MediaController;
 use App\Http\Controllers\V1\PageController;
 use App\Http\Controllers\V1\ProjectController;
@@ -18,8 +19,9 @@ use Illuminate\Support\Facades\Route;
  * The version is part of the path: /v1/...
  * Register a new route inside this v1 group so Scramble includes it at /docs/api.
  * Protected routes need the auth.customer middleware. The content routes (articles,
- * pages, brands, projects, categories, tags, media, and comments) are public and read-only, with a request limit.
- * Sending a comment is the one public write; it has a tighter limit and waits for approval.
+ * pages, brands, projects, categories, tags, forms, media, and comments) are public and read-only, with a request limit.
+ * Sending a comment and sending a form are the public writes; each has its own tighter limit, and both
+ * wait in the panel (comments for approval, form messages in the inbox).
  */
 Route::prefix('v1')->name('v1.')->group(function () {
     Route::prefix('auth')->name('auth.')->group(function () {
@@ -40,6 +42,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('categories/{slug}', [CategoryController::class, 'show'])->name('categories.show');
         Route::get('tags', [TagController::class, 'index'])->name('tags.index');
         Route::get('tags/{slug}', [TagController::class, 'show'])->name('tags.show');
+        Route::get('forms', [FormController::class, 'index'])->name('forms.index');
+        Route::get('forms/{slug}', [FormController::class, 'show'])->name('forms.show');
         Route::get('media', [MediaController::class, 'index'])->name('media.index');
         Route::get('media/{key}', [MediaController::class, 'show'])->name('media.show');
 
@@ -52,4 +56,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
         ->whereIn('type', Subject::values())
         ->middleware('throttle:comments')
         ->name('comments.store');
+
+    Route::post('forms/{slug}', [FormController::class, 'store'])
+        ->middleware('throttle:forms')
+        ->name('forms.store');
 });

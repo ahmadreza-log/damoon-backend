@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Auth\AccessTokens;
 use App\Filament\Auth\LogoutResponse;
 use App\Models\Customer;
+use App\Models\FormSetting;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Seo;
@@ -31,12 +32,13 @@ use Illuminate\Support\ServiceProvider;
  * - Add a new guard here with Auth::extend and register its name in config/auth.php.
  * - OpenAPI docs are configured for the v1 prefix in config/scramble.php.
  * - The owner bypass belongs in boot. Section checks stay in the policies.
- * - Named request limits, such as comments for sending comments, are defined in boot with RateLimiter::for.
+ * - Named request limits, such as comments for sending comments and forms for sending forms (its rate
+ *   comes from the forms settings), are defined in boot with RateLimiter::for.
  * - permission.models.role points at App\Models\Role so a role can keep a Persian name.
  * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
  * - The SEO box fields are adjusted in Seo::boot.
- * - The page builder script and styles are built into resources/dist with npm run designer and
- *   registered here; php artisan filament:assets copies them into public.
+ * - The page builder and form builder scripts and styles are built into resources/dist with npm run
+ *   designer and npm run formbuilder and registered here; php artisan filament:assets copies them into public.
  */
 class AppServiceProvider extends ServiceProvider
 {
@@ -70,13 +72,15 @@ class AppServiceProvider extends ServiceProvider
         FilamentAsset::register([
             AlpineComponent::make('designer', resource_path('dist/designer.js')),
             Css::make('designer', resource_path('dist/designer.css'))->loadedOnRequest(),
+            AlpineComponent::make('formbuilder', resource_path('dist/formbuilder.js')),
+            Css::make('formbuilder', resource_path('dist/formbuilder.css'))->loadedOnRequest(),
         ]);
 
-        // Without an app version the builder files carry Filament's version, and browsers keep an old build after npm run designer.
-        FilamentAsset::appVersion((string) max(
-            (int) @filemtime(resource_path('dist/designer.js')),
-            (int) @filemtime(resource_path('dist/designer.css')),
-        ));
+        // Without an app version the builder files carry Filament's version, and browsers keep an old build after a rebuild.
+        FilamentAsset::appVersion((string) max(array_map(
+            fn (string $file): int => (int) @filemtime(resource_path('dist/'.$file)),
+            ['designer.js', 'designer.css', 'formbuilder.js', 'formbuilder.css'],
+        )));
 
         $this->app->booted(function (): void {
             Shamsi::boot();
@@ -84,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Counted apart from the reading limit, so browsing a site does not use up a visitor's comments.
         RateLimiter::for('comments', fn (Request $request): Limit => Limit::perMinute(5)->by('comments|'.$request->ip()));
+        RateLimiter::for('forms', fn (Request $request): Limit => Limit::perMinute(max(1, FormSetting::current()->rate))->by('forms|'.$request->ip()));
 
         Gate::before(function (mixed $user, string $ability, array $arguments): ?bool {
             if ($user instanceof User && $user->owner()) {

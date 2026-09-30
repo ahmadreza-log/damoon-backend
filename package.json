@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "designer": "esbuild resources/js/designer.js --bundle --format=esm --minify --outfile=resources/dist/designer.js"
+        "designer": "esbuild resources/js/designer.js --bundle --format=esm --minify --outfile=resources/dist/designer.js",
+        "formbuilder": "esbuild resources/js/formbuilder.js --bundle --format=esm --minify --outfile=resources/dist/formbuilder.js"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

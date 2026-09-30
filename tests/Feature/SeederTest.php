@@ -7,6 +7,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Customer;
+use App\Models\Entry;
+use App\Models\Form;
 use App\Models\Page;
 use App\Models\Project;
 use App\Models\Role;
@@ -15,11 +17,13 @@ use App\Models\Tag;
 use App\Models\User;
 use Database\Factories\ArticleFactory;
 use Database\Factories\BrandFactory;
+use Database\Factories\FormFactory;
 use Database\Factories\ProjectFactory;
 use Database\Factories\TagFactory;
 use Database\Seeders\ArticleSeeder;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\CustomerSeeder;
+use Database\Seeders\FormSeeder;
 use Database\Seeders\PageSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -61,6 +65,9 @@ class SeederTest extends TestCase
         $this->assertGreaterThan(0, Comment::query()->where('status', Comment::APPROVED)->count());
         $this->assertSame(0, Brand::query()->whereDoesntHave('comments')->count());
         $this->assertSame(0, Project::query()->whereDoesntHave('comments')->count());
+        $this->assertSame(count(FormFactory::SAMPLES), Form::query()->count());
+        $this->assertSame(count(FormFactory::SAMPLES) * FormSeeder::MESSAGES, Entry::query()->count());
+        $this->assertSame(0, Entry::query()->where('answers', '[]')->count());
         $kinds = [(new Brand)->getMorphClass(), (new Project)->getMorphClass()];
         $comments = Comment::query()->whereIn('subject_type', $kinds)->count();
         $this->assertSame(0, Article::query()->whereDoesntHave('categories')->count());
@@ -74,6 +81,7 @@ class SeederTest extends TestCase
         $this->assertSame(count(BrandFactory::NAMES), Brand::query()->count());
         $this->assertSame(count(ProjectFactory::TITLES), Project::query()->count());
         $this->assertSame($comments, Comment::query()->whereIn('subject_type', $kinds)->count());
+        $this->assertSame(count(FormFactory::SAMPLES) * FormSeeder::MESSAGES, Entry::query()->count());
         $this->assertSame(2, Role::query()->whereIn('name', ['writer', 'support'])->count());
     }
 }

@@ -48,6 +48,12 @@ class Section
     /** The comments resource. */
     public const COMMENTS = 'comments';
 
+    /** The form builder and the forms settings page. */
+    public const FORMS = 'forms';
+
+    /** The inbox of form submissions. */
+    public const INBOX = 'inbox';
+
     /** Guard used by the staff panel. */
     public const GUARD = 'web';
 
@@ -69,6 +75,8 @@ class Section
             self::PROJECTS => 'پروژه‌ها',
             self::MEDIA => 'رسانه‌ها',
             self::COMMENTS => 'دیدگاه‌ها',
+            self::FORMS => 'فرم‌ها',
+            self::INBOX => 'صندوق پیام‌ها',
         ];
     }
 

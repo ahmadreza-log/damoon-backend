@@ -1,15 +1,17 @@
 <?php
 
+use App\Models\Entry;
 use App\Support\Library;
 use App\Support\Sizes;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 /**
  * Artisan commands written as closures.
  *
- * Commands here run with php artisan <name>. Scheduled tasks can be added with Schedule
- * in this file as well.
+ * Commands here run with php artisan <name>. Scheduled tasks are added with Schedule in this
+ * file as well; they run when php artisan schedule:run is called every minute (cron on the server).
  *
  * Extending:
  * - Move a command into app/Console/Commands once it grows options or needs its own tests.
@@ -41,3 +43,10 @@ Artisan::command('media:sizes', function () {
 
     $this->info("Built sizes for {$count} images.");
 })->purpose('Build the WebP sizes for every image on the public disk');
+
+/**
+ * Deletes form messages older than the retention period in the forms settings, with their files.
+ *
+ * Nothing is deleted while the retention period is empty.
+ */
+Schedule::command('model:prune', ['--model' => [Entry::class]])->daily();
