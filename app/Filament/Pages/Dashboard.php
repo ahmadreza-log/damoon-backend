@@ -15,7 +15,7 @@ use Filament\Pages\Dashboard as BaseDashboard;
  *
  * Extending:
  * - Filament owns canAccess and the route path inherited from the base dashboard.
- * - Widgets stay registered on the panel provider.
+ * - Widgets live in app/Filament/Widgets; the panel provider discovers them.
  */
 class Dashboard extends BaseDashboard
 {

@@ -5,6 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "panel": "esbuild resources/css/panel.css --minify --outfile=resources/dist/panel.css",
         "designer": "esbuild resources/js/designer.js --bundle --format=esm --minify --outfile=resources/dist/designer.js",
         "formbuilder": "esbuild resources/js/formbuilder.js --bundle --format=esm --minify --outfile=resources/dist/formbuilder.js"
     },

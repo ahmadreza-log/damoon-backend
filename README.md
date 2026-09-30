@@ -42,6 +42,19 @@ Inside the panel, **پیشخوان** is the home page. The **دسترسی** grou
 
 **نقش‌ها** stores a Persian name, an English key, and the sections that role may open. Moving between panel pages keeps the styles and fonts loaded. Dates are shown in Shamsi. A user with no avatar photo is shown the shared default image.
 
+### Look
+
+The panel uses a navy scale built around `#00377B`, with slate greys, in light and dark mode. The logo is a brand mark: the first letter of the site title on a gradient tile, next to the title and «پنل مدیریت». The topbar is frosted glass. The current page in the sidebar is a glowing pill, and the sidebar can be folded to icons on desktop. Cards, tables, tabs, buttons, badges, modals, and the login page share one soft, rounded style.
+
+**پیشخوان** opens with a welcome banner: a greeting for the time of day in Tehran, today's Shamsi date, and shortcuts (نوشته تازه، برگه تازه، فرم تازه، صندوق پیام‌ها). Under it are figures for new messages, comments waiting for review, published articles, and customers, each with a two-week activity line. Clicking a figure opens its list. A staff account sees only the shortcuts and figures for its sections.
+
+The styles are in `resources/css/panel.css`. After changing the file, rebuild and publish it:
+
+```bash
+npm run panel
+php artisan filament:assets
+```
+
 ## Content
 
 **نوشته‌ها** is where articles are created, edited, and deleted. Each article has:

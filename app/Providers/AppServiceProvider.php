@@ -37,8 +37,9 @@ use Illuminate\Support\ServiceProvider;
  * - permission.models.role points at App\Models\Role so a role can keep a Persian name.
  * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
  * - The SEO box fields are adjusted in Seo::boot.
- * - The page builder and form builder scripts and styles are built into resources/dist with npm run
- *   designer and npm run formbuilder and registered here; php artisan filament:assets copies them into public.
+ * - The panel stylesheet and the page builder and form builder scripts and styles are built into
+ *   resources/dist with npm run panel, npm run designer, and npm run formbuilder and registered here;
+ *   php artisan filament:assets copies them into public. Only the panel stylesheet loads on every page.
  */
 class AppServiceProvider extends ServiceProvider
 {
@@ -70,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         Seo::boot();
 
         FilamentAsset::register([
+            Css::make('panel', resource_path('dist/panel.css')),
             AlpineComponent::make('designer', resource_path('dist/designer.js')),
             Css::make('designer', resource_path('dist/designer.css'))->loadedOnRequest(),
             AlpineComponent::make('formbuilder', resource_path('dist/formbuilder.js')),
@@ -79,7 +81,7 @@ class AppServiceProvider extends ServiceProvider
         // Without an app version the builder files carry Filament's version, and browsers keep an old build after a rebuild.
         FilamentAsset::appVersion((string) max(array_map(
             fn (string $file): int => (int) @filemtime(resource_path('dist/'.$file)),
-            ['designer.js', 'designer.css', 'formbuilder.js', 'formbuilder.css'],
+            ['panel.css', 'designer.js', 'designer.css', 'formbuilder.js', 'formbuilder.css'],
         )));
 
         $this->app->booted(function (): void {
