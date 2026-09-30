@@ -13,9 +13,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * A visitor comment (دیدگاه) on an article or a page.
+ * A visitor comment (دیدگاه) on an article, page, brand, or project.
  *
- * subject is the article or page. A comment comes from a guest with a name and email,
+ * subject is the record the comment is on, one of Subject's models. A comment comes from a guest with a name and email,
  * a signed-in customer, or a staff member answering in the panel. New comments from the
  * site wait as pending until staff approve them; only approved ones reach the site.
  * Replies stay one level deep: a reply to a reply is stored under the top-level comment,
@@ -79,6 +79,8 @@ class Comment extends Model
         return [
             Article::class => 'نوشته',
             Page::class => 'برگه',
+            Brand::class => 'برند',
+            Project::class => 'پروژه',
         ];
     }
 
@@ -95,7 +97,7 @@ class Comment extends Model
     }
 
     /**
-     * The article or page this comment is on.
+     * The article, page, brand, or project this comment is on.
      *
      * @return MorphTo<Model, $this>
      */

@@ -23,7 +23,7 @@ class RoleSeeder extends Seeder
      * @var array<string, array{0: string, 1: array<int, string>}>
      */
     public const ROLES = [
-        'writer' => ['نویسنده', [Section::HOME, Section::ARTICLES, Section::PAGES, Section::MEDIA, Section::COMMENTS]],
+        'writer' => ['نویسنده', [Section::HOME, Section::ARTICLES, Section::PAGES, Section::BRANDS, Section::PROJECTS, Section::MEDIA, Section::COMMENTS]],
         'support' => ['پشتیبان', [Section::HOME, Section::CUSTOMERS, Section::COMMENTS]],
     ];
 

@@ -4,8 +4,10 @@ namespace App\Support;
 
 use App\Models\Article;
 use App\Models\Asset;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Page;
+use App\Models\Project;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -15,7 +17,8 @@ use Rankbeam\Seo\Models\SEOMeta;
 /**
  * Every file stored on the public disk, and where the panel still uses it.
  *
- * Avatars, article and page covers, galleries, body pictures, SEO social images, and files uploaded on the media page
+ * Avatars, article and page covers, galleries, body pictures, brand logos and catalogs, project logos and
+ * voice messages, SEO social images, and files uploaded on the media page
  * all live on that disk. The media page reads rows() and removes a file with drop().
  * find() is one file, used by the detail page.
  *
@@ -141,7 +144,7 @@ class Library
     }
 
     /**
-     * Deletes a public file with its sizes and clears it from users, articles, pages, and the detail text.
+     * Deletes a public file with its sizes and clears it from users, articles, pages, brands, projects, and the detail text.
      *
      * A picture from an article or page body is also taken out of that body, a
      * category or tag banner is taken off that record, a page builder layout loses its picture,
@@ -160,6 +163,10 @@ class Library
         User::query()->where('avatar', $path)->update(['avatar' => null]);
         Article::query()->where('cover', $path)->update(['cover' => null]);
         Page::query()->where('cover', $path)->update(['cover' => null]);
+        Brand::query()->where('logo', $path)->update(['logo' => null]);
+        Brand::query()->where('catalog', $path)->update(['catalog' => null]);
+        Project::query()->where('logo', $path)->update(['logo' => null]);
+        Project::query()->where('voice', $path)->update(['voice' => null]);
 
         Article::query()
             ->whereJsonContains('gallery', $path)
@@ -207,6 +214,26 @@ class Library
                 ->each(function (Page $page) use ($path): void {
                     $page->content = Page::strip($page->content, $path);
                     $page->saveQuietly();
+                });
+        }
+
+        if (str_starts_with($path, Brand::FOLDER.'/')) {
+            Brand::query()
+                ->get()
+                ->filter(fn (Brand $brand): bool => in_array($path, Brand::images($brand->content), true))
+                ->each(function (Brand $brand) use ($path): void {
+                    $brand->content = Brand::strip($brand->content, $path);
+                    $brand->saveQuietly();
+                });
+        }
+
+        if (str_starts_with($path, Project::FOLDER.'/')) {
+            Project::query()
+                ->get()
+                ->filter(fn (Project $project): bool => in_array($path, Project::images($project->content), true))
+                ->each(function (Project $project) use ($path): void {
+                    $project->content = Project::strip($project->content, $path);
+                    $project->saveQuietly();
                 });
         }
 
@@ -301,6 +328,12 @@ class Library
             str_starts_with($path, Page::COVERS.'/') => 'تصویر شاخص برگه',
             str_starts_with($path, Page::FOLDER.'/') => 'تصویر محتوای برگه',
             str_starts_with($path, Page::DESIGNS.'/'), str_starts_with($path, 'pages/blocks/') => 'تصویر صفحه‌ساز',
+            str_starts_with($path, Brand::LOGOS.'/') => 'لوگوی برند',
+            str_starts_with($path, Brand::CATALOGS.'/') => 'کاتالوگ برند',
+            str_starts_with($path, Brand::FOLDER.'/') => 'تصویر توضیحات برند',
+            str_starts_with($path, Project::LOGOS.'/') => 'لوگوی پروژه',
+            str_starts_with($path, Project::VOICES.'/') => 'پیام صوتی کارفرما',
+            str_starts_with($path, Project::FOLDER.'/') => 'تصویر توضیحات پروژه',
             str_starts_with($path, Seo::FOLDER.'/') => 'تصویر سئو',
             str_starts_with($path, Category::FOLDER.'/') => self::BANNERS[Category::class],
             str_starts_with($path, Tag::FOLDER.'/') => self::BANNERS[Tag::class],
@@ -361,6 +394,38 @@ class Library
 
                 foreach (Page::sources($page->design, $page->markup) as $path) {
                     $map[$path][] = 'صفحه‌ساز برگه '.$page->title;
+                }
+            });
+
+        Brand::query()
+            ->get(['title', 'logo', 'catalog', 'content'])
+            ->each(function (Brand $brand) use (&$map): void {
+                if (is_string($brand->logo) && $brand->logo !== '') {
+                    $map[$brand->logo][] = 'لوگوی برند '.$brand->title;
+                }
+
+                if (is_string($brand->catalog) && $brand->catalog !== '') {
+                    $map[$brand->catalog][] = 'کاتالوگ برند '.$brand->title;
+                }
+
+                foreach (array_unique(Brand::images($brand->content)) as $path) {
+                    $map[$path][] = 'توضیحات برند '.$brand->title;
+                }
+            });
+
+        Project::query()
+            ->get(['title', 'logo', 'voice', 'content'])
+            ->each(function (Project $project) use (&$map): void {
+                if (is_string($project->logo) && $project->logo !== '') {
+                    $map[$project->logo][] = 'لوگوی پروژه '.$project->title;
+                }
+
+                if (is_string($project->voice) && $project->voice !== '') {
+                    $map[$project->voice][] = 'پیام صوتی کارفرمای '.$project->title;
+                }
+
+                foreach (array_unique(Project::images($project->content)) as $path) {
+                    $map[$path][] = 'توضیحات پروژه '.$project->title;
                 }
             });
 

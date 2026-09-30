@@ -13,6 +13,12 @@ enum Subject: string
     /** Comments on a page (برگه). */
     case Pages = 'pages';
 
+    /** Comments on a brand (برند). */
+    case Brands = 'brands';
+
+    /** Comments on a project (پروژه). */
+    case Projects = 'projects';
+
     /**
      * The model this path segment points at.
      *
@@ -21,16 +27,18 @@ enum Subject: string
      *
      * Extending:
      * - Another model that takes comments is one more case and one more arm here; it also
-     *   needs a comments() relation, a commentable column, and a name in Comment::kinds.
-     *   The route constraint and the API docs pick the new case up on their own.
+     *   needs a comments() relation, a commentable column, a published scope, and a name in
+     *   Comment::kinds. The route constraint and the API docs pick the new case up on their own.
      *
-     * @return class-string<Article|Page>
+     * @return class-string<Article|Page|Brand|Project>
      */
     public function model(): string
     {
         return match ($this) {
             self::Articles => Article::class,
             self::Pages => Page::class,
+            self::Brands => Brand::class,
+            self::Projects => Project::class,
         };
     }
 

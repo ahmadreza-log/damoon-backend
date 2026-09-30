@@ -7,9 +7,11 @@ use App\Auth\Section;
 use App\Filament\Resources\Comments\Pages\EditComment;
 use App\Filament\Resources\Comments\Pages\ListComments;
 use App\Models\Article;
+use App\Models\Brand;
 use App\Models\Comment;
 use App\Models\Customer;
 use App\Models\Page;
+use App\Models\Project;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -123,6 +125,40 @@ class CommentTest extends TestCase
 
         $this->postJson($path, ['name' => 'مریم', 'body' => 'ششمین تلاش'])->assertTooManyRequests();
         $this->getJson($path)->assertOk();
+    }
+
+    /**
+     * Brands and projects take comments at /v1/brands/{slug}/comments and /v1/projects/{slug}/comments, unless closed.
+     */
+    public function test_brands_and_projects_take_comments(): void
+    {
+        $brand = Brand::factory()->create(['title' => 'آرتا صنعت']);
+        $project = Project::factory()->create(['title' => 'راه‌اندازی مرکز داده']);
+        $closed = Project::factory()->create(['title' => 'پروژه بسته', 'commentable' => false]);
+
+        foreach (['brands' => $brand, 'projects' => $project] as $type => $subject) {
+            $path = '/v1/'.$type.'/'.urlencode((string) $subject->slug).'/comments';
+
+            $this->postJson($path, ['name' => 'مریم', 'body' => 'عالی بود.'])->assertCreated();
+
+            $comment = $subject->comments()->sole();
+            $this->getJson($path)->assertOk()->assertJsonCount(0, 'data');
+
+            $comment->mark(Comment::APPROVED);
+            $this->getJson($path)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.body', 'عالی بود.');
+            $this->getJson('/v1/'.$type.'/'.urlencode((string) $subject->slug))
+                ->assertJsonPath('data.commentable', true)
+                ->assertJsonPath('data.comments_count', 1);
+        }
+
+        $this->postJson('/v1/projects/'.urlencode((string) $closed->slug).'/comments', ['name' => 'مریم', 'body' => 'سلام'])
+            ->assertForbidden()
+            ->assertJsonPath('message', 'ارسال دیدگاه برای اینجا بسته است.');
+        $this->getJson('/v1/brands/missing/comments')->assertNotFound()->assertJsonPath('message', 'برند پیدا نشد.');
+        $this->getJson('/v1/projects/missing/comments')->assertNotFound()->assertJsonPath('message', 'پروژه پیدا نشد.');
+
+        $brand->delete();
+        $this->assertSame(1, Comment::query()->count());
     }
 
     /**

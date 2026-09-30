@@ -17,6 +17,7 @@ use Rankbeam\Seo\Traits\HasSEO;
  *
  * Extending:
  * - The model needs Body, a cover column, and an ADDRESS constant, the path its site pages live under.
+ *   A model whose picture has another name overrides getSEOImage, like Brand with its logo.
  * - Add the model to Seo::MODELS so the media page sees its social image.
  *
  * @mixin Model

@@ -11,8 +11,8 @@ use Illuminate\Database\Seeder;
  * Run it with php artisan db:seed or migrate --seed. On an empty database it also
  * marks install as finished, and testuser (password "password") becomes the owner.
  * Real installs do not need it: the /install page creates the owner account instead.
- * Roles, categories, tags, pages, and testuser are kept when they already exist, so
- * running it on a database with data only adds staff, customers, articles, and comments.
+ * Roles, categories, tags, pages, brands, projects, and testuser are kept when they already exist, so
+ * running it on a database with data only adds staff, customers, articles, and comments on new content.
  *
  * Extending:
  * - A new sample seeder goes in the list in run(), after the seeders whose rows it reads.
@@ -40,6 +40,8 @@ class DatabaseSeeder extends Seeder
             TagSeeder::class,
             ArticleSeeder::class,
             PageSeeder::class,
+            BrandSeeder::class,
+            ProjectSeeder::class,
             CommentSeeder::class,
         ]);
     }

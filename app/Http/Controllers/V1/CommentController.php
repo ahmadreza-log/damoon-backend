@@ -5,9 +5,11 @@ namespace App\Http\Controllers\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\CommentResource;
 use App\Models\Article;
+use App\Models\Brand;
 use App\Models\Comment;
 use App\Models\Customer;
 use App\Models\Page;
+use App\Models\Project;
 use App\Models\Subject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,11 +20,11 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Comments (دیدگاه‌ها) on published articles and pages, version 1.
+ * Comments (دیدگاه‌ها) on published articles and pages, and on brands and projects, version 1.
  *
- * The route is /v1/{type}/{slug}/comments, where type is a Subject value (articles or
- * pages) and any other type gets 404. Reading is public
- * and sends only approved comments. Anyone may send one while the article or page allows
+ * The route is /v1/{type}/{slug}/comments, where type is a Subject value (articles, pages,
+ * brands, or projects) and any other type gets 404. Reading is public
+ * and sends only approved comments. Anyone may send one while the record allows
  * comments; a customer Bearer token is optional and fills the name and email from the
  * account. New comments wait for approval in the panel before the site shows them.
  *
@@ -41,8 +43,8 @@ class CommentController extends Controller
      * come inside their comment in replies. staff is true for an answer from the site's team.
      * Email, IP, and browser are never sent. An unknown type or an unknown or unpublished slug gets 404.
      *
-     * @param  Subject  $type  Where the comments live: articles or pages.
-     * @param  string  $slug  The slug of the article or page.
+     * @param  Subject  $type  Where the comments live: articles, pages, brands, or projects.
+     * @param  string  $slug  The slug of the article, page, brand, or project.
      * @return AnonymousResourceCollection<LengthAwarePaginator<int, CommentResource>>
      */
     public function index(Subject $type, string $slug): AnonymousResourceCollection
@@ -64,12 +66,12 @@ class CommentController extends Controller
      *
      * No token is needed. With a customer Bearer token, name and email may be left out and are
      * taken from the account; without one, name is required. The comment is saved as pending
-     * and shows in the list only after staff approve it in the panel. An article or page whose
+     * and shows in the list only after staff approve it in the panel. A record whose
      * comments are turned off gets 403, an unknown type or an unknown or unpublished slug gets 404,
      * and more than five comments a minute from one IP get 429.
      *
-     * @param  Subject  $type  Where the comment goes: articles or pages.
-     * @param  string  $slug  The slug of the article or page.
+     * @param  Subject  $type  Where the comment goes: articles, pages, brands, or projects.
+     * @param  string  $slug  The slug of the article, page, brand, or project.
      */
     public function store(Request $request, Subject $type, string $slug): JsonResponse
     {
@@ -120,9 +122,9 @@ class CommentController extends Controller
     }
 
     /**
-     * The published article or page a route points at; an unknown or unpublished slug gets 404.
+     * The published record a route points at; an unknown or unpublished slug gets 404.
      */
-    private function subject(Subject $type, string $slug): Article|Page
+    private function subject(Subject $type, string $slug): Article|Page|Brand|Project
     {
         $model = $type->model();
         $subject = $model::query()->published()->where('slug', $slug)->first();

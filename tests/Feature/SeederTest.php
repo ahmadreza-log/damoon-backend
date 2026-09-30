@@ -3,15 +3,19 @@
 namespace Tests\Feature;
 
 use App\Models\Article;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Customer;
 use App\Models\Page;
+use App\Models\Project;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\Tag;
 use App\Models\User;
 use Database\Factories\ArticleFactory;
+use Database\Factories\BrandFactory;
+use Database\Factories\ProjectFactory;
 use Database\Factories\TagFactory;
 use Database\Seeders\ArticleSeeder;
 use Database\Seeders\CategorySeeder;
@@ -34,7 +38,8 @@ class SeederTest extends TestCase
     /**
      * An empty database gets install finished, testuser as owner, and rows in every section.
      *
-     * A second run keeps one of each role, category, tag, page, and testuser.
+     * A second run keeps one of each role, category, tag, page, brand, project, and testuser, and adds
+     * no comments to brands and projects that already have some.
      */
     public function test_database_seeder_fills_every_section(): void
     {
@@ -50,7 +55,14 @@ class SeederTest extends TestCase
         $this->assertSame(count(ArticleFactory::TITLES), Article::query()->count());
         $this->assertSame(count(ArticleFactory::TITLES) - ArticleSeeder::SCHEDULED, Article::query()->published()->count());
         $this->assertSame(count(PageSeeder::TREE, COUNT_RECURSIVE), Page::query()->count());
+        $this->assertSame(count(BrandFactory::NAMES), Brand::query()->count());
+        $this->assertSame(count(ProjectFactory::TITLES), Project::query()->count());
+        $this->assertSame(0, Project::query()->whereDoesntHave('similar')->count());
         $this->assertGreaterThan(0, Comment::query()->where('status', Comment::APPROVED)->count());
+        $this->assertSame(0, Brand::query()->whereDoesntHave('comments')->count());
+        $this->assertSame(0, Project::query()->whereDoesntHave('comments')->count());
+        $kinds = [(new Brand)->getMorphClass(), (new Project)->getMorphClass()];
+        $comments = Comment::query()->whereIn('subject_type', $kinds)->count();
         $this->assertSame(0, Article::query()->whereDoesntHave('categories')->count());
 
         $this->seed();
@@ -59,6 +71,9 @@ class SeederTest extends TestCase
         $this->assertSame(count(CategorySeeder::TREE, COUNT_RECURSIVE), Category::query()->count());
         $this->assertSame(count(TagFactory::NAMES), Tag::query()->count());
         $this->assertSame(count(PageSeeder::TREE, COUNT_RECURSIVE), Page::query()->count());
+        $this->assertSame(count(BrandFactory::NAMES), Brand::query()->count());
+        $this->assertSame(count(ProjectFactory::TITLES), Project::query()->count());
+        $this->assertSame($comments, Comment::query()->whereIn('subject_type', $kinds)->count());
         $this->assertSame(2, Role::query()->whereIn('name', ['writer', 'support'])->count());
     }
 }

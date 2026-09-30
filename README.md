@@ -114,13 +114,17 @@ Routes are versioned at `/v1`, with no `/api` prefix.
 | `GET` | `/v1/articles/{slug}` | One article with its body, gallery, questions, related articles, and SEO. |
 | `GET` | `/v1/pages` | Published pages, ordered by parent and position, for building a menu. Filters: `q`, `parent` (an id, or `0` for top level), `page`, `per_page` (up to 100). |
 | `GET` | `/v1/pages/{slug}` | One page with its body, page builder design, HTML and CSS, trail, children, and SEO. |
+| `GET` | `/v1/brands` | Brands ordered by title. Filters: `q` (title or English title), `page`, `per_page` (up to 50). |
+| `GET` | `/v1/brands/{slug}` | One brand with its English title, description, features, logo, website, LinkedIn, software download link, catalog file, whether comments are open, the approved comment count, and SEO. |
+| `GET` | `/v1/projects` | Projects, newest year first. Filters: `q` (title, industry, or location), `page`, `per_page` (up to 50). |
+| `GET` | `/v1/projects/{slug}` | One project with its description, brand logo, year, services, industry, duration, location, client testimonial (name, position, text, voice message), similar projects, whether comments are open, the approved comment count, and SEO. |
 | `GET` | `/v1/categories`, `/v1/categories/{slug}` | Categories and one category. The list takes the same filters as pages. |
 | `GET` | `/v1/tags`, `/v1/tags/{slug}` | Tags and one tag. The list takes the same filters as pages. |
 | `GET` | `/v1/media`, `/v1/media/{key}` | Library files and one file. Filters: `q`, `type` (`image` or `file`), `page`, `per_page` (up to 100). |
-| `GET` | `/v1/{type}/{slug}/comments` | Approved comments with their replies, 20 top-level comments per `page`. `type` is where the comment lives: `articles` or `pages`. |
+| `GET` | `/v1/{type}/{slug}/comments` | Approved comments with their replies, 20 top-level comments per `page`. `type` is where the comment lives: `articles`, `pages`, `brands`, or `projects`. |
 | `POST` | `/v1/{type}/{slug}/comments` | Send a comment or a reply (`parent_id`). No token needed; it waits for approval. Five a minute per IP. |
 
-Articles, media, and comments are always paged. Pages, categories, and tags come whole unless the request sends `page` or `per_page`. A paged answer carries `links` and `meta` next to `data`.
+Articles, brands, projects, media, and comments are always paged. Pages, categories, and tags come whole unless the request sends `page` or `per_page`. A paged answer carries `links` and `meta` next to `data`.
 
 The content routes are public and read-only. Anything with a publish date still to come is never sent. Bodies arrive as Tiptap JSON, and every picture comes with its full address, alt text, and all its sizes. A page's builder layout arrives both as a JSON tree (`design`) and as ready `html` and `css`, with library addresses made full.
 

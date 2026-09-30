@@ -36,6 +36,12 @@ class Section
     /** The pages resource. */
     public const PAGES = 'pages';
 
+    /** The brands resource. */
+    public const BRANDS = 'brands';
+
+    /** The projects resource. */
+    public const PROJECTS = 'projects';
+
     /** The media library page. */
     public const MEDIA = 'media';
 
@@ -59,6 +65,8 @@ class Section
             self::ROLES => 'نقش‌ها',
             self::ARTICLES => 'نوشته‌ها',
             self::PAGES => 'برگه‌ها',
+            self::BRANDS => 'برندها',
+            self::PROJECTS => 'پروژه‌ها',
             self::MEDIA => 'رسانه‌ها',
             self::COMMENTS => 'دیدگاه‌ها',
         ];

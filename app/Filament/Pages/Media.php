@@ -56,8 +56,8 @@ class Media extends Page implements HasTable
     /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
-    /** The position inside the content group; the library comes after articles and pages. */
-    protected static ?int $navigationSort = 3;
+    /** The position inside the content group; the library comes after articles, pages, brands, and projects. */
+    protected static ?int $navigationSort = 5;
 
     /** The URL after /admin; each file's detail page (Asset) lives under it at media/{asset}. */
     protected static ?string $slug = 'media';

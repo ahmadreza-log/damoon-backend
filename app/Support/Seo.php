@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Filament\Fields\MediaPicker;
 use App\Models\Article;
+use App\Models\Brand;
 use App\Models\Page;
+use App\Models\Project;
 use App\Models\Setting;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Textarea;
@@ -13,7 +15,7 @@ use Rankbeam\Seo\Filament\Forms\SEOFields;
 use Rankbeam\Seo\Services\SEOWarningEvaluator;
 
 /**
- * The SEO box on article and page forms, from rankbeam/laravel-seo-filament.
+ * The SEO box on article, page, brand, and project forms, from rankbeam/laravel-seo-filament.
  *
  * Each record keeps its SEO in one seo_meta row per locale through HasSEO. boot() fits
  * the package fields to this panel: title and description stop at the seo_meta column
@@ -32,6 +34,8 @@ class Seo
     public const MODELS = [
         Article::class => 'نوشته',
         Page::class => 'برگه',
+        Brand::class => 'برند',
+        Project::class => 'پروژه',
     ];
 
     /** The public folder for social images uploaded from the SEO box. */
