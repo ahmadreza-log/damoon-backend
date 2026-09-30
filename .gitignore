@@ -12,6 +12,7 @@
 /.vscode
 /.zed
 /auth.json
+/ide
 /node_modules
 /public/build
 /public/css/filament
