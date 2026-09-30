@@ -2,35 +2,45 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Database\Seeder;
 
 /**
- * Fills a fresh database with sample data for local development.
+ * Fills the database with Persian sample data for local development.
  *
- * Run it with php artisan db:seed or migrate --seed. Real installs do not need it:
- * the /install page creates the owner account instead.
+ * Run it with php artisan db:seed or migrate --seed. On an empty database it also
+ * marks install as finished, and testuser (password "password") becomes the owner.
+ * Real installs do not need it: the /install page creates the owner account instead.
+ * Roles, categories, tags, pages, and testuser are kept when they already exist, so
+ * running it on a database with data only adds staff, customers, articles, and comments.
  *
  * Extending:
- * - Call other seeders from run() with $this->call([...]) as the sample data grows.
+ * - A new sample seeder goes in the list in run(), after the seeders whose rows it reads.
  */
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Creates one sample user with the factory defaults.
-     *
-     * The first user ever saved receives the owner role, so on an empty database
-     * this sample user becomes the owner.
+     * Marks install as finished when needed, then runs every sample seeder in order.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        if (! Setting::installed()) {
+            Setting::query()->create([
+                'title' => 'دامون',
+                'description' => 'سامانه‌ی مدیریت محتوای دامون',
+                'installed_at' => now(),
+            ]);
+        }
 
-        User::factory()->create([
-            'username' => 'testuser',
-            'email' => 'test@example.com',
-            'firstname' => 'Test',
-            'lastname' => 'User',
+        $this->call([
+            RoleSeeder::class,
+            UserSeeder::class,
+            CustomerSeeder::class,
+            CategorySeeder::class,
+            TagSeeder::class,
+            ArticleSeeder::class,
+            PageSeeder::class,
+            CommentSeeder::class,
         ]);
     }
 }

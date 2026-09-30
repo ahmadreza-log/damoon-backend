@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Database\Factories\CommentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * so the site draws a comment and its answers without deeper nesting.
  *
  * Extending:
- * - Another model that takes comments needs a comments() relation, a commentable column, and an entry in SUBJECTS.
+ * - Another model that takes comments needs a comments() relation, a commentable column, a name in kinds, and a Subject case.
  * - A new status needs a constant, a label in statuses, and a colour in CommentResource.
  */
 #[Fillable([
@@ -38,6 +40,9 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 ])]
 class Comment extends Model
 {
+    /** @use HasFactory<CommentFactory> */
+    use HasFactory;
+
     /** Waiting for staff to approve it; hidden from the site. */
     public const PENDING = 'pending';
 
@@ -49,12 +54,6 @@ class Comment extends Model
 
     /** The longest comment body, in characters. */
     public const LIMIT = 3000;
-
-    /** Models that take comments, keyed by their API path segment. */
-    public const SUBJECTS = [
-        'articles' => Article::class,
-        'pages' => Page::class,
-    ];
 
     /**
      * Persian status labels for the panel.

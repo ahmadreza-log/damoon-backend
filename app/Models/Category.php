@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Models\Concerns\Taxonomy;
+use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -20,6 +22,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[Fillable(['name', 'slug', 'parent_id', 'description', 'banners', 'questions'])]
 class Category extends Model
 {
+    /** @use HasFactory<CategoryFactory> */
+    use HasFactory;
+
     use Taxonomy;
 
     /** The public folder for sidebar banner images. */

@@ -8,6 +8,7 @@ use App\Models\Article;
 use App\Models\Comment;
 use App\Models\Customer;
 use App\Models\Page;
+use App\Models\Subject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -19,14 +20,14 @@ use Illuminate\Validation\ValidationException;
 /**
  * Comments (دیدگاه‌ها) on published articles and pages, version 1.
  *
- * Routes are /v1/articles/{slug}/comments and /v1/pages/{slug}/comments; each route passes its
- * type (articles or pages) as a route default. Reading is public
+ * The route is /v1/{type}/{slug}/comments, where type is a Subject value (articles or
+ * pages) and any other type gets 404. Reading is public
  * and sends only approved comments. Anyone may send one while the article or page allows
  * comments; a customer Bearer token is optional and fills the name and email from the
  * account. New comments wait for approval in the panel before the site shows them.
  *
  * Extending:
- * - Another model that takes comments goes in Comment::SUBJECTS; the routes read that list.
+ * - Another model that takes comments is a new Subject case; the route, its docs, and subject() read that list.
  */
 class CommentController extends Controller
 {
@@ -38,13 +39,15 @@ class CommentController extends Controller
      *
      * Twenty top-level comments per page; pass page for the next ones. Replies are one level deep and
      * come inside their comment in replies. staff is true for an answer from the site's team.
-     * Email, IP, and browser are never sent. An unknown or unpublished slug gets 404.
+     * Email, IP, and browser are never sent. An unknown type or an unknown or unpublished slug gets 404.
      *
+     * @param  Subject  $type  Where the comments live: articles or pages.
+     * @param  string  $slug  The slug of the article or page.
      * @return AnonymousResourceCollection<LengthAwarePaginator<int, CommentResource>>
      */
-    public function index(Request $request, string $slug): AnonymousResourceCollection
+    public function index(Subject $type, string $slug): AnonymousResourceCollection
     {
-        $comments = $this->subject($request, $slug)
+        $comments = $this->subject($type, $slug)
             ->comments()
             ->approved()
             ->whereNull('parent_id')
@@ -62,12 +65,15 @@ class CommentController extends Controller
      * No token is needed. With a customer Bearer token, name and email may be left out and are
      * taken from the account; without one, name is required. The comment is saved as pending
      * and shows in the list only after staff approve it in the panel. An article or page whose
-     * comments are turned off gets 403, an unknown or unpublished slug gets 404, and more than
-     * five comments a minute from one IP get 429.
+     * comments are turned off gets 403, an unknown type or an unknown or unpublished slug gets 404,
+     * and more than five comments a minute from one IP get 429.
+     *
+     * @param  Subject  $type  Where the comment goes: articles or pages.
+     * @param  string  $slug  The slug of the article or page.
      */
-    public function store(Request $request, string $slug): JsonResponse
+    public function store(Request $request, Subject $type, string $slug): JsonResponse
     {
-        $subject = $this->subject($request, $slug);
+        $subject = $this->subject($type, $slug);
 
         abort_unless((bool) $subject->commentable, 403, 'ارسال دیدگاه برای اینجا بسته است.');
 
@@ -116,13 +122,12 @@ class CommentController extends Controller
     /**
      * The published article or page a route points at; an unknown or unpublished slug gets 404.
      */
-    private function subject(Request $request, string $slug): Article|Page
+    private function subject(Subject $type, string $slug): Article|Page
     {
-        $type = (string) $request->route('type');
-        $model = Comment::SUBJECTS[$type];
+        $model = $type->model();
         $subject = $model::query()->published()->where('slug', $slug)->first();
 
-        abort_if($subject === null, 404, $type === 'pages' ? 'برگه پیدا نشد.' : 'نوشته پیدا نشد.');
+        abort_if($subject === null, 404, Comment::kinds()[$model].' پیدا نشد.');
 
         return $subject;
     }

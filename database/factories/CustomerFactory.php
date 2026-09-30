@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 /**
  * Builds fake customers for tests and local sample data.
  *
- * Every customer gets a unique username, email, and Iranian mobile number, a
+ * Every customer gets a Persian name, a unique username, email, and Iranian mobile number, a
  * verified email, and the password "password".
  *
  * Extending:
@@ -35,8 +35,8 @@ class CustomerFactory extends Factory
             'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->unique()->numerify('09#########'),
-            'firstname' => fake()->firstName(),
-            'lastname' => fake()->lastName(),
+            'firstname' => fake('fa_IR')->firstName(),
+            'lastname' => fake('fa_IR')->lastName(),
             'last_login' => null,
             'last_login_ip' => null,
             'code' => null,

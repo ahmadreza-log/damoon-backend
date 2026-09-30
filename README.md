@@ -117,8 +117,8 @@ Routes are versioned at `/v1`, with no `/api` prefix.
 | `GET` | `/v1/categories`, `/v1/categories/{slug}` | Categories and one category. The list takes the same filters as pages. |
 | `GET` | `/v1/tags`, `/v1/tags/{slug}` | Tags and one tag. The list takes the same filters as pages. |
 | `GET` | `/v1/media`, `/v1/media/{key}` | Library files and one file. Filters: `q`, `type` (`image` or `file`), `page`, `per_page` (up to 100). |
-| `GET` | `/v1/articles/{slug}/comments`, `/v1/pages/{slug}/comments` | Approved comments with their replies, 20 top-level comments per `page`. |
-| `POST` | `/v1/articles/{slug}/comments`, `/v1/pages/{slug}/comments` | Send a comment or a reply (`parent_id`). No token needed; it waits for approval. Five a minute per IP. |
+| `GET` | `/v1/{type}/{slug}/comments` | Approved comments with their replies, 20 top-level comments per `page`. `type` is where the comment lives: `articles` or `pages`. |
+| `POST` | `/v1/{type}/{slug}/comments` | Send a comment or a reply (`parent_id`). No token needed; it waits for approval. Five a minute per IP. |
 
 Articles, media, and comments are always paged. Pages, categories, and tags come whole unless the request sends `page` or `per_page`. A paged answer carries `links` and `meta` next to `data`.
 

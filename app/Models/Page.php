@@ -8,9 +8,11 @@ use App\Models\Concerns\Meta;
 use App\Models\Concerns\Tree;
 use App\Support\Library;
 use App\Support\Sizes;
+use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder as Query;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -57,6 +59,10 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Page extends Model
 {
     use Body;
+
+    /** @use HasFactory<PageFactory> */
+    use HasFactory;
+
     use Meta;
     use Tree;
 

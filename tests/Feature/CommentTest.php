@@ -105,6 +105,8 @@ class CommentTest extends TestCase
             ->assertNotFound()
             ->assertJsonPath('message', 'نوشته پیدا نشد.');
         $this->getJson('/v1/pages/missing/comments')->assertNotFound()->assertJsonPath('message', 'برگه پیدا نشد.');
+        $this->getJson('/v1/products/'.urlencode((string) $open->slug).'/comments')->assertNotFound();
+        $this->postJson('/v1/products/'.urlencode((string) $open->slug).'/comments', ['name' => 'مریم', 'body' => 'سلام'])->assertNotFound();
 
         $this->postJson($path, ['email' => 'bad', 'body' => str_repeat('ا', Comment::LIMIT + 1)])
             ->assertUnprocessable()

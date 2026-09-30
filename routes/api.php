@@ -7,7 +7,7 @@ use App\Http\Controllers\V1\CommentController;
 use App\Http\Controllers\V1\MediaController;
 use App\Http\Controllers\V1\PageController;
 use App\Http\Controllers\V1\TagController;
-use App\Models\Comment;
+use App\Models\Subject;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -37,15 +37,13 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('media', [MediaController::class, 'index'])->name('media.index');
         Route::get('media/{key}', [MediaController::class, 'show'])->name('media.show');
 
-        foreach (array_keys(Comment::SUBJECTS) as $type) {
-            Route::get($type.'/{slug}/comments', [CommentController::class, 'index'])->defaults('type', $type)->name($type.'.comments.index');
-        }
+        Route::get('{type}/{slug}/comments', [CommentController::class, 'index'])
+            ->whereIn('type', Subject::values())
+            ->name('comments.index');
     });
 
-    foreach (array_keys(Comment::SUBJECTS) as $type) {
-        Route::post($type.'/{slug}/comments', [CommentController::class, 'store'])
-            ->defaults('type', $type)
-            ->middleware('throttle:comments')
-            ->name($type.'.comments.store');
-    }
+    Route::post('{type}/{slug}/comments', [CommentController::class, 'store'])
+        ->whereIn('type', Subject::values())
+        ->middleware('throttle:comments')
+        ->name('comments.store');
 });
