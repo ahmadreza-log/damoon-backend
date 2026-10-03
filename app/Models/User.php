@@ -211,6 +211,21 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName
     }
 
     /**
+     * The Persian names of this account's roles, such as مالک سامانه, for the user menu and profile page.
+     *
+     * A role without a Persian name falls back to its key.
+     *
+     * @return list<string>
+     */
+    public function ranks(): array
+    {
+        return $this->roles
+            ->map(fn (RoleModel $role): string => (string) ($role->label ?: $role->name))
+            ->values()
+            ->all();
+    }
+
+    /**
      * The personal avatar shown in the panel.
      *
      * The HasAvatar contract owns this method name. An empty path uses the shared default image.

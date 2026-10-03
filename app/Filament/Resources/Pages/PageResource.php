@@ -12,6 +12,7 @@ use App\Models\Article;
 use App\Models\Page;
 use App\Models\User;
 use App\Support\Shamsi;
+use Damoon\Schema\Filament\SchemaEditor;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -38,6 +39,7 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
  * Each page has a title, slug, body, cover, parent page, order, author, publish date,
  * a switch that allows comments, and an SEO box. The body uses the same editor as articles, with pictures in Page::FOLDER.
  * The SEO box is seoSection() from rankbeam/laravel-seo-filament, fitted to the panel in Seo::boot.
+ * The schema box under it is SchemaEditor from damoon/schema; it starts with Page::SCHEMAS.
  * The page builder (صفحه‌ساز) is its own full-width page, DesignPage, opened with the
  * designer action from the list and the edit page.
  * The parent list shows each page's full trail and hides the page itself and everything under it.
@@ -152,6 +154,7 @@ class PageResource extends Resource
                 ->default(true)
                 ->columnSpanFull(),
             static::seoSection(),
+            SchemaEditor::section(),
         ]);
     }
 

@@ -359,6 +359,338 @@ a.dp-stat:hover {
     letter-spacing: -0.02em;
 }
 
+/* User menu: a card with the avatar, name, role, and email above the links. */
+
+.fi-user-menu .fi-dropdown-panel {
+    min-width: 17rem;
+}
+
+.dp-usercard {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 0.25rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, color-mix(in oklab, var(--primary-500) 12%, transparent), color-mix(in oklab, var(--primary-300) 6%, transparent));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary-500) 14%, transparent);
+}
+
+.dp-usercard-avatar {
+    flex: none;
+    box-shadow: 0 0 0 2px var(--dp-card), 0 0 0 4px color-mix(in oklab, var(--primary-500) 40%, transparent);
+}
+
+.dp-usercard-text {
+    display: grid;
+    gap: 0.125rem;
+    min-width: 0;
+    line-height: 1.5;
+}
+
+.dp-usercard-name {
+    font-size: 0.9375rem;
+    font-weight: 800;
+    color: var(--gray-950);
+}
+
+.dp-usercard-role {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dp-accent);
+}
+
+.dp-usercard-mail {
+    overflow: hidden;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    text-align: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dark .dp-usercard-name {
+    color: #fff;
+}
+
+.dark .dp-usercard-mail {
+    color: var(--gray-400);
+}
+
+/* Profile page */
+
+.dp-profile {
+    display: grid;
+    gap: 1.5rem;
+    container-type: inline-size;
+}
+
+.dp-profile-hero {
+    overflow: hidden;
+    border-radius: 1.25rem;
+    background-color: var(--dp-card);
+    box-shadow: var(--dp-shadow), 0 0 0 1px var(--dp-line);
+}
+
+.dp-profile-cover {
+    position: relative;
+    height: 8.5rem;
+    background:
+        radial-gradient(18rem 12rem at 85% -20%, rgb(255 255 255 / 0.22), transparent 70%),
+        radial-gradient(22rem 14rem at 10% 130%, color-mix(in oklab, var(--primary-300) 45%, transparent), transparent 70%),
+        linear-gradient(135deg, var(--primary-800), var(--primary-600) 55%, var(--primary-500));
+}
+
+.dp-profile-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem 1.25rem;
+    padding: 1rem 1.5rem 1.25rem;
+}
+
+.dp-profile-avatar {
+    position: relative;
+    flex: none;
+    width: 7rem;
+    height: 7rem;
+    margin-top: -4.5rem;
+    border-radius: 9999px;
+    object-fit: cover;
+    background-color: var(--gray-100);
+    box-shadow: 0 0 0 4px var(--dp-card), 0 12px 28px -12px rgb(15 23 42 / 0.5);
+}
+
+.dp-profile-who {
+    display: grid;
+    flex: 1 1 14rem;
+    gap: 0.375rem;
+}
+
+.dp-profile-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.4;
+    color: var(--gray-950);
+}
+
+.dp-profile-job {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.dp-profile-ranks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.dp-profile-meta {
+    display: grid;
+    gap: 0.375rem;
+    padding-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+.dp-profile-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.dp-profile-meta-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.dp-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--dp-line);
+}
+
+.dp-profile-stat {
+    display: grid;
+    justify-items: center;
+    gap: 0.125rem;
+    padding: 1rem 0.5rem;
+}
+
+.dp-profile-stat + .dp-profile-stat {
+    border-inline-start: 1px solid var(--dp-line);
+}
+
+.dp-profile-stat-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--dp-accent);
+}
+
+.dp-profile-stat-value {
+    font-size: 1.375rem;
+    font-weight: 800;
+    color: var(--gray-950);
+}
+
+.dp-profile-stat-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.dark .dp-profile-name,
+.dark .dp-profile-stat-value {
+    color: #fff;
+}
+
+.dark .dp-profile-avatar {
+    background-color: var(--gray-800);
+}
+
+.dp-profile-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+@container (min-width: 48rem) {
+    .dp-profile-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.dp-profile-list {
+    display: grid;
+}
+
+.dp-profile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    font-size: 0.875rem;
+}
+
+.dp-profile-row + .dp-profile-row {
+    border-top: 1px dashed var(--dp-line);
+}
+
+.dp-profile-row > dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-500);
+}
+
+.dp-profile-row > dd {
+    overflow: hidden;
+    font-weight: 600;
+    color: var(--gray-950);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dark .dp-profile-row > dd {
+    color: #fff;
+}
+
+.dp-profile-row-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--gray-400);
+}
+
+.dp-profile-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.dp-profile-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 9999px;
+    background-color: color-mix(in oklab, var(--primary-500) 9%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dp-accent);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dp-profile-link:hover,
+.dp-profile-link:focus-visible {
+    background-color: var(--primary-600);
+    color: #fff;
+}
+
+.dp-profile-link-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.dp-profile-posts {
+    display: grid;
+    margin: -0.5rem 0;
+}
+
+.dp-profile-posts > li + li {
+    border-top: 1px dashed var(--dp-line);
+}
+
+.dp-profile-post {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 -0.5rem;
+    padding: 0.75rem 0.5rem;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+}
+
+a.dp-profile-post:hover {
+    background-color: var(--dp-hover);
+}
+
+.dp-profile-post-title {
+    overflow: hidden;
+    font-weight: 600;
+    color: var(--gray-950);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dark .dp-profile-post-title {
+    color: #fff;
+}
+
+.dp-profile-post-side {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dp-profile-post-date {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.dp-profile-blank {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.dp-profile-empty {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
 /* Tables */
 
 .fi-ta-header-cell,
@@ -444,6 +776,36 @@ a.dp-stat:hover {
 .fi-modal-window {
     border-radius: 1.25rem;
     box-shadow: var(--dp-float), 0 0 0 1px var(--dp-line);
+}
+
+/* Addresses, keys, and patterns written left to right: Iran Yekan draws 0-9 as Persian digits, so Latin text uses Filament's Inter. */
+
+bdi[dir="ltr"],
+input[dir="ltr"],
+textarea[dir="ltr"] {
+    font-family: "Inter Variable", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+}
+
+/* Social links: an icon beside its name, in the icon picker and on each repeater row. */
+
+.dp-icon-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.dp-icon-option > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dp-icon-svg {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--dp-accent);
 }
 
 /* Login and the other simple pages: a brand-coloured stage with a glass card. */

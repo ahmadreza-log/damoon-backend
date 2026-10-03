@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthenticateCustomerToken;
+use App\Http\Middleware\RequireApiKey;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,8 +31,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // auth.customer locks customer Bearer routes. It does not accept a panel token.
+        // api.key asks every /v1 request for a key from the API settings page.
         $middleware->alias([
             'auth.customer' => AuthenticateCustomerToken::class,
+            'api.key' => RequireApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

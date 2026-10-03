@@ -38,6 +38,9 @@ class Seo
         Project::class => 'پروژه',
     ];
 
+    /** The locale the panel saves seo_meta rows in; the API reads the same rows whatever the app locale. */
+    public const LOCALE = 'fa';
+
     /** The public folder for social images uploaded from the SEO box. */
     public const FOLDER = 'seo';
 

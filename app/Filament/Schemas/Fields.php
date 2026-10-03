@@ -99,10 +99,14 @@ class Fields
 
     /**
      * The personnel section shown on the user form.
+     *
+     * The profile page passes locked: personnel code, national code, and job are then shown
+     * but not sent, so only someone with the users section can change them.
      */
-    public static function staff(): Component
+    public static function staff(bool $locked = false): Component
     {
         return Section::make('مشخصات پرسنلی')
+            ->description($locked ? 'کد پرسنلی، کد ملی و موقعیت شغلی را فقط مدیر سامانه می‌تواند تغییر دهد.' : null)
             ->columns(2)
             ->columnSpan(2)
             ->schema([
@@ -111,6 +115,7 @@ class Fields
                     ->nullable()
                     ->maxLength(32)
                     ->unique(ignoreRecord: true)
+                    ->disabled($locked)
                     ->dehydrateStateUsing(fn (mixed $state): ?string => self::clear($state)),
                 TextInput::make('national')
                     ->label('کد ملی')
@@ -118,12 +123,14 @@ class Fields
                     ->maxLength(10)
                     ->rule(new National)
                     ->unique(ignoreRecord: true)
+                    ->disabled($locked)
                     ->dehydrateStateUsing(fn (mixed $state): ?string => self::clear($state)),
                 TextInput::make('job')
                     ->label('موقعیت شغلی')
                     ->nullable()
                     ->maxLength(255)
                     ->columnSpanFull()
+                    ->disabled($locked)
                     ->dehydrateStateUsing(fn (mixed $state): ?string => self::clear($state)),
                 Select::make('degree')
                     ->label('مدرک تحصیلی')

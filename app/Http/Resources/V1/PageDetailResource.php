@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1;
 
 use App\Models\Page;
+use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -47,7 +48,7 @@ class PageDetailResource extends JsonResource
             'design' => Design::make($this->design),
             'html' => self::absolute((string) $this->markup),
             'css' => self::absolute((string) $this->style),
-            'seo' => new SeoResource($this->seoData()),
+            'seo' => new SeoResource($this->seoData(Seo::LOCALE)),
         ];
     }
 

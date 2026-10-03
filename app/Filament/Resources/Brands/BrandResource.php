@@ -11,6 +11,7 @@ use App\Models\Article;
 use App\Models\Brand;
 use App\Support\Shamsi;
 use App\Support\Sizes;
+use Damoon\Schema\Filament\SchemaEditor;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -35,7 +36,8 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
  * The panel brands section, in the content group.
  *
  * Each brand has a title, slug, English title, description, a list of features, links to
- * its website, LinkedIn, and software download, a catalog file, a logo, an SEO box, and a
+ * its website, LinkedIn, and software download, a catalog file, a logo, an SEO box, a schema box
+ * (SchemaEditor, starting with Brand::SCHEMAS), and a
  * switch that allows comments.
  * The description editor is Editor::body, shared with articles and pages, and is optional here.
  * The logo is a media library picture. The catalog is a PDF uploaded to Brand::CATALOGS
@@ -163,6 +165,7 @@ class BrandResource extends Resource
                         ->openable(),
                 ]),
             static::seoSection(),
+            SchemaEditor::section(),
             Toggle::make('commentable')
                 ->label('اجازه به ارسال دیدگاه')
                 ->default(true)

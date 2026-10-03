@@ -38,7 +38,32 @@ The admin panel is Persian and right to left, set in Iran Yekan, with `#00377B` 
 
 Until install is finished, `/admin` redirects to `/install`. That form asks for the site title, a short description, and the owner account. Afterward, the title becomes the panel name and the owner signs in with a username or email, plus the password they just chose.
 
-Inside the panel, **پیشخوان** is the home page. The **دسترسی** group holds **کاربران**, **مشتریان**, and **نقش‌ها**. The **محتوا** group holds **نوشته‌ها**, **برگه‌ها**, **برندها**, **پروژه‌ها**, **رسانه‌ها**, and **دیدگاه‌ها**. The **فرم‌ها** group holds **فرم‌ها**, **صندوق پیام‌ها**, and **تنظیمات**. A staff account only sees the sections chosen for them.
+Inside the panel, **پیشخوان** is the home page. The **دسترسی** group holds **کاربران**, **مشتریان**, and **نقش‌ها**. The **محتوا** group holds **نوشته‌ها**, **برگه‌ها**, **برندها**, **پروژه‌ها**, **رسانه‌ها**, and **دیدگاه‌ها**. The **فرم‌ها** group holds **فرم‌ها** and **صندوق پیام‌ها**. The **قابلیت‌های اضافی** group, above تنظیمات, is kept for add-on features and stays hidden while it has none. The **تنظیمات** group, last in the sidebar, holds **تنظیمات عمومی**, **تنظیمات شبکه‌های اجتماعی**, **تنظیمات فرم‌ها**, and **تنظیمات API**. A staff account only sees the sections chosen for them; تنظیمات عمومی, تنظیمات شبکه‌های اجتماعی, and تنظیمات API are each their own section, and تنظیمات فرم‌ها comes with the فرم‌ها section.
+
+**تنظیمات عمومی** (general settings) has three boxes:
+
+- The site title and description chosen at install. The title is also the panel name.
+- The site address. The public website does not run inside this Laravel app, so every content address in the API, the SEO canonical, and the schemas is built from it: the site address (for example `https://damoon.ir`) plus one pattern per content type. The defaults are `/articles/{slug}`, `/{slug}` for pages, `/brands/{slug}`, and `/projects/{slug}`; a pattern may also use `{id}`, such as `/work/{id}-{slug}`. The part of a pattern before the first placeholder is that type's list, used as a breadcrumb step. With no site address, `APP_URL` is used. Media files keep this app's address, since this app serves them.
+- The site-wide schemas (Organization and WebSite to start), described under schemas below.
+
+**تنظیمات API** (API settings) holds the private keys that open the API. Each key has a name, an origin (the one site, such as `https://damoon.ir` or `http://localhost:3000`, whose browser requests it opens), and an on/off switch. A new key is shown once, in a notice with a copy button; only its hash is stored, and the list shows its last four characters and when it was last used. **کلید تازه** replaces a key's secret at once. Without an active key the API answers every request with `401`.
+
+**تنظیمات شبکه‌های اجتماعی** (social networks settings) keeps the site's social links. Each link has a name, an icon, and an address: a full `https://` address, or `mailto:` and `tel:` for email and phone. Rows can be dragged into the order the site shows them. Icons come from [Blade Icons](https://github.com/driesvints/blade-icons) in three sets: Simple Icons (`si-instagram`, `si-telegram`, and about 3,400 more world brands), the app's own brand set in `resources/svg/brands` (`brand-eitaa`, `brand-bale`, `brand-rubika`, `brand-igap`, `brand-linkedin`, and Iranian banks), and Heroicons outline for email, phone, and website. The icon picker lists the popular networks first and searches by English or Persian name; picking a popular network fills an empty name. `GET /v1/socials` sends the links with each icon's SVG.
+
+**Schemas** (schema.org structured data, JSON-LD, for Google rich results) are edited on each record, not on a page of their own. Every article, page, brand, and project form has an **اسکیما (داده‌های ساختاریافته)** box under the SEO box. A record starts with its type's defaults:
+
+| Record | Starts with |
+| --- | --- |
+| Article | مقاله (Article), مسیر راهنما (BreadcrumbList), پرسش‌های متداول (FAQPage, filled from the article's questions) |
+| Page | صفحهٔ وب (WebPage), مسیر راهنما |
+| Brand | برند (Brand), مسیر راهنما |
+| Project | صفحهٔ وب, مسیر راهنما |
+
+Each schema can be changed, switched off, reordered, or removed, and more can be added: سازمان (Organization), کسب‌وکار محلی (LocalBusiness), وب‌سایت (WebSite), محصول (Product), خدمت (Service), شخص (Person), رویداد (Event), or سفارشی (any hand-written JSON-LD). Default values are mostly placeholders such as `{title}`, `{description}`, `{url}`, `{image}`, `{published}`, `{author}`, `{section}`, `{site_name}`, and `{site_url}`, filled when the output is built, so a renamed record or a new site address reaches its schemas on its own. A live preview shows the result for the record. A record that was never edited follows its type's defaults; once saved, it keeps its own list. The breadcrumb is built from the site address, the type's list address, the parent pages, and the record itself.
+
+Site-wide schemas live in تنظیمات عمومی. They come first in `seo.schema` of every article, page, brand, and project, followed by the record's own, unless that record stores a hand-written `schema_jsonld` in its SEO row. `GET /v1/schema` sends the site-wide ones alone, for the home page and lists.
+
+The editor is a local Composer package, `damoon/schema`, in `packages/damoon/schema`, so any Filament form can use it. A model implements `Damoon\Schema\Contracts\Schemable` with the `HasSchemas` trait, has a `schemas` JSON column, and names its starting types in `blueprints()`. The form adds `SchemaEditor::section()`. The app tells the package the site name, address, and description once with `Schemas::site(...)` in `AppServiceProvider`.
 
 **نقش‌ها** stores a Persian name, an English key, and the sections that role may open. Moving between panel pages keeps the styles and fonts loaded. Dates are shown in Shamsi. A user with no avatar photo is shown the shared default image.
 
@@ -54,6 +79,12 @@ The styles are in `resources/css/panel.css`. After changing the file, rebuild an
 npm run panel
 php artisan filament:assets
 ```
+
+### User menu and profile
+
+The avatar in the topbar opens a menu that starts with a card: the avatar, name, job (or role), and email. Under it are **پروفایل من**, **ویرایش پروفایل**, the light and dark switcher, shortcuts for the user's sections (**نوشته تازه**, **نوشته‌های من**, and **صندوق پیام‌ها** with the count of new messages), and **خروج از حساب**.
+
+**پروفایل من** (`/admin/profile`) is open to every signed-in user. It shows a cover with the avatar, name, job, roles, join date, and last sign-in; how many articles, pages, and comment replies the user wrote; the account and personnel details; the sections they may open, each linked to its page; and their latest articles. **ویرایش پروفایل** (`/admin/profile/edit`) changes the avatar, name, username, email, phone, education, and gender, and changes the password after checking the current one. Personnel code, national code, and job are shown locked, and sections, roles, and account status are not on this page, so only someone with the users section can change them.
 
 ## Content
 
@@ -162,7 +193,7 @@ Opening a message marks it read. The message page is laid out like a mail client
 - a side column with the form (and a link to all its messages), the page it came from, the customer, the device and browser, and the IP, and below it the sender's other messages, matched by customer or email
 - buttons in the header to go to the newer or older message, mark it unread, archive it, or delete it
 
-**تنظیمات** holds the email notice for new messages and its addresses, the default message after sending, how many messages one IP may send a minute, the largest file any field takes, and how many days messages are kept. With a retention period set, the daily `php artisan model:prune` run deletes older messages and their files, so the scheduler must run on the server:
+**تنظیمات فرم‌ها**, in the تنظیمات group, holds the email notice for new messages and its addresses, the default message after sending, how many messages one IP may send a minute, the largest file any field takes, and how many days messages are kept. With a retention period set, the daily `php artisan model:prune` run deletes older messages and their files, so the scheduler must run on the server:
 
 ```bash
 * * * * * php /path/to/artisan schedule:run
@@ -194,6 +225,21 @@ Nothing a visitor sends is trusted:
 
 Routes are versioned at `/v1`, with no `/api` prefix.
 
+Every `/v1` request, including login, comments, and forms, needs an `X-Api-Key` header with a key from **تنظیمات API**:
+
+| Request | Answer |
+| --- | --- |
+| No key, a wrong key, or a switched-off key | `401` |
+| From a browser whose `Origin` is not the key's origin | `403` |
+| From a browser on the key's origin | Allowed |
+| From a server, with no `Origin` header (for example server-side rendering) | Allowed on the key alone |
+
+CORS is open on `/v1` and preflight requests need no key, so the browser can always send the header; the key decides who gets in. A key sent from browser code can be read by anyone who opens the site, so the origin check is what limits it. Keep keys used by servers out of browser code.
+
+```bash
+curl -H "X-Api-Key: dmk_..." https://cms.example.com/v1/articles
+```
+
 | Method | Path | What it does |
 | --- | --- | --- |
 | `POST` | `/v1/auth/login` | Customer login. Returns a bearer token. |
@@ -212,12 +258,14 @@ Routes are versioned at `/v1`, with no `/api` prefix.
 | `GET` | `/v1/forms/{slug}` | One active form with its button text, the address to post to, whether it needs `multipart/form-data`, and its fields, each with the same keys: `key`, `type`, `label`, `placeholder`, `help`, `required`, `width`, `options`, `multiple`, `min`, `max`, `accept`, `size`, `condition`, `content`. |
 | `POST` | `/v1/forms/{slug}` | Send the answers, one value per field key. Errors come back as `422` in Persian, keyed by field. No token needed; a customer token links the message to the customer. Limited per IP by the forms settings. |
 | `GET` | `/v1/media`, `/v1/media/{key}` | Library files and one file. Filters: `q`, `type` (`image` or `file`), `page`, `per_page` (up to 100). |
+| `GET` | `/v1/schema` | The active site-wide schemas from تنظیمات عمومی as a list of JSON-LD documents, for pages without their own record such as the home page. Records carry theirs in `seo.schema`. |
+| `GET` | `/v1/socials` | The social links from تنظیمات شبکه‌های اجتماعی in their panel order. Each has `name`, `icon` (the Blade Icons name), `url`, and `svg` (the icon drawn with `currentColor`, so it takes the text colour). |
 | `GET` | `/v1/{type}/{slug}/comments` | Approved comments with their replies, 20 top-level comments per `page`. `type` is where the comment lives: `articles`, `pages`, `brands`, or `projects`. |
 | `POST` | `/v1/{type}/{slug}/comments` | Send a comment or a reply (`parent_id`). No token needed; it waits for approval. Five a minute per IP. |
 
 Articles, brands, projects, media, and comments are always paged. Pages, forms, categories, and tags come whole unless the request sends `page` or `per_page`. A paged answer carries `links` and `meta` next to `data`.
 
-The content routes are public and read-only. Anything with a publish date still to come is never sent. Bodies arrive as Tiptap JSON, and every picture comes with its full address, alt text, and all its sizes. A page's builder layout arrives both as a JSON tree (`design`) and as ready `html` and `css`, with library addresses made full.
+The content routes need no customer token and are read-only. Anything with a publish date still to come is never sent. Every `url` and the SEO `canonical` point at the public website, built from the site address and patterns in تنظیمات عمومی. Bodies arrive as Tiptap JSON, and every picture comes with its full address, alt text, and all its sizes. A page's builder layout arrives both as a JSON tree (`design`) and as ready `html` and `css`, with library addresses made full.
 
 Login accepts `username` and `password`. In the local environment, OpenAPI docs are at `/docs/api`. A successful login response looks like this:
 
@@ -244,6 +292,10 @@ cp .env.example .env
 php artisan key:generate
 ```
 
+On Windows, Horizon's `pcntl` and `posix` extensions are missing, so install with `composer install --ignore-platform-req=ext-pcntl --ignore-platform-req=ext-posix`.
+
+The schema editor comes from `packages/damoon/schema`, linked through a Composer `path` repository in `composer.json`, so `composer install` needs that folder in place. After changing the package's CSS, run `php artisan filament:assets`.
+
 Point `.env` at PostgreSQL:
 
 ```env
@@ -265,7 +317,7 @@ php artisan serve
 
 `storage:link` makes uploaded avatars, article images, and media reachable at `/storage`.
 
-Open [http://127.0.0.1:8000/install](http://127.0.0.1:8000/install), create the owner, and sign in at [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin).
+Open [http://127.0.0.1:8000/install](http://127.0.0.1:8000/install), create the owner, and sign in at [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin). Then set the website's address in تنظیمات عمومی and make a key for it in تنظیمات API; until then the API refuses every request.
 
 `.env` stays on your machine. Only `.env.example` belongs in git.
 
@@ -275,7 +327,7 @@ Open [http://127.0.0.1:8000/install](http://127.0.0.1:8000/install), create the 
 php artisan test
 ```
 
-Tests use SQLite in memory, so they do not touch the PostgreSQL database.
+Tests use SQLite in memory, so they do not touch the PostgreSQL database. Each test sends a fresh API key for `http://localhost`, made in `tests/TestCase.php`.
 
 ## Stack
 
@@ -287,6 +339,7 @@ Tests use SQLite in memory, so they do not touch the PostgreSQL database.
 | Spatie Permission | Roles and the section checklist |
 | Filament Jalali | Shamsi dates in the panel |
 | Laravel SEO (Rankbeam) | SEO title, description, and social image for articles and pages |
+| `damoon/schema` (local package) | The schema editor and JSON-LD output |
 | GrapesJS | The page builder, bundled with esbuild |
 | Scramble | OpenAPI docs for `/v1` |
 | PostgreSQL | Application database |

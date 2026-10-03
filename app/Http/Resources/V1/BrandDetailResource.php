@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use App\Models\Brand;
 use App\Support\Library;
+use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -43,7 +44,7 @@ class BrandDetailResource extends JsonResource
             'updated_at' => $this->updated_at?->toIso8601String(),
             'commentable' => (bool) $this->commentable,
             'comments_count' => $this->whenCounted('comments'),
-            'seo' => new SeoResource($this->seoData()),
+            'seo' => new SeoResource($this->seoData(Seo::LOCALE)),
         ];
     }
 

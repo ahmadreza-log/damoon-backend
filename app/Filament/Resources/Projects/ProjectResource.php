@@ -11,6 +11,7 @@ use App\Models\Article;
 use App\Models\Project;
 use App\Support\Shamsi;
 use App\Support\Sizes;
+use Damoon\Schema\Filament\SchemaEditor;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -37,7 +38,8 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
  *
  * Each project has a title, slug, description, the client's brand logo, the year it was
  * done, the services given, the client's industry, how long it took, where it was built,
- * the client's testimonial, similar projects, an SEO box, and a switch that allows comments.
+ * the client's testimonial, similar projects, an SEO box, a schema box (SchemaEditor, starting with
+ * Project::SCHEMAS), and a switch that allows comments.
  * The description editor is Editor::body, shared with articles, and is optional here.
  * The logo is a media library picture. The testimonial voice message is an audio file
  * uploaded to Project::VOICES on the public disk, so it shows up on the media page too.
@@ -170,6 +172,7 @@ class ProjectResource extends Resource
                 ->placeholder('انتخاب کنید')
                 ->columnSpanFull(),
             static::seoSection(),
+            SchemaEditor::section(),
             Toggle::make('commentable')
                 ->label('اجازه به ارسال دیدگاه')
                 ->default(true)

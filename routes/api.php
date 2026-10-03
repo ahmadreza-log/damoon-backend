@@ -9,6 +9,8 @@ use App\Http\Controllers\V1\FormController;
 use App\Http\Controllers\V1\MediaController;
 use App\Http\Controllers\V1\PageController;
 use App\Http\Controllers\V1\ProjectController;
+use App\Http\Controllers\V1\SchemaController;
+use App\Http\Controllers\V1\SocialController;
 use App\Http\Controllers\V1\TagController;
 use App\Models\Subject;
 use Illuminate\Support\Facades\Route;
@@ -18,12 +20,14 @@ use Illuminate\Support\Facades\Route;
  *
  * The version is part of the path: /v1/...
  * Register a new route inside this v1 group so Scramble includes it at /docs/api.
- * Protected routes need the auth.customer middleware. The content routes (articles,
- * pages, brands, projects, categories, tags, forms, media, and comments) are public and read-only, with a request limit.
+ * The whole group sits behind api.key: every request needs an X-Api-Key header with a key
+ * from the API settings page, sent from that key's origin (server calls have no Origin).
+ * Protected routes need the auth.customer middleware as well. The content routes (articles,
+ * pages, brands, projects, categories, tags, forms, media, schema, socials, and comments) are public and read-only, with a request limit.
  * Sending a comment and sending a form are the public writes; each has its own tighter limit, and both
  * wait in the panel (comments for approval, form messages in the inbox).
  */
-Route::prefix('v1')->name('v1.')->group(function () {
+Route::prefix('v1')->name('v1.')->middleware('api.key')->group(function () {
     Route::prefix('auth')->name('auth.')->group(function () {
         Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login');
         Route::get('me', [AuthController::class, 'me'])->middleware('auth.customer')->name('me');
@@ -46,6 +50,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('forms/{slug}', [FormController::class, 'show'])->name('forms.show');
         Route::get('media', [MediaController::class, 'index'])->name('media.index');
         Route::get('media/{key}', [MediaController::class, 'show'])->name('media.show');
+        Route::get('schema', [SchemaController::class, 'index'])->name('schema.index');
+        Route::get('socials', [SocialController::class, 'index'])->name('socials.index');
 
         Route::get('{type}/{slug}/comments', [CommentController::class, 'index'])
             ->whereIn('type', Subject::values())

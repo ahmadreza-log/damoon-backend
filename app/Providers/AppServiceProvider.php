@@ -7,9 +7,13 @@ use App\Filament\Auth\LogoutResponse;
 use App\Models\Customer;
 use App\Models\FormSetting;
 use App\Models\Role;
+use App\Models\Setting;
 use App\Models\User;
+use App\Support\Frontend;
+use App\Support\Icons;
 use App\Support\Seo;
 use App\Support\Shamsi;
+use Damoon\Schema\Schemas;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Filament\Support\Assets\AlpineComponent;
 use Filament\Support\Assets\Css;
@@ -37,6 +41,9 @@ use Illuminate\Support\ServiceProvider;
  * - permission.models.role points at App\Models\Role so a role can keep a Persian name.
  * - Shamsi dates are applied in Shamsi::boot after the other providers boot.
  * - The SEO box fields are adjusted in Seo::boot.
+ * - The damoon/schema package reads the site name, address, and description from Schemas::site in boot.
+ * - Frontend is scoped, so the settings row behind site addresses is read once per request.
+ * - The app's brand icon set (resources/svg/brands) is added to Blade Icons in Icons::register.
  * - The panel stylesheet and the page builder and form builder scripts and styles are built into
  *   resources/dist with npm run panel, npm run designer, and npm run formbuilder and registered here;
  *   php artisan filament:assets copies them into public. Only the panel stylesheet loads on every page.
@@ -56,6 +63,10 @@ class AppServiceProvider extends ServiceProvider
         config(['seo.features.auto_create_meta' => false]);
 
         $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
+
+        $this->app->scoped(Frontend::class);
+
+        Icons::register($this->app);
     }
 
     /**
@@ -69,6 +80,12 @@ class AppServiceProvider extends ServiceProvider
         config(['permission.events_enabled' => true]);
 
         Seo::boot();
+
+        Schemas::site(fn (): array => [
+            '{site_name}' => Setting::brand(),
+            '{site_url}' => Frontend::base(),
+            '{site_description}' => (string) Frontend::settings()?->description,
+        ]);
 
         FilamentAsset::register([
             Css::make('panel', resource_path('dist/panel.css')),

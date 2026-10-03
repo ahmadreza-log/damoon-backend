@@ -54,6 +54,15 @@ class Section
     /** The inbox of form submissions. */
     public const INBOX = 'inbox';
 
+    /** The general settings page: site title and description. */
+    public const SETTINGS = 'settings';
+
+    /** The social networks settings page: the site's social links. */
+    public const SOCIALS = 'socials';
+
+    /** The API settings page: the keys each website origin uses to read the API. */
+    public const API = 'api';
+
     /** Guard used by the staff panel. */
     public const GUARD = 'web';
 
@@ -77,6 +86,9 @@ class Section
             self::COMMENTS => 'دیدگاه‌ها',
             self::FORMS => 'فرم‌ها',
             self::INBOX => 'صندوق پیام‌ها',
+            self::SETTINGS => 'تنظیمات عمومی',
+            self::SOCIALS => 'تنظیمات شبکه‌های اجتماعی',
+            self::API => 'تنظیمات API',
         ];
     }
 

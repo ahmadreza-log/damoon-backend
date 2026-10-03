@@ -21,7 +21,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 
 /**
- * The forms settings page (تنظیمات), last in the forms group.
+ * The forms settings page (تنظیمات فرم‌ها), in the settings group after the social networks settings.
  *
  * It edits the one FormSetting row: the email notice for new messages and its addresses,
  * the default text shown after sending, how many messages one IP may send a minute, the
@@ -36,18 +36,18 @@ use Filament\Support\Icons\Heroicon;
 class FormSettings extends Page
 {
     /** The item name in the side menu. */
-    protected static ?string $navigationLabel = 'تنظیمات';
+    protected static ?string $navigationLabel = 'تنظیمات فرم‌ها';
 
     /** The page heading and browser tab title. */
     protected static ?string $title = 'تنظیمات فرم‌ها';
 
     /** The menu group this item sits in. */
-    protected static string|\UnitEnum|null $navigationGroup = 'فرم‌ها';
+    protected static string|\UnitEnum|null $navigationGroup = 'تنظیمات';
 
     /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
-    /** The position inside the forms group: after the inbox. */
+    /** The position inside the settings group: after the social networks settings. */
     protected static ?int $navigationSort = 3;
 
     /** The URL after /admin. */

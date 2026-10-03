@@ -8,6 +8,7 @@ use App\Models\Concerns\Meta;
 use App\Models\Concerns\Tree;
 use App\Support\Library;
 use App\Support\Sizes;
+use Damoon\Schema\Contracts\Schemable;
 use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -55,8 +56,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
     'author_id',
     'published_at',
     'commentable',
+    'schemas',
 ])]
-class Page extends Model
+class Page extends Model implements Schemable
 {
     use Body;
 
@@ -82,8 +84,8 @@ class Page extends Model
     /** The public folder for pictures uploaded inside the page builder. */
     public const DESIGNS = 'pages/design';
 
-    /** The site path pages live under, used for the SEO address. Pages sit at the site root. */
-    public const ADDRESS = '';
+    /** The schema types a new page starts with. */
+    public const SCHEMAS = ['WebPage', 'BreadcrumbList'];
 
     /**
      * Fills the slug and builds sizes for new pictures.
@@ -247,6 +249,7 @@ class Page extends Model
             'commentable' => 'boolean',
             'position' => 'integer',
             'design' => 'array',
+            'schemas' => 'array',
         ];
     }
 

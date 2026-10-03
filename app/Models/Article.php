@@ -6,6 +6,7 @@ use App\Filament\Blocks\Code;
 use App\Models\Concerns\Body;
 use App\Models\Concerns\Meta;
 use App\Support\Sizes;
+use Damoon\Schema\Contracts\Schemable;
 use Database\Factories\ArticleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -43,8 +44,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
     'questions',
     'gallery',
     'commentable',
+    'schemas',
 ])]
-class Article extends Model
+class Article extends Model implements Schemable
 {
     use Body;
 
@@ -60,8 +62,8 @@ class Article extends Model
      */
     public const BLOCKS = [Code::class];
 
-    /** The site path articles live under, used for the SEO address. */
-    public const ADDRESS = 'articles';
+    /** The schema types a new article starts with. */
+    public const SCHEMAS = ['Article', 'BreadcrumbList', 'FAQPage'];
 
     /** The public folder for pictures uploaded inside the body editor. */
     public const FOLDER = 'articles/content';
@@ -183,6 +185,7 @@ class Article extends Model
             'commentable' => 'boolean',
             'questions' => 'array',
             'gallery' => 'array',
+            'schemas' => 'array',
         ];
     }
 

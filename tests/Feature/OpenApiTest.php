@@ -20,6 +20,7 @@ class OpenApiTest extends TestCase
 {
     /**
      * The document lists login, me, and the public content routes, leaves out routes that do not exist, and has version 1.0.0.
+     * Every route asks for the X-Api-Key header, and me asks for the customer Bearer token as well.
      *
      * setThrowExceptions(true) makes the test fail when Scramble cannot read a route,
      * instead of silently dropping that route from the document.
@@ -43,7 +44,14 @@ class OpenApiTest extends TestCase
 
         $this->assertContains('/media', $paths);
         $this->assertContains('/media/{key}', $paths);
-        $this->assertSame([], $spec['paths']['/articles']['get']['security'] ?? []);
+        $this->assertContains('/schema', $paths);
+        $this->assertContains('/socials', $paths);
+        $this->assertSame([['apiKey' => []]], $spec['paths']['/articles']['get']['security'] ?? null);
+        $this->assertSame([['apiKey' => [], 'bearer' => []]], $spec['paths']['/auth/me']['get']['security'] ?? null);
+        $this->assertSame(['type' => 'apiKey', 'in' => 'header', 'name' => 'X-Api-Key'], array_intersect_key(
+            $spec['components']['securitySchemes']['apiKey'] ?? [],
+            array_flip(['type', 'in', 'name']),
+        ));
         $this->assertNotContains('/auth/register', $paths);
         $this->assertNotContains('/auth/verify', $paths);
         $this->assertNotContains('/auth/forgot', $paths);

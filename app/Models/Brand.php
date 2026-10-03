@@ -7,6 +7,7 @@ use App\Models\Concerns\Body;
 use App\Models\Concerns\Meta;
 use App\Support\Seo;
 use App\Support\Sizes;
+use Damoon\Schema\Contracts\Schemable;
 use Database\Factories\BrandFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -45,8 +46,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
     'download',
     'logo',
     'commentable',
+    'schemas',
 ])]
-class Brand extends Model
+class Brand extends Model implements Schemable
 {
     use Body;
 
@@ -62,8 +64,8 @@ class Brand extends Model
      */
     public const BLOCKS = [Code::class];
 
-    /** The site path brands live under, used for the SEO address. */
-    public const ADDRESS = 'brands';
+    /** The schema types a new brand starts with. */
+    public const SCHEMAS = ['Brand', 'BreadcrumbList'];
 
     /** The public folder for pictures uploaded inside the description editor. */
     public const FOLDER = 'brands/content';
@@ -144,6 +146,7 @@ class Brand extends Model
         return [
             'features' => 'array',
             'commentable' => 'boolean',
+            'schemas' => 'array',
         ];
     }
 

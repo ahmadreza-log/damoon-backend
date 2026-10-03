@@ -14,6 +14,7 @@ use App\Models\Category;
 use App\Models\Tag;
 use App\Models\User;
 use App\Support\Shamsi;
+use Damoon\Schema\Filament\SchemaEditor;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -34,6 +35,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
@@ -44,6 +46,7 @@ use Rankbeam\Seo\Filament\Concerns\HasSEOFields;
  * Each article has a title, slug, body, cover, categories, tags, author,
  * publish date, a switch that allows comments, an SEO box, questions, a gallery, and related articles and products.
  * The SEO box is seoSection() from rankbeam/laravel-seo-filament, fitted to the panel in Seo::boot.
+ * The schema box under it is SchemaEditor from damoon/schema; it starts with Article::SCHEMAS.
  * The body editor is Editor::body, shared with pages. It saves Tiptap JSON,
  * offers the blocks in Article::BLOCKS, and stores pictures in Article::FOLDER.
  * The category and tag fields reuse the CategoryResource and TagResource forms
@@ -170,6 +173,7 @@ class ArticleResource extends Resource
                 ->default(true)
                 ->columnSpanFull(),
             static::seoSection(),
+            SchemaEditor::section(),
             FormSection::make('سوالات متداول')
                 ->columnSpan(2)
                 ->schema([
@@ -212,7 +216,7 @@ class ArticleResource extends Resource
     }
 
     /**
-     * Article list.
+     * Article list, filterable by author. The user menu's نوشته‌های من opens it with the author filter set.
      */
     public static function table(Table $table): Table
     {
@@ -228,6 +232,15 @@ class ArticleResource extends Resource
                 TextColumn::make('published_at')->label('تاریخ انتشار')->jalaliDateTime(timezone: Shamsi::ZONE),
             ])
             ->defaultSort('published_at', 'desc')
+            ->filters([
+                SelectFilter::make('author_id')
+                    ->label('نویسنده')
+                    ->relationship('author', 'username')
+                    ->getOptionLabelFromRecordUsing(fn (User $record): string => $record->getFilamentName())
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
+            ])
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),

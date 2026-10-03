@@ -7,6 +7,7 @@ use App\Models\Concerns\Body;
 use App\Models\Concerns\Meta;
 use App\Support\Seo;
 use App\Support\Sizes;
+use Damoon\Schema\Contracts\Schemable;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -48,8 +49,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
     'testimony',
     'voice',
     'commentable',
+    'schemas',
 ])]
-class Project extends Model
+class Project extends Model implements Schemable
 {
     use Body;
 
@@ -65,8 +67,8 @@ class Project extends Model
      */
     public const BLOCKS = [Code::class];
 
-    /** The site path projects live under, used for the SEO address. */
-    public const ADDRESS = 'projects';
+    /** The schema types a new project starts with. */
+    public const SCHEMAS = ['WebPage', 'BreadcrumbList'];
 
     /** The public folder for pictures uploaded inside the description editor. */
     public const FOLDER = 'projects/content';
@@ -163,6 +165,7 @@ class Project extends Model
             'year' => 'integer',
             'services' => 'array',
             'commentable' => 'boolean',
+            'schemas' => 'array',
         ];
     }
 

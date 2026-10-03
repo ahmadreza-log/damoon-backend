@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1;
 
 use App\Models\Article;
+use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -43,7 +44,7 @@ class ArticleDetailResource extends JsonResource
             'gallery' => Picture::list($this->gallery),
             'questions' => Questions::make($this->questions),
             'related' => ArticleResource::collection($this->whenLoaded('related')),
-            'seo' => new SeoResource($this->seoData()),
+            'seo' => new SeoResource($this->seoData(Seo::LOCALE)),
         ];
     }
 }
