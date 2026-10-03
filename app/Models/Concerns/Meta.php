@@ -31,6 +31,7 @@ use Rankbeam\Seo\Traits\HasSEO;
  *
  * @property string|null $slug
  * @property string|null $cover
+ * @property array<string, mixed>|null $content
  */
 trait Meta
 {
@@ -44,7 +45,7 @@ trait Meta
      */
     public static function blueprints(): array
     {
-        return static::SCHEMAS;
+        return constant(static::class.'::SCHEMAS');
     }
 
     /**
