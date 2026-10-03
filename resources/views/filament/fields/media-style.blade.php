@@ -27,6 +27,15 @@
     .dm-picker-box:hover, .dm-picker-change:hover { border-color: var(--primary-600); color: var(--primary-600); background: var(--primary-50); }
     .dm-picker-box svg, .dm-picker-change svg { width: 1.75rem; height: 1.75rem; }
     .dm-picker-box:disabled, .dm-picker-change:disabled { opacity: .6; cursor: wait; }
+    .dm-picker-item video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
+    .dm-picker-video .dm-picker-item { width: 14rem; height: 8rem; }
+    .dm-picker-video .dm-picker-list + .dm-picker-box { flex-basis: 14rem; width: 14rem; }
+    .dm-picker-audio .dm-picker-item { width: 18rem; height: auto; min-height: 8rem; }
+    .dm-picker-audio .dm-picker-list + .dm-picker-box { flex-basis: 18rem; width: 18rem; }
+    .dm-picker-track { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; height: 100%; padding: 1rem .75rem .75rem; color: var(--gray-500); }
+    .dm-picker-track > svg { width: 2rem; height: 2rem; }
+    .dm-picker-track audio { width: 100%; height: 2.25rem; }
+    .dm-picker-name { max-width: 100%; font-size: .75rem; color: var(--gray-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Grid: search bar, tiles, the check badge on chosen tiles, and the empty message. */
     .dm-grid-bar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
@@ -34,7 +43,12 @@
     .dm-grid-count { font-size: .875rem; color: var(--primary-600); }
     .dm-grid-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .75rem; max-height: 60vh; overflow-y: auto; padding: .25rem; }
     .dm-grid-tile { position: relative; aspect-ratio: 1; border-radius: .75rem; overflow: hidden; border: 2px solid transparent; background: var(--gray-100); cursor: pointer; padding: 0; }
-    .dm-grid-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .dm-grid-tile img, .dm-grid-tile video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+    .dm-grid-tile-video { background: #000; }
+    .dm-grid-kind { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgb(255 255 255 / .9); }
+    .dm-grid-kind svg { width: 2.25rem; height: 2.25rem; filter: drop-shadow(0 1px 3px rgb(0 0 0 / .5)); }
+    .dm-grid-icon { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding-bottom: 1.5rem; color: var(--gray-500); }
+    .dm-grid-icon svg { width: 2.5rem; height: 2.5rem; }
     .dm-grid-tile:hover { border-color: var(--gray-400); }
     .dm-grid-tile-on, .dm-grid-tile-on:hover { border-color: var(--primary-600); box-shadow: 0 0 0 2px var(--primary-600); }
     .dm-grid-check { position: absolute; top: .4rem; inset-inline-end: .4rem; display: none; width: 1.5rem; height: 1.5rem; border-radius: 9999px; background: var(--primary-600); color: #fff; align-items: center; justify-content: center; }
@@ -46,6 +60,7 @@
     /* Dark mode: Filament puts the dark class on the html element. */
     .dark .dm-picker-item { border-color: var(--gray-700); background: var(--gray-800); }
     .dark .dm-picker-remove { background: rgb(24 24 27 / .9); }
+    .dark .dm-picker-name { color: var(--gray-300); }
     .dark .dm-picker-box, .dark .dm-picker-change { border-color: var(--gray-600); color: var(--gray-400); }
     .dark .dm-picker-box:hover, .dark .dm-picker-change:hover { background: rgb(255 255 255 / .04); color: var(--primary-400); border-color: var(--primary-400); }
     .dark .dm-grid-search { border-color: var(--gray-600); }

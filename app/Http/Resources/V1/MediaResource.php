@@ -37,6 +37,8 @@ class MediaResource extends JsonResource
             'mime' => (string) $row['mime'],
             'size' => (int) $row['size'],
             'image' => $picture !== null,
+            /** image, video, audio, or null for other files such as a PDF. */
+            'kind' => is_string($row['kind'] ?? null) ? $row['kind'] : null,
             'sizes' => $picture['sizes'] ?? null,
             'width' => $this->when(array_key_exists('width', $row), fn (): ?int => is_int($row['width']) ? $row['width'] : null),
             'height' => $this->when(array_key_exists('height', $row), fn (): ?int => is_int($row['height']) ? $row['height'] : null),

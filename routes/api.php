@@ -6,6 +6,7 @@ use App\Http\Controllers\V1\BrandController;
 use App\Http\Controllers\V1\CategoryController;
 use App\Http\Controllers\V1\CommentController;
 use App\Http\Controllers\V1\FormController;
+use App\Http\Controllers\V1\GalleryController;
 use App\Http\Controllers\V1\MediaController;
 use App\Http\Controllers\V1\PageController;
 use App\Http\Controllers\V1\ProjectController;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Route;
  * The whole group sits behind api.key: every request needs an X-Api-Key header with a key
  * from the API settings page, sent from that key's origin (server calls have no Origin).
  * Protected routes need the auth.customer middleware as well. The content routes (articles,
- * pages, brands, projects, categories, tags, forms, media, schema, socials, and comments) are public and read-only, with a request limit.
+ * pages, brands, projects, galleries, categories, tags, forms, media, schema, socials, and comments) are public and read-only, with a request limit.
  * Sending a comment and sending a form are the public writes; each has its own tighter limit, and both
  * wait in the panel (comments for approval, form messages in the inbox).
  */
@@ -42,6 +43,8 @@ Route::prefix('v1')->name('v1.')->middleware('api.key')->group(function () {
         Route::get('brands/{slug}', [BrandController::class, 'show'])->name('brands.show');
         Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('projects/{slug}', [ProjectController::class, 'show'])->name('projects.show');
+        Route::get('galleries', [GalleryController::class, 'index'])->name('galleries.index');
+        Route::get('galleries/{slug}', [GalleryController::class, 'show'])->name('galleries.show');
         Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::get('categories/{slug}', [CategoryController::class, 'show'])->name('categories.show');
         Route::get('tags', [TagController::class, 'index'])->name('tags.index');

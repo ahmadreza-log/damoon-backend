@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Auth\Section;
 use App\Filament\Pages\Asset as AssetPage;
+use App\Models\Kind;
 use App\Models\User;
 use App\Support\Library;
 use App\Support\Shamsi;
@@ -56,8 +57,8 @@ class Media extends Page implements HasTable
     /** The icon next to the menu item. */
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
-    /** The position inside the content group; the library comes after articles, pages, brands, and projects. */
-    protected static ?int $navigationSort = 5;
+    /** The position inside the content group; the library comes after articles, pages, brands, projects, and galleries. */
+    protected static ?int $navigationSort = 6;
 
     /** The URL after /admin; each file's detail page (Asset) lives under it at media/{asset}. */
     protected static ?string $slug = 'media';
@@ -95,15 +96,14 @@ class Media extends Page implements HasTable
                         ->disk('public')
                         ->directory('media')
                         ->visibility('public')
+                        ->helperText('تصویر، ویدئو، فایل صوتی یا PDF؛ حداکثر '.Library::weight(Kind::largest() * 1024).'.')
                         ->acceptedFileTypes([
-                            'image/jpeg',
-                            'image/png',
-                            'image/webp',
-                            'image/gif',
+                            ...Kind::Image->types(),
+                            ...Kind::Video->types(),
+                            ...Kind::Audio->types(),
                             'application/pdf',
-                            'video/mp4',
                         ])
-                        ->maxSize(10240),
+                        ->maxSize(Kind::largest()),
                 ])
                 ->action(function (array $data): void {
                     foreach ((array) ($data['files'] ?? []) as $path) {

@@ -10,6 +10,7 @@ use App\Filament\Resources\Comments\CommentResource;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Resources\Entries\EntryResource;
 use App\Filament\Resources\Forms\FormResource;
+use App\Filament\Resources\Galleries\GalleryResource;
 use App\Filament\Resources\Pages\PageResource;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\Roles\RoleResource;
@@ -192,6 +193,7 @@ class Profile extends Page
             Section::PAGES => fn (): string => PageResource::getUrl('index'),
             Section::BRANDS => fn (): string => BrandResource::getUrl('index'),
             Section::PROJECTS => fn (): string => ProjectResource::getUrl('index'),
+            Section::GALLERIES => fn (): string => GalleryResource::getUrl('index'),
             Section::MEDIA => fn (): string => Media::getUrl(),
             Section::COMMENTS => fn (): string => CommentResource::getUrl('index'),
             Section::FORMS => fn (): string => FormResource::getUrl('index'),

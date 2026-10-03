@@ -6,6 +6,7 @@ use App\Auth\AccessTokens;
 use App\Filament\Auth\LogoutResponse;
 use App\Models\Customer;
 use App\Models\FormSetting;
+use App\Models\Kind;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\User;
@@ -61,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
 
         // The SEO box writes a seo_meta row only when something is filled, in the panel's locale.
         config(['seo.features.auto_create_meta' => false]);
+
+        // Livewire stops temporary uploads at 12 MB, below a gallery video; each field still checks its own limit.
+        config(['livewire.temporary_file_upload.rules' => ['required', 'file', 'max:'.Kind::largest()]]);
 
         $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
 

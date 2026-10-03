@@ -32,13 +32,14 @@ class MediaController extends Controller
     /**
      * Files, newest first, a page at a time.
      *
-     * q searches the file name and title. type is image for pictures only or file for everything else.
+     * q searches the file name and title. type is image, video, or audio for only that kind, or
+     * file for everything that is not a picture.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $data = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
-            'type' => ['nullable', 'string', 'in:image,file'],
+            'type' => ['nullable', 'string', 'in:image,video,audio,file'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:'.self::LIMIT],
         ]);
@@ -47,7 +48,11 @@ class MediaController extends Controller
         $type = $data['type'] ?? null;
 
         $rows = array_values(array_filter(self::rows(), function (array $row) use ($text, $type): bool {
-            if ($type !== null && ($row['preview'] !== null) !== ($type === 'image')) {
+            if ($type === 'file' && $row['preview'] !== null) {
+                return false;
+            }
+
+            if ($type !== null && $type !== 'file' && $row['kind'] !== $type) {
                 return false;
             }
 

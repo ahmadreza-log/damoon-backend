@@ -37,7 +37,7 @@ class OpenApiTest extends TestCase
         $this->assertContains('/auth/login', $paths);
         $this->assertContains('/auth/me', $paths);
 
-        foreach (['articles', 'pages', 'brands', 'projects', 'forms', 'categories', 'tags'] as $group) {
+        foreach (['articles', 'pages', 'brands', 'projects', 'galleries', 'forms', 'categories', 'tags'] as $group) {
             $this->assertContains('/'.$group, $paths);
             $this->assertContains('/'.$group.'/{slug}', $paths);
         }

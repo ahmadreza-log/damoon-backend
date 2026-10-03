@@ -1,18 +1,21 @@
 {{--
     The MediaGrid field (App\Filament\Fields\MediaGrid), the library tab inside the media popup.
 
-    Every library picture is a tile. Clicking a tile toggles it in the field's state,
-    a list of paths. Alpine keeps that list entangled with Livewire, so choosing
+    Every library file of the picker's kind is a tile. Clicking a tile toggles it in the field's
+    state, a list of paths. Alpine keeps that list entangled with Livewire, so choosing
     happens in the browser without a server round trip, and the search box filters
     tiles on each tile's pre-lowercased name, title, and place.
 
     Extending:
     - The tile data (path, url, name, title, place, search) comes from MediaGrid::tiles().
+    - Picture tiles draw an img, video tiles a muted video frame, and audio tiles the kind's icon.
 --}}
 @php
+    use App\Models\Kind;
     use Filament\Support\Icons\Heroicon;
 
     $tiles = $tiles();
+    $kind = $getKind();
     $statePath = $getStatePath();
 @endphp
 
@@ -43,7 +46,7 @@
     >
         @if ($tiles === [])
             <div class="dm-grid-empty">
-                هنوز تصویری در رسانه‌ها نیست. از زبانهٔ «بارگذاری فایل» تصویر اضافه کنید.
+                در رسانه‌ها {{ $kind->label() }} پیدا نشد. از زبانهٔ «بارگذاری فایل» {{ $kind->label() }} اضافه کنید.
             </div>
         @else
             <div class="dm-grid-bar">
@@ -53,21 +56,28 @@
                     placeholder="جستجو در رسانه‌ها"
                     x-model.debounce.200ms="search"
                 />
-                <span class="dm-grid-count" x-text="list().length ? `${list().length} تصویر انتخاب شده` : ''"></span>
+                <span class="dm-grid-count" x-text="list().length ? `${list().length} {{ $kind->label() }} انتخاب شده` : ''"></span>
             </div>
 
             <div class="dm-grid-tiles">
                 @foreach ($tiles as $tile)
                     <button
                         type="button"
-                        class="dm-grid-tile"
+                        class="dm-grid-tile dm-grid-tile-{{ $kind->value }}"
                         wire:key="{{ $statePath }}.{{ $tile['path'] }}"
                         x-show="! search || @js($tile['search']).includes(search.toLowerCase())"
                         x-on:click="toggle(@js($tile['path']))"
                         x-bind:class="{ 'dm-grid-tile-on': has(@js($tile['path'])) }"
                         title="{{ $tile['title'] !== '' ? $tile['title'] : $tile['name'] }} — {{ $tile['place'] }}"
                     >
-                        <img src="{{ $tile['url'] }}" alt="{{ $tile['name'] }}" loading="lazy" />
+                        @if ($kind === Kind::Image)
+                            <img src="{{ $tile['url'] }}" alt="{{ $tile['name'] }}" loading="lazy" />
+                        @elseif ($kind === Kind::Video)
+                            <video src="{{ $tile['url'] }}#t=0.5" preload="metadata" muted playsinline></video>
+                            <span class="dm-grid-kind">{{ \Filament\Support\generate_icon_html(Heroicon::Play) }}</span>
+                        @else
+                            <span class="dm-grid-icon">{{ \Filament\Support\generate_icon_html($kind->icon()) }}</span>
+                        @endif
                         <span class="dm-grid-check">
                             {{ \Filament\Support\generate_icon_html(Heroicon::Check) }}
                         </span>

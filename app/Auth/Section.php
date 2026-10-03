@@ -42,6 +42,9 @@ class Section
     /** The projects resource. */
     public const PROJECTS = 'projects';
 
+    /** The galleries resource: picture, video, and audio galleries. */
+    public const GALLERIES = 'galleries';
+
     /** The media library page. */
     public const MEDIA = 'media';
 
@@ -82,6 +85,7 @@ class Section
             self::PAGES => 'برگه‌ها',
             self::BRANDS => 'برندها',
             self::PROJECTS => 'پروژه‌ها',
+            self::GALLERIES => 'گالری‌ها',
             self::MEDIA => 'رسانه‌ها',
             self::COMMENTS => 'دیدگاه‌ها',
             self::FORMS => 'فرم‌ها',

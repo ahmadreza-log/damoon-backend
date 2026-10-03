@@ -1,27 +1,31 @@
 {{--
     The MediaPicker field (App\Filament\Fields\MediaPicker).
 
-    Shows the chosen pictures as thumbnails, each with a remove button, followed by a
+    Shows the chosen files as thumbnails, each with a remove button, followed by a
     dashed box that opens the media popup (the "pick" action). A single field with a
-    picture shows a "change picture" button instead of the box. In a multiple field the
+    file shows a "change" button instead of the box. In a multiple field the
     thumbnails can be dragged; the new order is sent to the "reorder" action.
+    Pictures draw an img, videos a playable video, and audio files a card with a player.
     Styles come from media-style.blade.php, injected into every panel page head.
 
     Extending:
     - Actions are addressed with schemaComponent = the field key, so several pickers on one form stay apart.
 --}}
 @php
+    use App\Models\Kind;
     use Filament\Support\Icons\Heroicon;
 
     $items = $previews();
     $multiple = $isMultiple();
     $disabled = $isDisabled();
+    $kind = $getKind();
+    $noun = $kind->label();
     $key = $getKey();
     $open = $getAction('pick')?->getLivewireClickHandler();
 @endphp
 
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
-    <div @class(['dm-picker', 'dm-picker-round' => $isRound(), 'dm-picker-single' => ! $multiple])>
+    <div @class(['dm-picker', 'dm-picker-'.$kind->value, 'dm-picker-round' => $isRound(), 'dm-picker-single' => ! $multiple])>
         @if ($items !== [])
             {{-- x-sortable is Filament's drag-and-drop helper; each item's x-sortable-item value is its path. --}}
             <ul
@@ -40,7 +44,17 @@
                         class="dm-picker-item"
                         title="{{ $item['name'] }}"
                     >
-                        <img src="{{ $item['url'] }}" alt="{{ $item['name'] }}" loading="lazy" />
+                        @if ($kind === Kind::Image)
+                            <img src="{{ $item['url'] }}" alt="{{ $item['name'] }}" loading="lazy" />
+                        @elseif ($kind === Kind::Video)
+                            <video src="{{ $item['url'] }}" preload="metadata" controls playsinline></video>
+                        @else
+                            <div class="dm-picker-track">
+                                {{ \Filament\Support\generate_icon_html($kind->icon()) }}
+                                <bdi class="dm-picker-name" dir="ltr">{{ $item['name'] }}</bdi>
+                                <audio src="{{ $item['url'] }}" preload="none" controls></audio>
+                            </div>
+                        @endif
 
                         @unless ($disabled)
                             <div class="dm-picker-remove">
@@ -52,7 +66,7 @@
             </ul>
         @endif
 
-        {{-- The open button: an add box while more pictures fit, otherwise a change button. wire:loading blocks double clicks while the popup loads. --}}
+        {{-- The open button: an add box while more files fit, otherwise a change button. wire:loading blocks double clicks while the popup loads. --}}
         @if (! $disabled && $open)
             @if ($items === [] || $multiple)
                 <button
@@ -62,8 +76,8 @@
                     wire:loading.attr="disabled"
                     wire:target="mountAction"
                 >
-                    {{ \Filament\Support\generate_icon_html(Heroicon::OutlinedPhoto) }}
-                    <span>{{ $items === [] ? 'برای انتخاب از رسانه‌ها یا بارگذاری تصویر کلیک کنید' : 'افزودن تصویر' }}</span>
+                    {{ \Filament\Support\generate_icon_html($kind->icon()) }}
+                    <span>{{ $items === [] ? 'برای انتخاب از رسانه‌ها یا بارگذاری '.$noun.' کلیک کنید' : 'افزودن '.$noun }}</span>
                 </button>
             @else
                 <button
@@ -74,7 +88,7 @@
                     wire:target="mountAction"
                 >
                     {{ \Filament\Support\generate_icon_html(Heroicon::OutlinedArrowPath) }}
-                    <span>تغییر تصویر</span>
+                    <span>تغییر {{ $noun }}</span>
                 </button>
             @endif
         @endif

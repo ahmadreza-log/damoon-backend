@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Article;
 use App\Models\Brand;
+use App\Models\Gallery;
 use App\Models\Page;
 use App\Models\Project;
 use App\Models\Setting;
@@ -32,6 +33,7 @@ class Frontend
         Page::class => ['key' => 'pages', 'label' => 'برگه‌ها', 'default' => '/{slug}'],
         Brand::class => ['key' => 'brands', 'label' => 'برندها', 'default' => '/brands/{slug}'],
         Project::class => ['key' => 'projects', 'label' => 'پروژه‌ها', 'default' => '/projects/{slug}'],
+        Gallery::class => ['key' => 'galleries', 'label' => 'گالری‌ها', 'default' => '/galleries/{slug}'],
     ];
 
     /** The settings row, read on first use. */

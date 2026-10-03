@@ -6,6 +6,8 @@ use App\Models\Article;
 use App\Models\Asset;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Gallery;
+use App\Models\Kind;
 use App\Models\Page;
 use App\Models\Project;
 use App\Models\Tag;
@@ -17,10 +19,11 @@ use Rankbeam\Seo\Models\SEOMeta;
 /**
  * Every file stored on the public disk, and where the panel still uses it.
  *
- * Avatars, article and page covers, galleries, body pictures, brand logos and catalogs, project logos and
- * voice messages, SEO social images, and files uploaded on the media page
- * all live on that disk. The media page reads rows() and removes a file with drop().
- * find() is one file, used by the detail page.
+ * Avatars, article and page covers, article galleries, body pictures, brand logos and catalogs, project logos and
+ * voice messages, the files of picture, video, and audio galleries, SEO social images, and files uploaded on
+ * the media page all live on that disk. The media page reads rows() and removes a file with drop().
+ * find() is one file, used by the detail page. Each row's kind (App\Models\Kind) is image, video, audio,
+ * or null; files() and holds() let MediaPicker offer and accept only one kind.
  *
  * Extending:
  * - A new public upload shows up here on its own. Add a label in place() when its folder should have a name.
@@ -39,7 +42,7 @@ class Library
      *
      * Dotfiles and Livewire's temporary folder are left out.
      *
-     * @return array<int, array{__key: string, path: string, name: string, title: string, preview: ?string, place: string, usage: string, size: int, mime: string, modified: string}>
+     * @return array<int, array{__key: string, path: string, name: string, title: string, preview: ?string, kind: ?string, place: string, usage: string, size: int, mime: string, modified: string}>
      */
     public static function rows(): array
     {
@@ -66,6 +69,7 @@ class Library
                 'name' => basename($path),
                 'title' => is_string($title) ? $title : '',
                 'preview' => self::image($path, $mime) ? Sizes::pick($path, 'small') : null,
+                'kind' => Kind::of($path, $mime)?->value,
                 'place' => self::place($path),
                 'usage' => $uses[$path] ?? 'بدون استفاده',
                 'size' => $disk->size($path),
@@ -82,7 +86,7 @@ class Library
     /**
      * One public file, plus its pixel size, public address, and built sizes.
      *
-     * @return array{__key: string, path: string, name: string, title: string, preview: ?string, place: string, usage: string, size: int, mime: string, modified: string, width: ?int, height: ?int, url: string, sizes: array<string, array{path: string, label: string, width: ?int, height: ?int, bytes: int, url: string}>}|null
+     * @return array{__key: string, path: string, name: string, title: string, preview: ?string, kind: ?string, place: string, usage: string, size: int, mime: string, modified: string, width: ?int, height: ?int, url: string, sizes: array<string, array{path: string, label: string, width: ?int, height: ?int, bytes: int, url: string}>}|null
      */
     public static function find(string $key): ?array
     {
@@ -104,19 +108,37 @@ class Library
     }
 
     /**
-     * Library rows that are pictures, newest first. The media picker lists these.
+     * Library rows that are pictures, newest first.
      *
-     * @return array<int, array{__key: string, path: string, name: string, title: string, preview: ?string, place: string, usage: string, size: int, mime: string, modified: string}>
+     * @return array<int, array{__key: string, path: string, name: string, title: string, preview: ?string, kind: ?string, place: string, usage: string, size: int, mime: string, modified: string}>
      */
     public static function pictures(): array
     {
-        return array_values(array_filter(self::rows(), fn (array $row): bool => $row['preview'] !== null));
+        return self::files(Kind::Image);
+    }
+
+    /**
+     * Library rows of one kind, newest first. The media picker lists these.
+     *
+     * @return array<int, array{__key: string, path: string, name: string, title: string, preview: ?string, kind: ?string, place: string, usage: string, size: int, mime: string, modified: string}>
+     */
+    public static function files(Kind $kind): array
+    {
+        return array_values(array_filter(self::rows(), fn (array $row): bool => $row['kind'] === $kind->value));
     }
 
     /**
      * Whether a path is a picture stored on the public disk that the media page shows.
      */
     public static function picture(string $path): bool
+    {
+        return self::holds($path, Kind::Image);
+    }
+
+    /**
+     * Whether a path is a file of the given kind stored on the public disk that the media page shows.
+     */
+    public static function holds(string $path, Kind $kind): bool
     {
         if ($path === '' || str_contains($path, '..') || self::hidden($path)) {
             return false;
@@ -126,7 +148,7 @@ class Library
 
         return $disk instanceof FilesystemAdapter
             && $disk->exists($path)
-            && self::image($path, (string) $disk->mimeType($path));
+            && Kind::of($path, (string) $disk->mimeType($path)) === $kind;
     }
 
     /**
@@ -144,7 +166,7 @@ class Library
     }
 
     /**
-     * Deletes a public file with its sizes and clears it from users, articles, pages, brands, projects, and the detail text.
+     * Deletes a public file with its sizes and clears it from users, articles, pages, brands, projects, galleries, and the detail text.
      *
      * A picture from an article or page body is also taken out of that body, a
      * category or tag banner is taken off that record, a page builder layout loses its picture,
@@ -179,6 +201,16 @@ class Library
 
                 $article->gallery = $left === [] ? null : $left;
                 $article->saveQuietly();
+            });
+
+        Gallery::query()
+            ->whereJsonContains('items', $path)
+            ->get()
+            ->each(function (Gallery $gallery) use ($path): void {
+                $left = array_values(array_filter($gallery->paths(), fn (string $item): bool => $item !== $path));
+
+                $gallery->items = $left === [] ? null : $left;
+                $gallery->saveQuietly();
             });
 
         foreach (array_keys(self::BANNERS) as $model) {
@@ -334,6 +366,7 @@ class Library
             str_starts_with($path, Project::LOGOS.'/') => 'لوگوی پروژه',
             str_starts_with($path, Project::VOICES.'/') => 'پیام صوتی کارفرما',
             str_starts_with($path, Project::FOLDER.'/') => 'تصویر توضیحات پروژه',
+            str_starts_with($path, Gallery::FOLDER.'/') => Kind::tryFrom(explode('/', $path)[1] ?? '')?->title() ?? 'گالری',
             str_starts_with($path, Seo::FOLDER.'/') => 'تصویر سئو',
             str_starts_with($path, Category::FOLDER.'/') => self::BANNERS[Category::class],
             str_starts_with($path, Tag::FOLDER.'/') => self::BANNERS[Tag::class],
@@ -426,6 +459,15 @@ class Library
 
                 foreach (array_unique(Project::images($project->content)) as $path) {
                     $map[$path][] = 'توضیحات پروژه '.$project->title;
+                }
+            });
+
+        Gallery::query()
+            ->whereNotNull('items')
+            ->get(['title', 'kind', 'items'])
+            ->each(function (Gallery $gallery) use (&$map): void {
+                foreach (array_unique($gallery->paths()) as $path) {
+                    $map[$path][] = $gallery->kind->title().' '.$gallery->title;
                 }
             });
 

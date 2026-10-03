@@ -60,7 +60,7 @@ class CommentResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleLeftRight;
 
     /** The position inside the content group: after media. */
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 7;
 
     /** The URL segment after /admin. */
     protected static ?string $slug = 'comments';
